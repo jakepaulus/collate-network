@@ -4,7 +4,6 @@ CREATE TABLE `users` (
   `passwd` varchar(40) NOT NULL,
   `tmppasswd` varchar(40) default NULL,
   `accesslevel` tinyint(1) NOT NULL default '0',
-  `group_id` tinyint(3) NOT NULL,
   `phone` varchar(25) NOT NULL,
   `altphone` varchar(25) NOT NULL,
   `address` varchar(100) NOT NULL,
@@ -16,18 +15,19 @@ CREATE TABLE `users` (
   `loginattempts` tinyint(1) NOT NULL,
   `passwdexpire` datetime NOT NULL,
   PRIMARY KEY  (`uid`),
-  UNIQUE KEY `username` (`username`),
-  KEY `group_id` (`group_id`)
+  UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='User Table' AUTO_INCREMENT=4 ;
 
 
 CREATE TABLE `groups` (
   `id` tinyint(3) NOT NULL,
   `name` varchar(50) NOT NULL,
+  `user_id` tinyint(11) NOT NULL,
   `notes` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`),
-  KEY `notes` (`notes`)
+  KEY `notes` (`notes`),
+  KEY `user_id` (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 
@@ -40,7 +40,7 @@ CREATE TABLE `ip_addresses` (
   `notes` varchar(255) NOT NULL,
   PRIMARY KEY  (`start_address`),
   KEY `end_address` (`end_address`,`notes`),
-  KEY `site_id` (`site_id`,`hardware_id`)
+  KEY `site_id` (`site_id`,`hardwares_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 

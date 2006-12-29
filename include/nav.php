@@ -4,7 +4,7 @@
       <h3>Quick Links</h3>
       <div class="inner_box">
         <ul>
-          <li><a href="/ip_addresses.php">IP Addresses</a></li>
+          <li><a href="ip_addresses.php">IP Addresses</a></li>
         </ul>
       </div>
     </div>
