@@ -4,7 +4,7 @@
 
     <div id="footer">
         <p>
-	Collate:Inventory is &copy; 2006 by its <a href="http://collate.info/">developers</a>. <br />
+	Collate:Network is &copy; 2007 by its <a href="http://collate.info/">developers</a>. <br />
 	This software is <a href="license.txt">licensed</a> under the terms of  version 2 of the <a href="docs/gpl.txt">Gnu GPL</a>.
         </p>
     </div>

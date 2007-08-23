@@ -26,27 +26,24 @@ if($view == "printable"){ ?>
 <?php } ?>
 
 </head>
-<body id="collate-inventory">
+<body id="collate-network">
 
 <div id="page">
     
     <div id="header">
         <a href="index.php">Collate:Network</a>&nbsp;
     </div>
- 
-
         <div id="content">
-	
 <div class="path">
   <table width="100%">
     <tr><td align="left">
       <?php 
-	    echo "<a href=\"panel.php\">Control Panel</a>";
+	    echo "<a href=\"panel.php\">Control Panel</a> | ";
 		if(isset($_SESSION['username'])){
-		  echo " | <a href=\"login.php?op=logout\">Logout</a></td>";
+		  echo "<a href=\"login.php?op=logout\">Logout</a></td>";
 		}
 		else{
-		  echo " | <a href=\"login.php\"> Login </a></td>";
+		  echo "<a href=\"login.php\"> Login </a></td>";
 		}
 		
      // This little mess here makes sure that the print URL is formed properly.

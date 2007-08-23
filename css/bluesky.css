@@ -109,7 +109,7 @@ div.left_nav a:link {
     font-size: 0.9em;
 }
 
-div.inner_nav a:link {
+div.inner_box a:link {
     color: #000;
 }
 
@@ -124,7 +124,7 @@ div.left_nav a:hover, div.left_box a:active {
 font-size: .9em;
 }
 
-div.inner_nav {
+div.inner_box {
     border-right: 0.15em solid #7BA5C6;
     border-bottom: 0.15em solid #7BA5C6;
 }
