@@ -21,12 +21,9 @@ require_once('./include/header.php');
 <td align="center" style="width: 25%"><a href="./login.php?op=changepasswd"><img height="48" width="48" alt="[?]" src="./images/password.gif" /></a><br />
 <b>Change Your Password</b></td>
 <?php } ?>
-
-<?php if($COLLATE['user']['accesslevel'] == "5" || $COLLATE['settings']['checklevel5perms'] === "0"){ ?>
 <td align="center" style="width: 25%"><a href="./settings.php"><img height="48" width="48" alt="Settings" src="./images/settings.gif" /></a><br /><b>Settings</b></td>
-<?php } ?>
-<td align="center" style="width: 25%">&nbsp;</td>
-<td align="center" style="width: 25%">&nbsp;</td>
+
+
 </tr>
 </table>
 <br />

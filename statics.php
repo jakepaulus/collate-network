@@ -18,6 +18,14 @@ switch($op){
 	submit_static();
 	break;
 	
+	case "edit";
+	edit_static();
+	break;
+	
+	case "update";
+	update_static();
+	break;
+	
 	case "delete";
 	delete_static();
 	break;
@@ -174,6 +182,85 @@ function submit_static(){
   exit();
 } // Ends submit_static function
 
+function edit_static(){
+
+  $static_id = (empty($_GET['static_id'])) ? '' : $_GET['static_id'];
+  
+  if(empty($static_id)){
+    $notice = "Please select a block, then a subnet, then a static IP to edit.";
+	header("Location: blocks.php?notice=$notice");
+	exit();
+  }
+  
+  $sql = "SELECT name, contact, note FROM statics WHERE id='$static_id'";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    $notice = "Please select a block, then a subnet, then a static IP to edit.";
+	header("Location: blocks.php?notice=$notice");
+	exit();
+  }
+  
+  list($name,$contact,$note) = mysql_fetch_row($result);
+  
+  $accesslevel = "3";
+  $message = "Static IP edit form accessed: $name";
+  AccessControl($accesslevel, $message); 
+  
+  echo "<h1>Update Static IP: $name</h1>\n".
+	   "<br />\n".
+	   "<form action=\"statics.php?op=update\" method=\"POST\">\n".
+	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
+	   "  <p>Contact:<br /><input type=\"text\" name=\"contact\" value=\"$contact\" /></p>\n".
+	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
+       "  <p><input type=\"hidden\" name=\"static_id\" value=\"$static_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
+	   "</form>\n";
+
+} // Ends edit_static function
+
+function update_static(){
+
+  $static_id = (empty($_POST['static_id'])) ? '' : $_POST['static_id'];
+  $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
+  $contact = (empty($_POST['contact'])) ? '' : clean($_POST['contact']);
+  $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
+  
+  
+  $accesslevel = "3";
+  $message = "Static IP edit form submitted: $name";
+  AccessControl($accesslevel, $message); 
+  
+  if(empty($static_id)){
+    $notice = "Please select an IP block, then a subnet, then a static IP to edit.";
+	header("Location: blocks.php?notice=$notice");
+	exit();
+  }
+  elseif(empty($name) || empty($contact) || empty($note)){
+    $notice = "The name, contact, and note fields cannot be blank.";
+	header("Location: statics.php?op=edit&static_id=$static_id&notice=$notice");
+	exit();
+  }
+  
+  $sql = "SELECT subnet_id FROM statics WHERE id='$static_id'";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    $notice = "Please select an IP block, then a subnet, then a static IP to edit.";
+	header("Location: blocks.php?notice=$notice");
+	exit();
+  }
+  
+  $subnet_id = mysql_result($result, 0, 0);  
+  
+  $sql = "UPDATE statics SET name='$name', contact='$contact', note='$note' WHERE id='$static_id'";
+  mysql_query($sql);
+  
+  $notice = "The static IP reservation has been updated.";
+  header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
+  exit();
+
+} // Ends update_static function
+
 function list_statics(){
   if(!isset($_GET['subnet_id']) || empty($_GET['subnet_id'])){
     $notice = "Please select the IP Block and Subnet you would like to reserve an IP address from.";
@@ -194,7 +281,7 @@ function list_statics(){
   echo "<h1>Static IPs in \"$subnet_name:\"</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></p>\n".
-	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Delete?</th></tr>".
+	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Actions</th></tr>".
 	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
   
 
@@ -205,7 +292,9 @@ function list_statics(){
     $ip = long2ip($ip);
     echo "<tr>
 	     <td>$ip</td><td>$name</td><td>$contact</td>
-		 <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a></td>
+		 <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>
+		  &nbsp;
+		 &nbsp;<a href=\"statics.php?op=edit&amp;static_id=$static_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td>
 		 </tr>\n";
 	echo "<tr><td>$note<td></tr>\n";
     echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";

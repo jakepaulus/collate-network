@@ -1,7 +1,5 @@
 <?php
 session_start();
-date_default_timezone_set ('UTC');
-
 
 //------------- Build CI array var and put version number in it -----------------------------
 

@@ -96,13 +96,38 @@ function add_subnet (){
     echo "<div style=\"float: left; width: 45%; padding-left: 10px;\">\n".
 	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n".
 	     "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
-	while(!empty($ipspace)){
-	  $long_start = array_pop($ipspace);
-	  $start = long2ip($long_start);
-	  $long_end = array_pop($ipspace);
-	  $end = long2ip($long_end);
-	  if($long_start + 1 != $long_end){
-	    echo "<tr><td>$start</td><td>$end</td></tr>";
+		 
+    $ipspace_count = count($ipspace);
+    if(count($ipspace) > '2'){
+	  while(!empty($ipspace)){
+	    $long_start = array_pop($ipspace);
+		if(count($ipspace) != $ipspace_count - '1'){
+		  $start = long2ip($long_start + '1');
+		}
+		else{
+	      $start = long2ip($long_start);
+		}
+	    $long_end = array_pop($ipspace);
+		if(count($ipspace) > '1'){
+		  $end = long2ip($long_end - '1');
+		}
+		else{
+	      $end = long2ip($long_end);
+		}
+	    if($long_start + 1 != $long_end){
+	      echo "<tr><td>$start</td><td>$end</td></tr>";
+	    }
+	  }
+	}
+	else{
+	  while(!empty($ipspace)){
+	    $long_start = array_pop($ipspace);
+	    $start = long2ip($long_start);
+	    $long_end = array_pop($ipspace);
+	    $end = long2ip($long_end);
+	    if($long_start + 1 != $long_end){
+	      echo "<tr><td>$start</td><td>$end</td></tr>";
+	    }
 	  }
 	}
 	echo "</table>";
@@ -193,7 +218,7 @@ function submit_subnet(){
   
   $long_gateway = ip2long($gateway);
   
-  if(empty($gateway) || ip2long($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip){
+  if(!empty($gateway) && (ip2long($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
     $notice = "The Default Gateway you specified is not valid.";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
 	exit();
@@ -227,16 +252,19 @@ function submit_subnet(){
   mysql_query($sql);
   
   // Add an ACL for the DHCP range so users don't assign a static IP inside a DHCP scope.
-  if(!empty($dchp_start)){
+  if(!empty($dhcp_start)){
     $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('DHCP', '$long_dhcp_start', '$long_dhcp_end', 
 	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
+	
     mysql_query($sql);
   }
   // Add static IP for the Default Gateway
-  $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id) 
-		 VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', 
-		 (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
-  mysql_query($sql);
+  if(!empty($gateway)){
+    $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id) 
+	       VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', 
+	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
+    mysql_query($sql);
+  }
   
   $notice = "The subnet you entered has been added.";
   header("Location: subnets.php?block_id=$block_id&notice=$notice");

@@ -114,6 +114,14 @@ global $COLLATE;
   
 
   if($COLLATE['settings']['perms'] != $perms){
+    // First we need to make sure there is at least one administrator user so we know they don't lock themselves out of the application
+	$sql = "SELECT id FROM users WHERE accesslevel='5'";
+	$result = mysql_query($sql);
+	if(mysql_num_rows($result) < '1'){
+	  $notice = "You must create at least one user with administrator rights before changing the permission requirements.";
+	  header("Location: settings.php?notice=$notice");
+	  exit();
+	}
     $sql = "UPDATE settings SET value='$perms' WHERE name='perms'";
 	mysql_query($sql);
   } 

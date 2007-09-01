@@ -52,7 +52,14 @@ function download(){
   }
   
   if(($first == '0' || $first == '1') && $second == "ip"){
-    list($ip,$mask) = explode('/', $search);
+     
+    if(!strstr($ip, '/')){
+	  $ip = $search;
+	  $mask = '32';
+	}
+	else{
+      list($ip,$mask) = explode('/', $search);
+	}
   
     if(ip2long($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
@@ -215,7 +222,14 @@ function search(){
   }
   
   if(($first == '0' || $first == '1') && $second == "ip"){
-    list($ip,$mask) = explode('/', $search);
+  
+    if(!strstr($ip, '/')){
+	  $ip = $search;
+	  $mask = '32';
+	}
+	else{
+      list($ip,$mask) = explode('/', $search);
+	}
   
     if(ip2long($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
@@ -224,8 +238,8 @@ function search(){
     }
   
     $ip = long2ip(ip2long($ip));  
-    if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-      $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
+    if(!strstr($mask, '.') && ($mask <= '0' || $mask > '32')){
+      $notice = "The IP you have specified is not valid. The mask cannot be 0 bits long or longer than 32 bits.";
       header("Location: search.php?notice=$notice");
       exit();
     }
@@ -472,7 +486,7 @@ function show_form(){
   <select name="first" onchange="populate();">
     <option value="0">Subnets</option>
 	<option value="1">Static IPs</option>
-	<option value="2">logs</option>
+	<option value="2">Logs</option>
   </select>
   matching
   <select name="second">
@@ -482,7 +496,7 @@ function show_form(){
   </select>: <input name="search" type="text" /> &nbsp;
   <br />
   <div id="extraforms" style="display: none;">
-  <input type="radio" name="when" value="all" onclick="new Effect.Fade('extraextraforms', {duration: 0.2})" /> in all records <br />
+  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraextraforms', {duration: 0.2})" /> in all records <br />
   <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraextraforms', {duration: 0.2})" /> specify a date range<br />
   </div>
   <div id="extraextraforms" style="display: none;">
