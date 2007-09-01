@@ -13,7 +13,7 @@ require_once('./include/header.php');
 	  
     <h3>About Collate:Network</h3>
       <p> 
-      With this application you can easily track your IP space allocations and static IP address assignments. You can also inventory your WAN connections as they relate to sites. Site information can be shared with your Collate:Inventory application if it is present.
+      With this application you can easily track your IP space allocations and static IP address assignments. 
       </p>
       
     <h3>Documentation</h3>

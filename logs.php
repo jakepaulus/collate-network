@@ -12,19 +12,18 @@ else {
 switch($op){
 
   case "truncate";
+  AccessControl("5", "Truncate Logs form accessed");
   log_truncate();
   break;
   
   default:
+  AccessControl("1", "Log tail viewed");
   view_tail();
   break;
 }
 
 function log_truncate(){
   global $COLLATE;
-  $accesslevel = "5";
-  $message = "truncate logs page accessed";
-  AccessControl($accesslevel, $message);
   
   if(isset($_GET['action'])){
     $action = clean($_GET['action']);
@@ -44,11 +43,11 @@ function log_truncate(){
   }
   
   // They've confirmed they want to truncate the logs.
-  $sql = "SELECT MAX(lid) FROM logs";
-  $maxlid = mysql_result(mysql_query($sql), 0);
-  $lid = $maxlid - 500;
+  $sql = "SELECT MAX(id) FROM logs";
+  $maxid = mysql_result(mysql_query($sql), 0);
+  $id = $maxid - 500;
   
-  $sql = "DELETE FROM logs WHERE lid<'$lid'";
+  $sql = "DELETE FROM logs WHERE id<'$id'";
   mysql_query($sql);
   
   $level = "5";
@@ -62,20 +61,15 @@ function log_truncate(){
   
 } // Ends log_truncate function
 
-
 function view_tail() {
   
   global $COLLATE;
-  $accesslevel = "1";
-  $message = "logs viewed";
-  AccessControl($accesslevel, $message); 
   
   echo "<h1>Log Tail:</h1>".
-       "<table width=\"100%\"><tr><td align=\"left\"><a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" /> ".
-       "Truncate Logs</a></td><td align=\"right\"><a href=\"search.php\"><img src=\"images/search_small.gif\" alt=\"search\" /> ".
-       "Search Logs</a></td></tr></table><br />";
+       "<p style=\"text-align: right;\"><a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" /> ".
+       "Truncate Logs</a></p>";
   
-  $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY lid DESC LIMIT 0, 12";
+  $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY id DESC LIMIT 0, 25";
   $row = mysql_query($sql);
   
   if(mysql_num_rows($row) < "1"){

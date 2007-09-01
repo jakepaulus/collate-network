@@ -38,18 +38,42 @@ if($view == "printable"){ ?>
   <table width="100%">
     <tr><td align="left">
       <?php 
-	    echo "<a href=\"panel.php\">Control Panel</a> | ";
-		if(isset($_SESSION['username'])){
-		  echo "<a href=\"login.php?op=logout\">Logout</a></td>";
-		}
-		else{
-		  echo "<a href=\"login.php\"> Login </a></td>";
-		}
-		
+	// Here we construct the current path links.
+	if(stristr($_SERVER['REQUEST_URI'], "blocks") ||
+	   stristr($_SERVER['REQUEST_URI'], "subnets") ||
+	   stristr($_SERVER['REQUEST_URI'], "statics")){
+	   
+	  echo "<a href=\"blocks.php\">All</a> ";
+	}
+	if(stristr($_SERVER['REQUEST_URI'], "block_id")){
+	  $block_id = clean($_GET['block_id']);
+	  $sql = "SELECT name FROM blocks WHERE id='$block_id'";
+	  $result = mysql_query($sql);
+	  if(mysql_num_rows($result) == '1'){
+	    $block_name = mysql_result($result, 0, 0);
+	    echo "/ <a href=\"subnets.php?block_id=$block_id\">$block_name</a></td>";
+	  }
+	}
+	elseif(stristr($_SERVER['REQUEST_URI'], "subnet_id")){
+	  $subnet_id = clean($_GET['subnet_id']);
+	  $sql = "SELECT blocks.name, subnets.name, subnets.block_id FROM blocks, subnets 
+			WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
+	  $result = mysql_query($sql);
+	  if(mysql_num_rows($result) == '1'){
+	    list($block_name, $subnet_name, $block_id) = mysql_fetch_row($result);
+		echo "/ <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
+			 <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a></td>";
+	  }
+	}
+	else{
+	  echo "</td>";
+	}
+
      // This little mess here makes sure that the print URL is formed properly.
-     
-    echo "<td align=\"right\"><a href=\"http://".$_SERVER['SERVER_NAME'].htmlentities($_SERVER['REQUEST_URI']); 
-    if(stristr($_SERVER['REQUEST_URI'], "?") == TRUE){ 
+    echo "<td align=\"right\">
+	        <a href=\"search.php\">Search</a> | 
+			<a href=\"http://".$_SERVER['SERVER_NAME'].htmlentities($_SERVER['REQUEST_URI']); 
+    if(stristr($_SERVER['REQUEST_URI'], "?")){ 
       echo "&amp;"; 
     } 
     else {
