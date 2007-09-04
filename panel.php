@@ -1,4 +1,8 @@
 <?php
+show_panel();
+
+function show_panel(){
+
 require_once('./include/common.php');
 require_once('./include/header.php');
   $accesslevel = "1";
@@ -28,5 +32,6 @@ require_once('./include/header.php');
 </table>
 <br />
 <?
+}
 require_once('./include/footer.php');
 ?>
