@@ -53,7 +53,7 @@ function download(){
   
   if(($first == '0' || $first == '1') && $second == "ip"){
      
-    if(!strstr($ip, '/')){
+    if(!strstr($search, '/')){
 	  $ip = $search;
 	  $mask = '32';
 	}
@@ -223,7 +223,7 @@ function search(){
   
   if(($first == '0' || $first == '1') && $second == "ip"){
   
-    if(!strstr($ip, '/')){
+    if(!strstr($search, '/')){
 	  $ip = $search;
 	  $mask = '32';
 	}
