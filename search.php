@@ -43,6 +43,9 @@ function download(){
   $fromdate = clean($_GET['from_year'])."-".clean($_GET['from_month'])."-".clean($_GET['from_day']);
   $todate = clean($_GET['to_year'])."-".clean($_GET['to_month'])."-".clean($_GET['to_day']);
   $when = clean($_GET['when']);
+    if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
+    $when = "all";
+  }
   
 
   if(strlen($search) <= "3"){
@@ -209,9 +212,12 @@ function search(){
   $first = clean($_GET['first']);
   $second = clean($_GET['second']);
   $search = clean($_GET['search']);
-  $fromdate = clean($_GET['from_year'])."-".clean($_GET['from_month'])."-".clean($_GET['from_day']);
-  $todate = clean($_GET['to_year'])."-".clean($_GET['to_month'])."-".clean($_GET['to_day']);
+  $fromdate = clean($_GET['fromdate']);
+  $todate = clean($_GET['todate']);
   $when = clean($_GET['when']);
+  if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
+    $when = "all";
+  }
   
   echo "<h1>Search Results:</h1><br />";
   
@@ -479,6 +485,13 @@ function show_form(){
   
   ?>
   <script type="text/javascript" src="javascripts/options.js"></script>
+  <script type="text/javascript" src="javascripts/calendarDateInput.js">
+  /***********************************************
+  * Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm
+  * Script featured on and available at http://www.dynamicdrive.com
+  * Keep this notice intact for use.
+  ***********************************************/
+  </script>
   <script type="text/javascript">
     window.onload = init();
   </script>
@@ -502,70 +515,16 @@ function show_form(){
   <div id="extraforms" style="display: none;">
   <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraextraforms', {duration: 0.2})" /> in all records <br />
   <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraextraforms', {duration: 0.2})" /> specify a date range<br />
-  </div>
   <div id="extraextraforms" style="display: none;">
-  <br />
-  <b>From:</b><br />
-    <select name="from_year">
-    <?php
-	  $year = "2007";
-	  $currentyear = date('Y');
-	  while($year <= $currentyear){
-	    echo "<option value=\"$year\">$year</option>";
-		$year++;
-	  }
-	?>
-  </select> 
-  <select name="from_month">
-    <?php 
-	  $month = "1";
-	  while($month < "13"){
-	    echo "<option value=\"$month\">$month</option>";
-		$month++;
-	  }
-	?>
-  </select>
-  <select name="from_day">
-    <?php 
-	  $day = "1";
-	  while($day < "32"){
-	    echo "<option value=\"$day\">$day</option>";
-		$day++;
-	  }
-	?>
-  </select>
-  <br /><br />
-  <b>To:</b><br />
-    <select name="to_year">
-    <?php
-	  $year = "2006";
-	  $currentyear = date('Y');
-	  while($year <= $currentyear){
-	    echo "<option value=\"$year\">$year</option>";
-		$year++;
-	  }
-	?>
-  </select> 
-  <select name="to_month">
-    <?php 
-	  $month = "1";
-	  while($month < "13"){
-	    echo "<option value=\"$month\">$month</option>";
-		$month++;
-	  }
-	?>
-  </select>
-  <select name="to_day">
-    <?php 
-	  $day = "1";
-	  while($day < "32"){
-	    echo "<option value=\"$day\">$day</option>";
-		$day++;
-	  }
-	?>
-  </select>
-  <br />
+    <br />
+    <b>From:</b><br />
+      <script>DateInput('fromdate', 'false', 'YYYY-MM-DD')</script>
+	<br />
+    <b>To:</b><br />
+      <script>DateInput('todate', 'false', 'YYYY-MM-DD')</script>
   </div>
+  </div>
+  <br />
   <br />
   <input type="checkbox" name="export" /> Export Results as a Microsoft Excel spreadsheet<br />
   <br />
