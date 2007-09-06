@@ -3,7 +3,6 @@
  * Please see /include/common.php for documentation on common.php, the $COLLATE global array used by this program, and the AccessControl function used widely.
  */
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -53,6 +52,8 @@ function add_static(){
     $notice = "The subnet you provided is not valid. Please select an IP block and a subnet to reserve an IP address from.";
 	header("Location: blocks.php?notice=$notice");
   }
+  
+  require_once('./include/header.php');
   
   list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($results);
   $first_usable = $long_subnet_start_ip;
@@ -207,6 +208,8 @@ function edit_static(){
   $message = "Static IP edit form accessed: $name";
   AccessControl($accesslevel, $message); 
   
+  require_once('./include/header.php');
+  
   echo "<h1>Update Static IP: $name</h1>\n".
 	   "<br />\n".
 	   "<form action=\"statics.php?op=update\" method=\"POST\">\n".
@@ -262,6 +265,7 @@ function update_static(){
 } // Ends update_static function
 
 function list_statics(){
+
   if(!isset($_GET['subnet_id']) || empty($_GET['subnet_id'])){
     $notice = "Please select the IP Block and Subnet you would like to reserve an IP address from.";
 	header("Location: blocks.php?notice=$notice");
@@ -275,6 +279,8 @@ function list_statics(){
     $notice = "You have not selected a valid subnet. Please select the IP Block and Subnet you would like to reserve an IP address from.";
 	header("Location: blocks.php?notice=$notice");
   }
+  
+  require_once('./include/header.php');
   
   $subnet_name = mysql_result($results, 0, 0);
    
@@ -338,12 +344,14 @@ function delete_static(){
   }
   
   if($confirm != "yes"){
+    require_once('./include/header.php');
     echo "Are you sure you'd like to delete $static_ip?<br />\n".
          "<br />".
 		 "<a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$static_ip&amp;confirm=yes\">
 		 <img src=\"./images/apply.gif\" alt=\"confirm\" /></a>".
 		 " &nbsp; <a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-    return;
+    require_once('include/footer.php');
+	exit();
   }
   
   $long_ip = ip2long($static_ip);

@@ -123,15 +123,15 @@ function download(){
 	}
   }
 
-
   $row = mysql_query($sql);
   $totalrows = mysql_num_rows($row);
  
-
   if($totalrows < "1"){
-    require_once('./include/header.php');
-    $result = "No results were found that matched your search.";
-	require_once('./include/infopage.php');
+    echo "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>".
+         "<hr class=\"head\" />".
+         "<p><b>No results were found that matched your search.</b></p>";
+	require_once('./include/footer.php');
+	exit();
   }
   
   ob_start();
@@ -309,6 +309,8 @@ function search(){
     $extrasearchdescription = "";
   }
   
+  require_once('include/header.php');
+  
   echo "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>".
        "<hr class=\"head\" />";
 
@@ -472,6 +474,8 @@ function show_form(){
   $accesslevel = "1";
   $message = "search form accessed";
   AccessControl($accesslevel, $message); 
+  
+  require_once('include/header.php');
   
   ?>
   <script type="text/javascript" src="javascripts/options.js"></script>

@@ -3,7 +3,6 @@
  * Please see /include/common.php for documentation on common.php, the $COLLATE global array used by this program, and the AccessControl function used widely.
  */
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -39,6 +38,8 @@ switch($op){
 require_once('./include/footer.php');
 
 function add_block(){
+  require_once('./include/header.php');
+  
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip = (empty($_GET['ip'])) ? '' : $_GET['ip'];
   $end_ip = (empty($_GET['end_ip'])) ? '' : $_GET['end_ip'];
@@ -175,6 +176,8 @@ function edit_block(){
   $message = "Edit IP Block form accessed: $name";
   AccessControl($accesslevel, $message);
 
+  require_once('./include/header.php');
+  
   echo "<h1>Update Block: $name</h1>\n".
 	   "<br />\n".
 	   "<form action=\"blocks.php?op=update\" method=\"POST\">\n".
@@ -236,6 +239,7 @@ function delete_block(){
   AccessControl($accesslevel, $message);
   
   if($confirm != "yes"){
+    require_once('./include/header.php');
     
 	echo "Are you sure you'd like to delete the IP block \"$name\" and everything in it? There is no undo for this action!
 	      <br />\n".
@@ -269,6 +273,7 @@ function delete_block(){
 } // Ends delete_block function
 
 function list_blocks(){
+  require_once('./include/header.php');
  
   echo "<h1>All IP Blocks</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add\">

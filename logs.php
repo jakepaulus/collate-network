@@ -1,13 +1,7 @@
 <?php
 require_once('./include/common.php');
-require_once('./include/header.php');
 
-if(isset($_GET['op'])){
-  $op = $_GET['op'];
-}
-else {
-  $op = "show_tail";
-}
+$op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
 
@@ -32,14 +26,15 @@ function log_truncate(){
     $action = "show warning";
   }
   if($action != "truncate"){ // Show confirmation form
+    require_once('./include/header.php');
     echo "<h1>Truncate Logs?</h1><br />".
          "<p><b>Are you sure you'd like to truncate the logs?</b> This will delete all log events in the database except the most \n".
 		 "recent 500 events. This action is not reversable! \n".
 	     "<br /><br /><a href=\"logs.php?op=truncate&amp;action=truncate\">".
 	     "<img src=\"./images/apply.gif\" alt=\"confirm\" /></a> &nbsp; <a href=\"logs.php\">".
 	     "<img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-      require_once('./include/footer.php');
-      exit();
+    require_once('./include/footer.php');
+    exit();
   }
   
   // They've confirmed they want to truncate the logs.
@@ -62,7 +57,7 @@ function log_truncate(){
 } // Ends log_truncate function
 
 function view_tail() {
-  
+  require_once('./include/header.php');
   global $COLLATE;
   
   echo "<h1>Log Tail:</h1>".

@@ -1,7 +1,6 @@
 <?php
 
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -22,7 +21,10 @@ function form() {
 global $COLLATE;
   $accesslevel = "5";
   $message = "settings form accessed";
-  AccessControl($accesslevel, $message); 
+  AccessControl($accesslevel, $message);
+  
+require_once('./include/header.php');
+  
 ?>
 <h1>Settings</h1>
 <br />

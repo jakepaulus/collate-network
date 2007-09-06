@@ -3,7 +3,6 @@
  * Please see /include/common.php for documentation on common.php, the $COLLATE global array used by this program, and the AccessControl function used widely.
  */
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -39,6 +38,8 @@ switch($op){
 require_once('./include/footer.php');
 
 function add_subnet (){
+  require_once('./include/header.php');
+  
   if(!isset($_GET['block_id'])){
     $notice = "Please select an IP block to allocate a subnet from.";
 	header("Location: blocks.php?notice=$notice");
@@ -296,6 +297,8 @@ function edit_subnet(){
   $message = "Subnet edit form accessed: $name";
   AccessControl($accesslevel, $message); 
 
+  require_once('./include/header.php');
+    
   $sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
   $result = mysql_query($sql);
   
@@ -391,6 +394,7 @@ function update_subnet(){
 } // Ends update_subnet function
 
 function list_subnets(){
+  require_once('./include/header.php');
  
   if(!isset($_GET['block_id']) || empty($_GET['block_id'])){
     $notice = "Please select an IP block within which to view subnets.";
@@ -476,6 +480,7 @@ function delete_subnet(){
   AccessControl($accesslevel, $message); 
   
   if($confirm != "yes"){
+    require_once('./include/header.php');
     
 	echo "Are you sure you'd like to delete the subnet \"$name\" and everything in it? There is no undo for this action!
 	      <br />\n".
@@ -483,7 +488,8 @@ function delete_subnet(){
 		 "<a href=\"subnets.php?op=delete&amp;block_id=$block_id&amp;subnet_id=$subnet_id&amp;confirm=yes\">
 		 <img src=\"./images/apply.gif\" alt=\"confirm\" /></a>".
 		 " &nbsp; <a href=\"subnets.php?block_id=$block_id\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-    return;
+    require_once('include/footer.php');
+	exit();
   }
   
   // First delete all static IPs

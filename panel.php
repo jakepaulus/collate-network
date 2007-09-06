@@ -4,11 +4,10 @@ show_panel();
 function show_panel(){
 
 require_once('./include/common.php');
-require_once('./include/header.php');
   $accesslevel = "1";
   $message = "control panel accessed";
   AccessControl($accesslevel, $message); 
-
+require_once('./include/header.php');
 ?>
 <br />
 <table width="100%">

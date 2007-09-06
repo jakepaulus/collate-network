@@ -1,6 +1,5 @@
 <?php
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -37,6 +36,7 @@ function change_password(){
   }
   
   if($action != "change"){
+  require_once('./include/header.php');
   ?>
   <h1>Change Your Password:</h1>
   <br />
@@ -96,6 +96,7 @@ function change_password(){
 	collate_log($level, $message);
     $notice = "This username has been locked because there have been too many failed attempts to login. You must contact your administrator to have a new temporary password set.";
 	header("Location: login.php?notice=$notice");
+	exit();
   
   }elseif($password == $auth['passwd']){
     $notice = "You have not supplied a new password. Please try again.";
@@ -136,9 +137,11 @@ function change_password(){
   
   if(stristr($returnto, ".php") == TRUE){
     header("Location: $returnto");
+	exit();
   }
   else{
     header("Location: index.php?notice=$notice");
+	exit();
   }
   
   
@@ -185,7 +188,7 @@ function cn_login() {
   }
   
   if($action != "login") {
-
+  require_once('./include/header.php');
   ?>
   <h1>Login:</h1>
   <br />
@@ -266,9 +269,11 @@ function cn_login() {
   
   if(stristr($returnto, ".php") == TRUE){
     header("Location: $returnto");
+	exit();
   }
   else{
     header("Location: index.php?notice=$notice");
+	exit();
   }
 } // Ends cn_login function
 

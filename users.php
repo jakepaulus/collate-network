@@ -3,7 +3,6 @@
  * Please see /include/common.php for documentation on common.php, the $COLLATE global array used by this program, and the AccessControl function used widely.
  */
 require_once('./include/common.php');
-require_once('./include/header.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
@@ -37,6 +36,7 @@ require_once('./include/footer.php');
 
 function list_users(){
   global $COLLATE;
+  require_once('./include/header.php');
   
   $sql = "SELECT username, phone, email FROM users ORDER BY username"; 
   $result = mysql_query($sql);
@@ -70,6 +70,7 @@ function delete_user() {
     $sql = "SELECT username FROM users WHERE username='$username'";
     $row = mysql_query($sql);
     if(mysql_num_rows($row) == '1') {
+	  require_once('./include/header.php');
       echo "Are you sure you'd like to delete the user \"$username\"?<br /><br />\n".
 		   "<a href=\"users.php?op=delete&amp;username=$username&amp;confirm=yes\">".
 		   "<img src=\"./images/apply.gif\" alt=\"confirm\" /></a> &nbsp; <a href=\"users.php\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
@@ -119,13 +120,15 @@ function add_user(){
   else{
   $accesslevel = "5";
   $message = "Add User form accessed";
-  
-  AccessControl($accesslevel, $message); // This is placed here to prevent false messages saying the system account was deleted.
+  AccessControl($accesslevel, $message);
+    
     $post_to = "users.php?op=submit&amp;action=add";
 	$phone = (empty($_GET['phone'])) ? '' : $_GET['phone'];
 	$email = (empty($_GET['email'])) ? '' : $_GET['email'];
 	$accesslevel = '0';
   }
+  
+  require_once('./include/header.php');
   
   echo "<div id=\"passwordtip\" style=\"display: none;\" class=\"tip\">A temporary password must be set for this 
        user to login for the first time. The user will \n".
