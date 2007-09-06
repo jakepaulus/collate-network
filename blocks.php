@@ -49,7 +49,11 @@ function add_block(){
 	descriptive of what the subnets inside the block will be used for. The name should be short and should not contain 
 	spaces.<br /><br /></div>\n".
 	"<div id=\"iptip\" style=\"display: none;\" class=\"tip\">Enter a block of IP addresses in CIDR notation such as 
-	\"10.10.0.0/23\" or using a subnet mask such as in \"10.10.0.0/255.255.254.0.\"<br /><br /></div>\n".
+	\"10.10.0.0/23\" or using a subnet mask such as in \"10.10.0.0/255.255.254.0.\" You can also enter the start address
+	of a range.<br /><br /></div>\n".
+	"<div id=\"endiptip\" style=\"display: none;\" class=\"tip\">If you entered a start IP address for a range you can use
+    this field for the end IP of the range. If you used a mask value in the IP field, this field will be ignored.<br />
+	<br /></div>\n".
 	"<div id=\"notetip\" style=\"display: none;\" class=\"tip\">Enter a very brief description of what the subnets inside the 
 	block will\n".
 	"  be used for. An example would be \"Point to Point subnets.\"<br /><br /></div>\n".
@@ -62,6 +66,9 @@ function add_block(){
 	"  <p>IP:<br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
+	"  <p>End IP: (Optional)<br /><input type=\"text\" name=\"end_ip\" value=\"$end_ip\" />\n".
+	"    <a href=\"#\" onclick=\"new Effect.toggle($('endiptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	"  </p>\n".
 	"  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" />\n".
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
@@ -73,6 +80,7 @@ function add_block(){
 function submit_block() {
   $name = clean($_POST['name']);
   $ip = clean($_POST['ip']);
+  $end_ip = clean($_POST['end_ip']);
   $note = clean($_POST['note']);
   
   $accesslevel = "4";
@@ -81,7 +89,7 @@ function submit_block() {
   
   if(empty($name) || empty($ip)){
     $notice = "Please verify that required fields have been completed.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
+    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   
@@ -90,46 +98,56 @@ function submit_block() {
   $result = mysql_query($sql);
   if(mysql_num_rows($result) >= '1'){
     $notice = "The block name you have chosen is already in use. Please use another name.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
+    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   
-  if(!strstr($ip, '/')){
-    $notice = "You must supply the number of mask bits or a mask to add an IP block.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
+  if(!strstr($ip, '/') && empty($end_ip)){
+    $notice = "You must supply the number of mask bits, a mask, or an end IP to add an IP block.";
+    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   
-  list($ip,$mask) = explode('/', $ip);
+  if(strstr($ip, '/')){
+    list($ip,$mask) = explode('/', $ip);
   
-  if(ip2long($ip) == FALSE){
-    $notice = "The IP you have entered is not valid.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
-	exit();
-  }
+    if(ip2long($ip) == FALSE){
+      $notice = "The IP you have entered is not valid.";
+      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	  exit();
+    }
   
-  $ip = long2ip(ip2long($ip));  
-  $long_ip = ip2long($ip);
-  if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-    $notice = "The IP block you have specified is not valid. The mask cannot be 0 or 32 bits long.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
-	exit();
+    $ip = long2ip(ip2long($ip));  
+    $long_ip = ip2long($ip);
+    if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
+      $notice = "The IP block you have specified is not valid. The mask cannot be 0 or 32 bits long.";
+      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	  exit();
+    }
+    elseif(!strstr($mask, '.')){
+      $bin = str_pad('', $mask, '1');
+	  $bin = str_pad($bin, '32', '0');
+	  $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
+      $mask = long2ip(ip2long($mask));
+    }
+    elseif(!checkNetmask($mask)){
+      $notice = "The mask you have specified is not valid.";
+      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	  exit();
+    }
+    
+	$long_mask = ip2long($mask);
+    $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
+    $long_end_ip = $long_ip | (~$long_mask);
   }
-  elseif(!strstr($mask, '.')){
-    $bin = str_pad('', $mask, '1');
-	$bin = str_pad($bin, '32', '0');
-	$mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-    $mask = long2ip(ip2long($mask));
+  else{
+    if(!long2ip($end_ip)){
+	  $notice = "The end IP Address you have supplied is not valid.";
+	  header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	}
+    $long_ip = ip2long($ip);
+    $long_end_ip = ip2long($end_ip);
   }
-  elseif(!checkNetmask($mask)){
-    $notice = "The mask you have specified is not valid.";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
-	exit();
-  }
-  
-  $long_mask = ip2long($mask);
-  $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
-  $long_end_ip = $long_ip | (~$long_mask);
   
   // We need to make sure this new block doesn't overlap an existing block
   $sql = "SELECT id FROM blocks WHERE (start_ip <= '$long_ip' AND end_ip >= '$long_ip') OR 
@@ -139,7 +157,7 @@ function submit_block() {
   $search = mysql_query($sql);
   if(mysql_num_rows($search) != '0'){
     $notice = "The IP block you entered overlaps with an existing IP block in the database.";
-	header("Location: blocks.php?op=add&name=$name&ip=$ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   
