@@ -344,8 +344,8 @@ function update_subnet(){
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
-  elseif(empty($name) || empty($note)){
-    $notice = "The name and note fields cannot be blank.";
+  elseif(empty($name)){
+    $notice = "The name field cannot be blank.";
 	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&notice=$notice");
 	exit();
   }
