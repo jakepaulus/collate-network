@@ -244,8 +244,8 @@ function search(){
   }
     
   if(strlen($search) < "3"){
-    echo "<p>You must enter a search phrase of three characters or more in order to find results.</p>";
-	require_once('./include/footer.php');
+    $notice = "<p>You must enter a search phrase of three characters or more in order to find results.</p>";
+	header("Location: search.php?notice=$notice");
 	exit();
   }
   
