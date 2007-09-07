@@ -364,7 +364,7 @@ function search(){
   }
   
   require_once('include/header.php');
-  echo "<h1>Search Results:</h1><br />\n".
+  echo "<h1>Search Results</h1><br />\n".
        "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>\n".
        "<hr class=\"head\" />\n";
 
@@ -543,7 +543,7 @@ function show_form(){
   <script type="text/javascript">
     window.onload = init();
   </script>
-  <h1>Search:</h1>
+  <h1>Search</h1>
   <br />
   <form onload="init();" id="test" action="search.php" method="get">
   <p><b>Search:</b><br />

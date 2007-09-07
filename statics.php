@@ -90,7 +90,7 @@ function add_static(){
   echo "<div id=\"iptip\" style=\"display: none;\" class=\"tip\">If the IP Address you're looking for is not
 		listed, the address is already in use or is not available because it was part of the range given for 
 		the DHCP scope in the subnet.<br /><br/></div>\n".
-       "<h1>Reserve a static IP:</h1>\n".
+       "<h1>Reserve a static IP</h1>\n".
        "<br />\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
@@ -285,7 +285,7 @@ function list_statics(){
   
   $subnet_name = mysql_result($results, 0, 0);
    
-  echo "<h1>Static IPs in \"$subnet_name:\"</h1>\n".
+  echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></p>\n".
 	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Actions</th></tr>".

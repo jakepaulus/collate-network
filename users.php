@@ -138,7 +138,7 @@ function add_user(){
     echo "<h1>Update User: $username</h1>\n";
   }
   else{
-    echo  "<h1>Add a user:</h1>\n";
+    echo  "<h1>Add a user</h1>\n";
   }
   echo "<br />\n".
        "<form action=\"$post_to\" method=\"post\">\n";

@@ -57,7 +57,7 @@ function add_subnet (){
 	descriptive of what the subnet will be used for. The name should be short and should not contain spaces.<br /><br/></div>\n".
 	"<div id=\"iptip\" style=\"display: none;\" class=\"tip\">Enter a subnet in CIDR notation such as 
 	\"192.168.1.0/24\" or using a subnet mask such as in \"192.168.1.0/255.255.255.0.\"<br /><br /></div>\n".
-	"<h1>Allocate a Subnet:</h1>\n".
+	"<h1>Allocate a Subnet</h1>\n".
 	"<br />\n".
 	"<div style=\"float: left; width: 45%; border-right: 1px solid #000;\">\n".
 	"<form action=\"subnets.php?op=submit\" method=\"post\">\n".

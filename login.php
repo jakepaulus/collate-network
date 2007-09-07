@@ -38,7 +38,7 @@ function change_password(){
   if($action != "change"){
   require_once('./include/header.php');
   ?>
-  <h1>Change Your Password:</h1>
+  <h1>Change Your Password</h1>
   <br />
   <form action="login.php?op=changepasswd&amp;action=change&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
   <p><b>Username:</b><br />
@@ -190,7 +190,7 @@ function cn_login() {
   if($action != "login") {
   require_once('./include/header.php');
   ?>
-  <h1>Login:</h1>
+  <h1>Login</h1>
   <br />
   <form action="login.php?op=login&amp;action=login&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
   <p><b>Username:</b><br />

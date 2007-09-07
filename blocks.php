@@ -57,7 +57,7 @@ function add_block(){
 	"<div id=\"notetip\" style=\"display: none;\" class=\"tip\">Enter a very brief description of what the subnets inside the 
 	block will\n".
 	"  be used for. An example would be \"Point to Point subnets.\"<br /><br /></div>\n".
-	"<h1>Add Block:</h1>\n".
+	"<h1>Add Block</h1>\n".
 	"<br />\n".
 	"<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
 	"  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".

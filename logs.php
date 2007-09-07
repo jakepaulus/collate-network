@@ -60,7 +60,7 @@ function view_tail() {
   require_once('./include/header.php');
   global $COLLATE;
   
-  echo "<h1>Log Tail:</h1>".
+  echo "<h1>Log Tail</h1>".
        "<p style=\"text-align: right;\"><a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" /> ".
        "Truncate Logs</a></p>";
   
