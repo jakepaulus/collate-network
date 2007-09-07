@@ -4,7 +4,6 @@ session_start();
 //------------- Build CI array var and put version number in it -----------------------------
 
 $COLLATE = array();
-$COLLATE['version'] = "0.9";
 
 if(isset($_SESSION['accesslevel'])){
   $COLLATE['user']['accesslevel'] = $_SESSION['accesslevel'];
