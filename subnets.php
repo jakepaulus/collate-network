@@ -247,9 +247,9 @@ function submit_subnet(){
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
 	exit();
   }
-  
-  $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id) 
-		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id')";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at) 
+		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now())";
   mysql_query($sql);
   
   // Add an ACL for the DHCP range so users don't assign a static IP inside a DHCP scope.
@@ -261,9 +261,10 @@ function submit_subnet(){
   }
   // Add static IP for the Default Gateway
   if(!empty($gateway)){
-    $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id) 
+    $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+    $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
 	       VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', 
-	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
+	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'), '$username', now())";
     mysql_query($sql);
   }
   
@@ -380,8 +381,8 @@ function update_subnet(){
 	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
 	exit();
   }
-  
-  $sql = "UPDATE subnets SET name='$name', note='$note' WHERE id='$subnet_id'";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "UPDATE subnets SET name='$name', note='$note', modified_by='$username', modified_at=now() WHERE id='$subnet_id'";
   mysql_query($sql);
   
   $sql = "UPDATE acl SET start_ip='$long_dhcp_start', end_ip='$long_dhcp_end' WHERE name='DHCP' AND apply='$subnet_id'";

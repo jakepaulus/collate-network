@@ -5,18 +5,21 @@ var store = new Array();
 store[0] = new Array(
 	'IP', 'ip',
 	'name', 'name',
-	'note', 'note');
+	'note', 'note',
+	'last modified by', 'modified_by');
 
 store[1] = new Array(
 	'IP', 'ip',
 	'name', 'name',
 	'contact', 'contact',
-	'note', 'note');
+	'note', 'note',
+	'last modified by', 'modified_by');
 	
 store[2] = new Array(
 	'user', 'username',
 	'level', 'level',
-	'message', 'message');
+	'message', 'message',
+	'last modified by', 'modified_by');
 
 function init()
 {
@@ -42,17 +45,5 @@ function populate()
 	for(i=0;i<list.length;i+=2)
 	{
 		box2.options[i/2] = new Option(list[i],list[i+1]);
-	}
-	if (number == 0)
-	{
-		new Effect.Fade('extraforms', {duration: 0.2});
-	}
-	else if (number == 1)
-	{
-		new Effect.Fade('extraforms', {duration: 0.2});
-	}
-	else if (number == 2)
-	{
-		new Effect.Appear('extraforms', {duration: 0.2});
 	}
 }

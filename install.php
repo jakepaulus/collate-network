@@ -21,6 +21,8 @@ CREATE TABLE `blocks` (
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
@@ -58,6 +60,8 @@ CREATE TABLE `statics` (
   `contact` varchar(25) NOT NULL,
   `note` varchar(255) NOT NULL,
   `subnet_id` tinyint(9) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `ip` (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
@@ -71,6 +75,8 @@ CREATE TABLE `subnets` (
   `mask` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
   `block_id` tinyint(9) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;;

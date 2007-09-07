@@ -160,8 +160,8 @@ function submit_block() {
 	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
-  
-  $sql = "INSERT INTO blocks (name, start_ip, end_ip, note) VALUES('$name', '$long_ip', '$long_end_ip', '$note')";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_ip', '$long_end_ip', '$note', '$username', now())";
   mysql_query($sql);
   $notice = "The IP block you entered has been added.";
   header("Location: blocks.php?notice=$notice");
@@ -220,8 +220,8 @@ function update_block(){
 	header("Location: blocks.php?op=edit&block_id=$block_id&notice=$notice");
 	exit();
   }
-  
-  $sql = "UPDATE blocks SET name='$name', note='$note' WHERE id='$block_id'";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "UPDATE blocks SET name='$name', note='$note', modified_by='$username', modified_at=now() WHERE id='$block_id'";
   mysql_query($sql);
   
   $notice = "The block has been updated.";

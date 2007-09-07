@@ -1,8 +1,6 @@
 <?php
 /*
- * This script contains functions that enable search and search result export to excel
- *
- * Please see /include/common.php for documentation on common.php and the $COLLATE global array used by this application as well as the AccessControl function used widely.
+  * Please see /include/common.php for documentation on common.php and the $COLLATE global array used by this application as well as the AccessControl function used widely.
  */
 require_once('./include/common.php');
 
@@ -15,7 +13,6 @@ switch($op){
   break;
   
   case "search";
-  require_once('./include/header.php');
   search();
   break;
   
@@ -95,21 +92,47 @@ function download(){
     $first = "subnets";
 	$First = "Subnets";
 	
-	if($second == "ip"){
-	  $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip'";
+	if($when == "dates"){
+	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
+	  if($second == "ip"){
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+      }
+	  else{
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
 	}
 	else{
-	  $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%'";
+	  if($second == "ip"){
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip'";
+      }
+	  else{
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%'";
+	  }
 	}
   }
   elseif($first == "1"){ // Statics earch
     $first = "static IPs";
 	
-   if($second == "ip"){
-	  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	if($when == "dates"){
+	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
+	  if($second == "ip"){
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
+	  else{
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
 	}
 	else{
-	  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%'";
+      if($second == "ip"){
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	  }
+	  else{
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%'";
+	  }
 	}
   }
   elseif($first == "2"){ // They're trying to search logs
@@ -195,10 +218,6 @@ function download(){
 }
 
 function search(){
-  global $COLLATE;
-  $accesslevel = "1";
-  $message = "search conducted";
-  AccessControl($accesslevel, $message); 
 
   $export = (!isset($_GET['export'])) ? 'off' : $_GET['export'];
   
@@ -208,7 +227,12 @@ function search(){
 	header("Location: $uri");
 	exit();
   }
-    
+   
+  global $COLLATE;
+  $accesslevel = "1";
+  $message = "search conducted";
+  AccessControl($accesslevel, $message); 
+  
   $first = clean($_GET['first']);
   $second = clean($_GET['second']);
   $search = clean($_GET['search']);
@@ -218,9 +242,7 @@ function search(){
   if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
     $when = "all";
   }
-  
-  echo "<h1>Search Results:</h1><br />";
-  
+    
   if(strlen($search) < "3"){
     echo "<p>You must enter a search phrase of three characters or more in order to find results.</p>";
 	require_once('./include/footer.php');
@@ -268,21 +290,47 @@ function search(){
     $first = "subnets";
 	$First = "Subnets";
 	
-	if($second == "ip"){
-	  $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip'";
+	if($when == "dates"){
+	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
+	  if($second == "ip"){
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+      }
+	  else{
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
 	}
 	else{
-	  $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%'";
+	  if($second == "ip"){
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip'";
+      }
+	  else{
+	    $sql = "SELECT id, name, start_ip, mask, note FROM subnets WHERE $second LIKE '%$search%'";
+	  }
 	}
   }
   elseif($first == "1"){ // Statics earch
     $first = "static IPs";
 	
-   if($second == "ip"){
-	  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	if($when == "dates"){
+	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
+	  if($second == "ip"){
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
+	  else{
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%' AND
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+	  }
 	}
 	else{
-	  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%'";
+      if($second == "ip"){
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	  }
+	  else{
+	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%'";
+	  }
 	}
   }
   elseif($first == "2"){ // They're trying to search logs
@@ -316,9 +364,9 @@ function search(){
   }
   
   require_once('include/header.php');
-  
-  echo "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>".
-       "<hr class=\"head\" />";
+  echo "<h1>Search Results:</h1><br />\n".
+       "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>\n".
+       "<hr class=\"head\" />\n";
 
   if($totalrows < "1"){
     echo "<p><b>No results were found that matched your search.</b></p>";
@@ -510,12 +558,13 @@ function show_form(){
 	<option value="ip">IP</option>
 	<option value="name">name</option>
 	<option value="note">note</option>
+	<option value="modified_by">last modified by</option>
   </select>: <input name="search" type="text" /> &nbsp;
   <br />
+  <br />
+  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2})" /> in all records <br />
+  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraforms', {duration: 0.2})" /> specify a date range<br />
   <div id="extraforms" style="display: none;">
-  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraextraforms', {duration: 0.2})" /> in all records <br />
-  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraextraforms', {duration: 0.2})" /> specify a date range<br />
-  <div id="extraextraforms" style="display: none;">
     <br />
     <b>From:</b><br />
       <script>DateInput('fromdate', 'false', 'YYYY-MM-DD')</script>
@@ -523,10 +572,9 @@ function show_form(){
     <b>To:</b><br />
       <script>DateInput('todate', 'false', 'YYYY-MM-DD')</script>
   </div>
-  </div>
   <br />
   <br />
-  <input type="checkbox" name="export" /> Export Results as a Microsoft Excel spreadsheet<br />
+  <input type="checkbox" name="export" /> Export Results as a Microsoft Excel compatible spreadsheet<br />
   <br />
   <input type="submit" value=" Go " /></p>
   </form>

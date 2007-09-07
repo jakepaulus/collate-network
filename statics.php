@@ -173,8 +173,9 @@ function submit_static(){
 	exit();
   }
   
-  $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id) 
-		 VALUES('$long_ip_addr', '$name', '$contact', '$note', '$subnet_id')";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
+		 VALUES('$long_ip_addr', '$name', '$contact', '$note', '$subnet_id', '$username', now())";
 		 
   mysql_query($sql);
   
@@ -238,8 +239,8 @@ function update_static(){
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
-  elseif(empty($name) || empty($contact) || empty($note)){
-    $notice = "The name, contact, and note fields cannot be blank.";
+  elseif(empty($name) || empty($contact)){
+    $notice = "The name and contact fields cannot be blank.";
 	header("Location: statics.php?op=edit&static_id=$static_id&notice=$notice");
 	exit();
   }
@@ -254,8 +255,8 @@ function update_static(){
   }
   
   $subnet_id = mysql_result($result, 0, 0);  
-  
-  $sql = "UPDATE statics SET name='$name', contact='$contact', note='$note' WHERE id='$static_id'";
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $sql = "UPDATE statics SET name='$name', contact='$contact', note='$note', modified_by='$username', modified_at=now() WHERE id='$static_id'";
   mysql_query($sql);
   
   $notice = "The static IP reservation has been updated.";
