@@ -1,9 +1,9 @@
 <?php
+require_once('include/common.php');
+
 show_panel();
 
 function show_panel(){
-
-require_once('./include/common.php');
   $accesslevel = "1";
   $message = "control panel accessed";
   AccessControl($accesslevel, $message); 
