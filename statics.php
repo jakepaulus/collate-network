@@ -87,14 +87,12 @@ function add_static(){
   $contact = (empty($_GET['contact'])) ? '' : $_GET['contact'];
   
 
-  echo "<div id=\"iptip\" style=\"display: none;\" class=\"tip\">If the IP Address you're looking for is not
-		listed, the address is already in use or is not available because it was part of the range given for 
-		the DHCP scope in the subnet.<br /><br/></div>\n".
-       "<h1>Reserve a static IP</h1>\n".
+  echo "<h1>Reserve a static IP</h1>\n".
        "<br />\n".
+	   "<div style=\"float: left; width: 28%;\">\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
-       "  <p>IP Address:<br /><select name=\"ip_addr\">\n";
+       "  <p>IP Address:<br /><select id=\"ip\" name=\"ip_addr\">\n";
 	
   while(!empty($ipspace)){
     $ip = long2ip(array_pop($ipspace));
@@ -107,11 +105,17 @@ function add_static(){
   }   
 	   
   echo "</select>".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   " <a href=\"#\" onclick=\"new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value);\">[Ping]</a>\n".
 	   "  </p> \n".
        "  <p>Contact Person:<br /><input type=\"text\" name=\"contact\" value=\"$contact\"/></p>\n".
        "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-       "  <p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
+	   "  </div>\n".
+	   "  <div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n";
+  
+
+	   
+  echo "</div>  <p style=\"clear: left;\"><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />\n".
+	   "<input type=\"submit\" value=\" Go \" /></p>\n".
        "</form>";
 
    
