@@ -105,7 +105,9 @@ function add_static(){
   }   
 	   
   echo "</select>".
-	   " <a href=\"#\" onclick=\"new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value);\">[Ping]</a>\n".
+	   " <a href=\"#\" onclick=\"
+	   new Element.update('helper', '<p><img src=&quot;images/loading.gif&quot; alt=&quot;&quot; /></p>'); 
+	   new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value);\">[Ping]</a>\n".
 	   "  </p> \n".
        "  <p>Contact Person:<br /><input type=\"text\" name=\"contact\" value=\"$contact\"/></p>\n".
        "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
