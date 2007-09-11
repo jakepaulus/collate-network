@@ -406,7 +406,9 @@ function search(){
       $ip = long2ip($ip);
       echo "<tr>
 	       <td>$ip</td><td>$name</td><td>$contact</td>
-	       <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a></td>
+	       <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>
+		   &nbsp;
+		   <a href=\"statics.php?op=edit&amp;static_id=$static_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td>
 	       </tr>\n";
 	  echo "<tr><td>$note<td></tr>\n";
       echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
