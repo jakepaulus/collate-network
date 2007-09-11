@@ -12,7 +12,9 @@ switch($op){
 
 function ping_host(){
   $ip = escapeshellcmd($_GET['ip']);
-  if(empty($ip)){ return; }
+  
+  // This prevents someone from passing extra parameters to ping that could be dangerous e.g. DoS the server or use the server to DoS a host....
+  if(!ereg("^([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+$", $ip)){ return; }
   
   echo "<pre>";
   if (!strstr($_SERVER['DOCUMENT_ROOT'], ":")){ // *nix system
