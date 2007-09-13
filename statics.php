@@ -211,7 +211,7 @@ function edit_static(){
   
   list($name,$contact,$note) = mysql_fetch_row($result);
   
-  $accesslevel = "3";
+  $accesslevel = "2";
   $message = "Static IP edit form accessed: $name";
   AccessControl($accesslevel, $message); 
   
