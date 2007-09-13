@@ -165,11 +165,31 @@ function add_user(){
   $show4 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
   $show5 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
 
-  if($COLLATE['settings']['checklevel1perms'] === "1"){ $show1 = $show; }
-  if($COLLATE['settings']['checklevel2perms'] === "1"){ $show2 = $show; }
-  if($COLLATE['settings']['checklevel3perms'] === "1"){ $show3 = $show; }
-  if($COLLATE['settings']['checklevel4perms'] === "1"){ $show4 = $show; }
-  if($COLLATE['settings']['checklevel5perms'] === "1"){ $show5 = $show; }
+  if($COLLATE['settings']['perms'] <= "1"){ 
+    $show1 = $show; 
+	$show2 = $show;
+	$show3 = $show;
+	$show4 = $show;
+	$show5 = $show;
+  }
+  elseif($COLLATE['settings']['perms'] === "2"){ 
+    $show2 = $show;
+	$show3 = $show;
+	$show4 = $show;
+	$show5 = $show;
+  }
+  elseif($COLLATE['settings']['perms'] === "3"){ 
+    $show3 = $show;
+	$show4 = $show;
+	$show5 = $show; 
+  }
+  elseif($COLLATE['settings']['perms'] === "4"){ 
+    $show4 = $show; 
+	$show5 = $show;
+  }
+  elseif($COLLATE['settings']['perms'] === "5"){ 
+    $show5 = $show; 
+  }
   
   if($accesslevel == '1'){ 
     $checked1 = "checked=\"checked\""; 
