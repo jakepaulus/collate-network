@@ -18,8 +18,7 @@ store[1] = new Array(
 store[2] = new Array(
 	'user', 'username',
 	'level', 'level',
-	'message', 'message',
-	'last modified by', 'modified_by');
+	'message', 'message');
 
 function init()
 {
