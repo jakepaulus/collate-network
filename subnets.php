@@ -95,43 +95,49 @@ function add_subnet (){
 	array_push($ipspace, $block_long_end_ip);
 	$ipspace = array_reverse($ipspace);
     echo "<div style=\"float: left; width: 45%; padding-left: 10px;\">\n".
-	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n".
-	     "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n";
 		 
-    $ipspace_count = count($ipspace);
-    if(count($ipspace) > '2'){
-	  while(!empty($ipspace)){
-	    $long_start = array_pop($ipspace);
-		if(count($ipspace) != $ipspace_count - '1'){
-		  $start = long2ip($long_start + '1');
-		}
-		else{
-	      $start = long2ip($long_start);
-		}
-	    $long_end = array_pop($ipspace);
-		if(count($ipspace) > '1'){
-		  $end = long2ip($long_end - '1');
-		}
-		else{
-	      $end = long2ip($long_end);
-		}
-	    if($long_start + 1 != $long_end){
-	      echo "<tr><td>$start</td><td>$end</td></tr>";
-	    }
-	  }
+    if($ipspace[0] == $ipspace[1]){
+	  echo "<p>The IP Block is exhausted.</p>";
 	}
 	else{
-	  while(!empty($ipspace)){
-	    $long_start = array_pop($ipspace);
-	    $start = long2ip($long_start);
-	    $long_end = array_pop($ipspace);
-	    $end = long2ip($long_end);
-	    if($long_start + 1 != $long_end){
-	      echo "<tr><td>$start</td><td>$end</td></tr>";
+	  echo "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+    	
+      $ipspace_count = count($ipspace);
+      if(count($ipspace) > '2'){
+	    while(!empty($ipspace)){
+	      $long_start = array_pop($ipspace);
+		  if(count($ipspace) != $ipspace_count - '1'){
+		    $start = long2ip($long_start + '1');
+		  }
+		  else{
+	        $start = long2ip($long_start);
+		  }
+	      $long_end = array_pop($ipspace);
+		  if(count($ipspace) > '1'){
+		    $end = long2ip($long_end - '1');
+		  }
+		  else{
+	        $end = long2ip($long_end);
+	      }
+	      if($long_start + 1 != $long_end){
+	        echo "<tr><td>$start</td><td>$end</td></tr>";
+	      }
 	    }
 	  }
+	  else{
+	    while(!empty($ipspace)){
+	      $long_start = array_pop($ipspace);
+	      $start = long2ip($long_start);
+	      $long_end = array_pop($ipspace);
+	      $end = long2ip($long_end);
+	      if($long_start + 1 != $long_end){
+	        echo "<tr><td>$start</td><td>$end</td></tr>";
+	      }
+	    }
+	  }
+	  echo "</table>";
 	}
-	echo "</table>";
 	echo "</div><p style=\"clear: left;\"></p>";
   
 } // Ends add_subnet function
