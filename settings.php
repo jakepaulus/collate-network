@@ -92,6 +92,8 @@ require_once('./include/header.php');
 	<option value="9" <?php if($COLLATE['settings']['loginattempts'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
   </select></p>
   
+  <p><b>Default IP Usage Guidance:</b> (Optional)<br />
+  <textarea name="guidance" rows="10" cols="45"><?php echo $COLLATE['settings']['guidance']; ?></textarea></p>
   
   <p><input type="submit" value="Submit" /> <input type="reset" /></p>
   
@@ -112,7 +114,7 @@ global $COLLATE;
   $accountexpire = clean($_POST['accountexpire']);
   $passwdlength = clean($_POST['passwdlength']);
   $loginattempts = clean($_POST['loginattempts']);
-
+  $guidance = clean($_POST['guidance']);
   
 
   if($COLLATE['settings']['perms'] != $perms){
@@ -137,6 +139,10 @@ global $COLLATE;
   }
   if($COLLATE['settings']['loginattempts'] != $loginattempts) { 
     $sql = "UPDATE settings SET value='$loginattempts' WHERE name='loginattempts'";
+	mysql_query($sql);
+  }
+  if($COLLATE['settings']['guidance'] != $guidance) {
+    $sql = "UPDATE settings SET value='$guidance' WHERE name='guidance'";
 	mysql_query($sql);
   }
   

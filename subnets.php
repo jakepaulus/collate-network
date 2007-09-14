@@ -51,16 +51,20 @@ function add_subnet (){
   $dhcp_start = (empty($_GET['dhcp_start'])) ? '' : $_GET['dhcp_start'];
   $dhcp_end = (empty($_GET['dhcp_end'])) ? '' : $_GET['dhcp_end'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
+  $guidance = (empty($_GET['guidance'])) ? '' : $_GET['guidance'];
   $block_id = $_GET['block_id'];
 
   echo "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">Enter the name of the subnet here. The name should be 
 	descriptive of what the subnet will be used for. The name should be short and should not contain spaces.<br /><br/></div>\n".
 	"<div id=\"iptip\" style=\"display: none;\" class=\"tip\">Enter a subnet in CIDR notation such as 
 	\"192.168.1.0/24\" or using a subnet mask such as in \"192.168.1.0/255.255.255.0.\"<br /><br /></div>\n".
+	"<div id=\"guidance\" style=\"display: none;\" class=\"tip\">You may type a message that will be viewable to any user 
+	adding a static IP in this subnet. The message should help the user understand what IP to use for the type of device they
+	wish to reserve an IP address for. Some formatting will be maintained, HTML is not allowed.<br /><br /></div>\n".
 	"<h1>Allocate a Subnet</h1>\n".
 	"<br />\n".
-	"<div style=\"float: left; width: 45%; border-right: 1px solid #000;\">\n".
 	"<form action=\"subnets.php?op=submit\" method=\"post\">\n".
+	"<div style=\"float: left; width: 45%; border-right: 1px solid #000;\">\n".
 	"  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
@@ -72,8 +76,7 @@ function add_subnet (){
 	"  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n".
 	"  </p>\n".
 	"  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-	"  <p><input type=\"hidden\" name=\"block_id\" value=\"$block_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
-	"</form></div>\n";
+	" </div>";
 	
 	
 	// Here we'll figure out what available space is left in the IP Block and list it out for the user
@@ -138,8 +141,15 @@ function add_subnet (){
 	  }
 	  echo "</table>";
 	}
-	echo "</div><p style=\"clear: left;\"></p>";
-  
+	echo "</div>\n".
+	     "<p style=\"clear: left;\">\n".
+		 "<p>IP Guidance: (Optional) 
+		 <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+		 "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"45\">$guidance</textarea></p>\n".
+		 "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
+		 "<input type=\"submit\" value=\" Go \" /></p>\n".
+	     "</form>\n";
+	
 } // Ends add_subnet function
 
 function submit_subnet(){
@@ -150,6 +160,7 @@ function submit_subnet(){
   $dhcp_start = clean($_POST['dhcp_start']);
   $dhcp_end = clean($_POST['dhcp_end']);
   $note = clean($_POST['note']);
+  $guidance = clean($_POST['guidance']);
   
   $accesslevel = "3";
   $message = "Subnet Allocation form submitted: $name";
@@ -157,7 +168,8 @@ function submit_subnet(){
   
   if(empty($name) || empty($ip)){
     $notice = "Please verify that required fields have been completed.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	$guidance = urlencode($guidance);
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -166,13 +178,13 @@ function submit_subnet(){
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '0'){
     $notice = "The subnet name you have chosen is already in use in this IP block. Please use another name.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(!strstr($ip, '/')){
     $notice = "You must supply the number of mask bits or a mask.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -180,7 +192,7 @@ function submit_subnet(){
   
   if(ip2long($start_ip) == FALSE){
     $notice = "The IP you have entered is not valid.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -188,7 +200,7 @@ function submit_subnet(){
   $long_ip = ip2long($start_ip);
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
     $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   elseif(!strstr($mask, '.')){
@@ -199,13 +211,13 @@ function submit_subnet(){
   }
   elseif(!checkNetmask($mask)){
     $notice = "The mask you have specified is not valid.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(!empty($dhcp_start) && (ip2long($dhcp_start) == FALSE || ip2long($dhcp_end) == FALSE)){
     $notice = "The DHCP Range you specified is not valid.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -219,7 +231,7 @@ function submit_subnet(){
   if(!empty($dhcp_start) && ($long_dhcp_start < $long_ip || $long_dhcp_start > $long_end_ip || $long_dhcp_end < $long_dhcp_start
     || $long_dhcp_end > $long_end_ip)){
 	 $notice = "The DHCP Range you specified is not valid.";
-	 header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	 header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -227,7 +239,7 @@ function submit_subnet(){
   
   if(!empty($gateway) && (ip2long($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
     $notice = "The Default Gateway you specified is not valid.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -236,7 +248,7 @@ function submit_subnet(){
   $search = mysql_query($sql);
   if(mysql_num_rows($search) != '1'){
     $notice = "The IP you entered does not match the block you have selected.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
 	}
   
@@ -250,12 +262,12 @@ function submit_subnet(){
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '0'){
     $notice = "The IP you entered overlaps with an subnet in the database.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at) 
-		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now())";
+  $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
+		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
   mysql_query($sql);
   
   // Add an ACL for the DHCP range so users don't assign a static IP inside a DHCP scope.
@@ -282,6 +294,7 @@ function submit_subnet(){
 function edit_subnet(){
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
+  $guidance = (empty($_GET['guidance'])) ? '' : $_GET['guidance'];
   
   if(empty($subnet_id)){
     $notice = "Please select a block, then a subnet to edit.";
@@ -289,7 +302,7 @@ function edit_subnet(){
 	exit();
   }
   
-  $sql = "SELECT name, note FROM subnets WHERE id='$subnet_id'";
+  $sql = "SELECT name, note, guidance FROM subnets WHERE id='$subnet_id'";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
@@ -298,7 +311,7 @@ function edit_subnet(){
 	exit();
   }
   
-  list($name,$note) = mysql_fetch_row($result);
+  list($name,$note,$guidance) = mysql_fetch_row($result);
   
   $accesslevel = "3";
   $message = "Subnet edit form accessed: $name";
@@ -315,7 +328,10 @@ function edit_subnet(){
 	$dhcp_end = long2ip($long_dhcp_end);
   }
   
-  echo "<h1>Update Subnet: $name</h1>\n".
+  echo "<div id=\"guidance\" style=\"display: none;\" class=\"tip\">You may type a message that will be viewable to any user 
+	   adding a static IP in this subnet. The message should help the user understand what IP to use for the type of device they
+	   wish to reserve an IP address for. Some formatting will be maintained, HTML is not allowed.<br /><br /></div>\n".
+       "<h1>Update Subnet: $name</h1>\n".
 	   "<br />\n".
 	   "<form action=\"subnets.php?op=update\" method=\"POST\">\n".
 	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
@@ -326,7 +342,10 @@ function edit_subnet(){
 	     "  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n";
   }
 	   
-  echo "  <p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
+  echo "<p>IP Guidance: (Optional) 
+	   <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"45\" />$guidance</textarea></p>\n".
+       "  <p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
 	   "</form>\n";
 
 } // Ends edit_subnet function
@@ -340,6 +359,7 @@ function update_subnet(){
   $long_dhcp_start = ip2long($dhcp_start);
   $dhcp_end = (empty($_POST['dhcp_end'])) ? '' : $_POST['dhcp_end'];
   $long_dhcp_end = ip2long($dhcp_end);
+  $guidance = (empty($_POST['guidance'])) ? '' : clean($_POST['guidance']);
   
   $accesslevel = "3";
   $message = "Subnet edit form submitted: $name";
@@ -352,13 +372,13 @@ function update_subnet(){
   }
   elseif(empty($name)){
     $notice = "The name field cannot be blank.";
-	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&notice=$notice");
+	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(!empty($dhcp_start) && (ip2long($dhcp_start) == FALSE || ip2long($dhcp_end) == FALSE)){
     $notice = "The DHCP Range you specified is not valid.";
-	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&notice=$notice");
+	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -376,7 +396,7 @@ function update_subnet(){
   if(!empty($dhcp_start) && ($long_dhcp_start < $long_ip || $long_dhcp_start > $long_end_ip || $long_dhcp_end < $long_dhcp_start
     || $long_dhcp_end > $long_end_ip)){
 	 $notice = "The DHCP Range you specified is not valid.";
-	 header("Location: subnets.php?op=edit&subnet_id=$subnet_id&notice=$notice");
+	 header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -388,7 +408,7 @@ function update_subnet(){
 	exit();
   }
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "UPDATE subnets SET name='$name', note='$note', modified_by='$username', modified_at=now() WHERE id='$subnet_id'";
+  $sql = "UPDATE subnets SET name='$name', note='$note', modified_by='$username', modified_at=now(), guidance='$guidance' WHERE id='$subnet_id'";
   mysql_query($sql);
   
   $sql = "UPDATE acl SET start_ip='$long_dhcp_start', end_ip='$long_dhcp_end' WHERE name='DHCP' AND apply='$subnet_id'";

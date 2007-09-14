@@ -8,6 +8,10 @@ switch($op){
 	ping_host();
 	break;
 	
+	case "guidance";
+	ip_guidance();
+	break;
+	
 }
 
 function ping_host(){
@@ -25,5 +29,29 @@ function ping_host(){
   }
   echo "</pre>";
 } // Ends ping_host function
+
+
+function ip_guidance(){
+  require_once('include/common.php');
   
+  $subnet_id = $_GET['subnet_id'];
+  
+  if(!is_numeric($subnet_id)){ return; }
+  
+  $sql = "SELECT guidance FROM subnets WHERE id='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  list($guidance) = mysql_fetch_row($result);
+
+  if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
+    echo "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
+	     guidance information can be input into the settings page by an administrator.</p>";
+  }
+  elseif(!empty($guidance)){
+	echo "<p>".nl2br($guidance)."</p>";
+  }
+  else{ 
+    echo nl2br($COLLATE['settings']['guidance']);
+  }
+} // Ends ip_guidance function  
 ?>

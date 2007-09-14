@@ -79,7 +79,7 @@ function add_static(){
 	}    
   }
   $ipspace = array_reverse($ipspace);
-  $suggested_ip = long2ip(array_pop($ipspace));
+  $dotzeroaddress = array_pop($ipspace);
   
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip_addr = (empty($_GET['ip_addr'])) ? '' : $_GET['ip_addr'];
@@ -88,7 +88,8 @@ function add_static(){
   
 
   echo "<h1>Reserve a static IP</h1>\n".
-       "<br />\n".
+       "<p align=\"right\"><a href=\"#\" 
+	   onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); \">IP Guidance</a>\n".
 	   "<div style=\"float: left; width: 28%;\">\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
@@ -209,7 +210,7 @@ function edit_static(){
 	exit();
   }
   
-  list($name,$contact,$note) = mysql_fetch_row($result);
+  list($name,$contact,$note,$guidance) = mysql_fetch_row($result);
   
   $accesslevel = "2";
   $message = "Static IP edit form accessed: $name";

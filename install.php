@@ -1,22 +1,19 @@
 <?php
-
-require_once('./include/db_connect.php');
-
-$sql = 
+$install = 
 "
-DROP TABLE IF EXISTS `acl`;;
+DROP TABLE IF EXISTS `acl`;
 CREATE TABLE `acl` (
-  `id` tinyint(9) NOT NULL auto_increment,
+  `id` int(9) NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
   `apply` varchar(25) NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `blocks`;;
+DROP TABLE IF EXISTS `blocks`;
 CREATE TABLE `blocks` (
-  `id` tinyint(9) NOT NULL auto_increment,
+  `id` int(9) NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
@@ -25,11 +22,11 @@ CREATE TABLE `blocks` (
   `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `logs`;;
+DROP TABLE IF EXISTS `logs`;
 CREATE TABLE `logs` (
-  `id` tinyint(11) NOT NULL auto_increment,
+  `id` int(11) NOT NULL auto_increment,
   `occuredat` datetime NOT NULL,
   `username` varchar(30) NOT NULL,
   `ipaddress` varchar(15) NOT NULL,
@@ -37,38 +34,39 @@ CREATE TABLE `logs` (
   `message` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `username` (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `settings`;;
+DROP TABLE IF EXISTS `settings`;
 CREATE TABLE `settings` (
   `name` varchar(50) NOT NULL,
   `value` varchar(50) NOT NULL,
   PRIMARY KEY  (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO `settings` VALUES ('passwdlength', '5');;
-INSERT INTO `settings` VALUES ('accountexpire', '60');;
-INSERT INTO `settings` VALUES ('loginattempts', '4');;
-INSERT INTO `settings` VALUES ('version', '1.0');;
-INSERT INTO `settings` VALUES ('perms', '6');;
+INSERT INTO `settings` VALUES ('passwdlength', '5');
+INSERT INTO `settings` VALUES ('accountexpire', '60');
+INSERT INTO `settings` VALUES ('loginattempts', '4');
+INSERT INTO `settings` VALUES ('version', '1.0');
+INSERT INTO `settings` VALUES ('perms', '6');
+INSERT INTO `settings` (`name`, `value`) VALUES ('guidance', '');
 
-DROP TABLE IF EXISTS `statics`;;
+DROP TABLE IF EXISTS `statics`;
 CREATE TABLE `statics` (
-  `id` tinyint(10) NOT NULL auto_increment,
+  `id` int(10) NOT NULL auto_increment,
   `ip` int(10) NOT NULL,
   `name` varchar(25) NOT NULL,
   `contact` varchar(25) NOT NULL,
   `note` varchar(255) NOT NULL,
-  `subnet_id` tinyint(9) NOT NULL,
+  `subnet_id` int(9) NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `ip` (`ip`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `subnets`;;
+DROP TABLE IF EXISTS `subnets`;
 CREATE TABLE `subnets` (
-  `id` tinyint(9) NOT NULL auto_increment,
+  `id` int(9) NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
@@ -77,11 +75,12 @@ CREATE TABLE `subnets` (
   `block_id` tinyint(9) NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
+  `guidance` longtext NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `users`;;
+DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(9) NOT NULL auto_increment,
   `username` varchar(25) NOT NULL,
@@ -97,7 +96,32 @@ CREATE TABLE `users` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 ";
 
-$results = multiple_query($sql);
+$upgrade_from_one_dot_zero = 
+"
+ALTER TABLE `subnets` ADD `guidance` LONGTEXT NOT NULL;
+ALTER TABLE `blocks` CHANGE `id` `id` INT( 9 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `logs` CHANGE `id` `id` INT( 11 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `statics` CHANGE `id` `id` INT( 10 ) NOT NULL AUTO_INCREMENT, CHANGE `subnet_id` `subnet_id` INT( 9 ) NOT NULL;
+ALTER TABLE `subnets` CHANGE `id` `id` INT( 9 ) NOT NULL AUTO_INCREMENT , CHANGE `block_id` `block_id` INT( 9 ) NOT NULL 
+INSERT INTO `settings` (`name`, `value`) VALUES ('guidance', '');
+UPDATE `settings` SET `value` = '1.2' WHERE `name` = 'version';
+";
+
+
+require_once('./include/db_connect.php');
+
+$sql = "select value from settings where name='version'";
+$result = mysql_query($sql);
+
+if(mysql_num_rows($result) != '0') { // See what version we're on
+  $version = mysql_result($result, 0, 0);
+  if($version == '1.0'){
+    $results = multiple_query("$upgrade_from_one_dot_zero");
+  }
+}
+else{ // We're installing
+  $results = multiple_query($install);
+}
 
 $tok = strtok($results, "<br />");
 
@@ -124,14 +148,14 @@ else{ // Everything went well.
 
 function multiple_query($sql)
    {
-   $tok = strtok($sql, ";;");
+   $tok = strtok($sql, ";");
    while ($tok)
        {
        mysql_query($tok);
 	   $results = mysql_error()."<br />$results<br /><br />";
-       $tok = strtok(";;");
+       $tok = strtok(";");
        }
    return $results;
    }
-   
+   */
 ?>

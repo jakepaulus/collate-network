@@ -9,34 +9,29 @@ that is using them.
 
 
 
-Installation:
-Installing this program is a two-part process. I assume that you already have 
-a PHP-enabled web server and a MySQL database server installed and configured. 
+Deployment
 
-Start by unpacking the zip archive you downloaded from Collate.info. Browse 
-the folder you have unpacked for /include/db_connect.php. There are four settings 
-in this file that you must change: the database server's IP Address/Hostname, the 
+Installing this program is a two-part process. I assume that you already have a 
+PHP-enabled web server and a MySQL database server installed and configured.
+
+Start by unpacking the zip archive you downloaded from Collate.info. Browse the 
+folder you have unpacked for /include/db_connect.php. There are four settings in 
+this file that you must change: the database server's IP Address/Hostname, the 
 database username, the database password, and the name of the database for 
 Collate:Inventory to use. The database username you specify should have full 
-rights to the database. 
+rights to the database.
 
-Now that you have prepared the program, upload it to your webserver. Once in 
-place, browse to the install.php file on your webserver with any web browser. 
-Browsing to this page will load the necessary tables into the database. This 
-process will delete any existing tables of the same names if they exist, so it 
-is important that you use a blank database. It is important to delete the 
-install.php file from your web server once you are given a notice stating 
-installation was successful or someone browsing to the page would wipe out 
-your database!
+Now that you have prepared the program, upload it to your webserver.
 
 
 
-General Usage:
-By default, full access is granted for all people browsing the site without 
-logging in. To correct this, go to the Control Panel and use the Settings page 
-to lock the application down. You will find, however, that you cannot do this 
-without first creating a user with Administrator rights and setting a password 
-for this user.
+Installation/Upgrade
+
+Once the files have been uploaded, browse to the install.php file on your 
+webserver with any web browser. Browsing to this page will load the necessary 
+tables into the database. If data already exists and Collate:Network finds a 
+version number for the database, updates will be done to the schema as necessary 
+to bring your program up-to-date. 
 
 
 
