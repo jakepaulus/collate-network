@@ -448,7 +448,7 @@ function list_subnets(){
        "<p style=\"text-align: right;\"><a href=\"subnets.php?op=add&amp;block_id=$block_id\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Allocate a Subnet </a></p>";
 
-  $sql = "SELECT `id`, `name`, `start_ip`, `mask`, `note` FROM `subnets` 
+  $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` 
 	  WHERE `block_id` = '$block_id' ORDER BY `name` ASC";
 
     
@@ -457,21 +457,49 @@ function list_subnets(){
 	     "<tr><th align=\"left\">Subnet Name</th>".
 	     "<th align=\"left\">Network Address</th>".
 	     "<th align=\"left\">Subnet Mask</th>".
+		 "<th align=\"left\">Statics Used</th>".
 	     "<th align=\"left\">Actions</th></tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
   $results = mysql_query($sql);  
-  while(list($subnet_id,$name,$long_start_ip,$long_mask,$note) = mysql_fetch_row($results)){
+  while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($results)){
     $start_ip = long2ip($long_start_ip);
 	$mask = long2ip($long_mask);
 	
+	$subnet_size = $long_end_ip - $long_start_ip;
+	
+	$sql = "SELECT COUNT(*) FROM statics WHERE subnet_id='$subnet_id'";
+	$result = mysql_query($sql);
+	$static_count = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
+	$result = mysql_query($sql);
+	while(list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result)){
+	  $subnet_size = $subnet_size - ($long_dhcp_end - $long_dhcp_start);
+	}
+	
+	$percent_subnet_used = round('100' * ($static_count / $subnet_size));
+	
+	if($percent_subnet_used > '90'){
+	  $font_color = 'red';
+	}
+	elseif($percent_subnet_used > '70'){
+	  $font_color = 'orange';
+	}
+	else{
+	  $font_color = 'green';
+	}
+	
+	$percent_subnet_used = "<b>~$percent_subnet_used%</b>";
+	
     echo "<tr>
 	     <td><b><a href=\"statics.php?subnet_id=$subnet_id\">$name</a></b></td><td>$start_ip</td>
-		 <td>$mask</td>
+		 <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
 		 <td><a href=\"subnets.php?op=delete&amp;block_id=$block_id&amp;subnet_id=$subnet_id\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
 		 &nbsp;<a href=\"subnets.php?op=edit&amp;subnet_id=$subnet_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td>
+		 
 		 </tr>\n";
-	echo "<tr><td>$note<td></tr>\n";
+	echo "<tr><td>$note</td></tr>\n";
     echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
   }
   
