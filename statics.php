@@ -301,9 +301,18 @@ function list_statics(){
   
 
   $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY ip ASC";
-  $results = mysql_query($sql);
+    
+  $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
+
+  $limit = "10";
+  $lowerlimit = $page * $limit - $limit;
+  $totalrows = mysql_num_rows(mysql_query($sql));
+  $sql .= " LIMIT $lowerlimit, $limit";
+  $row = mysql_query($sql);
+  $rows = mysql_num_rows($row);
+  $numofpages = ceil($totalrows/$limit); 
   
-  while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($results)){
+  while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
     $ip = long2ip($ip);
     echo "<tr>
 	     <td>$ip</td><td>$name</td><td>$contact</td>
@@ -329,7 +338,91 @@ function list_statics(){
 		 <tr><th>Starting IP Address</th><th>Ending IP Address</th></tr>
 		 <tr><td>$dhcp_start</td><td>$dhcp_end</td></tr>
 		 </table>\n";
-  } 
+  }
+  
+  $goto = $_SERVER['REQUEST_URI'];
+  if(stristr($_SERVER['REQUEST_URI'], "page")){
+    $goto = preg_replace("{[&]*page=[0-9]*}", '', $goto); // Matches a string containing page=[zero or more numeric characters] and replaces with nothing
+  }
+  if(preg_match("/\?[a-zA-Z]/", $goto)){  // At this point there could be a ? mark, but it might not be followed by anything...in which case we don't want to append an &.
+    $goto = $goto."&amp;";
+  }
+  elseif(!stristr($goto, "?")){
+    $goto = $goto."?";
+  }  
+    
+  if($numofpages > "1") {
+    if($page != "1") { // Generate Prev link only if previous pages exist.
+      $pageprev = $page - "1";
+       echo "<a href=\"{$goto}page=$pageprev\"> Prev </a>";
+    }
+    
+	if($numofpages < "10"){
+	  $i = "1";
+      while($i < $page) { // Build all page number links up to the current page
+        echo "<a href=\"{$goto}page=$i\"> $i </a>";
+	    $i++;
+      }
+	}
+	else {
+	  if($page > "4") {
+	    echo "...";
+	  }
+	  $i = $page - "3";
+	  while($i < $page ) { // Build all page number links up to the current page
+	    if($i > "0"){
+          echo "<a href=\"{$goto}page=$i\"> $i </a>";
+	    }
+		$i++;
+      }
+	}
+    echo "[$page]"; // List Current page
+	
+	if($numofpages < "10"){	
+      $i = $page + "1"; // Now we'll build all the page numbers after the current page if they exist.
+      while(($numofpages-$page > "0") && ($i < $numofpages + "1")) {
+        echo "<a href=\"{$goto}page=$i\"> $i </a>";
+        $i++;
+      }
+	}
+	else{
+	  $i = $page + "1";
+	  $j = "1";
+	  while(($numofpages-$page > "0") && ($i <= $numofpages) && ($j <= "3")) {
+        echo "<a href=\"{$goto}page=$i\"> $i </a>";
+        $i++;
+		$j++;
+      }
+	  if($i <= $numofpages){
+	    echo "...";
+	  }
+	}
+    if($page < $numofpages) { // Generate Next link if there is a page after this one
+      $nextpage = $page + "1";
+	  echo "<a href=\"{$goto}page=$nextpage\"> Next </a>";
+	}
+  }
+      
+  // Regardless of how many pages there are, well show how many records there are and what records we're displaying.
+
+  if($lowerlimit == "0") { // The program is happy to start counting with 0, humans aren't.
+    $lowerlimit = "1";
+  }
+  else{
+    $lowerlimit++;
+  }
+  $upperlimit = $lowerlimit + $limit - 1;
+  if($upperlimit > $totalrows) {
+    $upperlimit = $totalrows;
+  }
+  if($result_count <= $totalrows){
+    $howmany = "$lowerlimit - $upperlimit out of";
+  }
+  else{
+    $howmany = "";
+  }
+  echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
+  
 } // Ends list_statics function
 
 function delete_static(){

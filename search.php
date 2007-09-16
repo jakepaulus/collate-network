@@ -512,7 +512,6 @@ function search(){
 	  $howmany = "";
 	}
     echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
-  require_once('./include/footer.php'); 
 
   require_once('./include/footer.php');
   
