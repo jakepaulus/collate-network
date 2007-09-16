@@ -38,6 +38,8 @@ switch($op){
 require_once('./include/footer.php');
 
 function add_static(){
+  global $COLLATE;
+
   if(!isset($_GET['subnet_id']) || empty($_GET['subnet_id'])){
     $notice = "Please select an IP block and a subnet to reserve an IP address from.";
 	header("Location: blocks.php?notice=$notice");
@@ -117,6 +119,21 @@ function add_static(){
 	   "  </div>\n".
 	   "  <div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n";
   
+  $sql = "SELECT guidance FROM subnets WHERE id='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  $guidance = mysql_result($result, 0, 0);
+  
+  if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
+    echo "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
+	     guidance information can be input into the settings page by an administrator.</p>";
+  }
+  elseif(!empty($guidance)){
+	echo "<p>".nl2br($guidance)."</p>";
+  }
+  else{ 
+    echo nl2br($COLLATE['settings']['guidance']);
+  }
 
 	   
   echo "</div>  <p style=\"clear: left;\"><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />\n".
