@@ -335,12 +335,9 @@ function edit_subnet(){
 	   "<br />\n".
 	   "<form action=\"subnets.php?op=update\" method=\"POST\">\n".
 	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
-	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n";
-
-  if(!empty($dhcp_start)){
-    echo "  <p>DHCP Range:<br /><input type=\"text\" name=\"dhcp_start\" value=\"$dhcp_start\" size=\"15\" />\n".
-	     "  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n";
-  }
+	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
+	   "  <p>DHCP Range:<br /><input type=\"text\" name=\"dhcp_start\" value=\"$dhcp_start\" size=\"15\" />\n".
+	   "  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n";
 	   
   echo "<p>IP Guidance: (Optional) 
 	   <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
@@ -411,7 +408,14 @@ function update_subnet(){
   $sql = "UPDATE subnets SET name='$name', note='$note', modified_by='$username', modified_at=now(), guidance='$guidance' WHERE id='$subnet_id'";
   mysql_query($sql);
   
-  $sql = "UPDATE acl SET start_ip='$long_dhcp_start', end_ip='$long_dhcp_end' WHERE name='DHCP' AND apply='$subnet_id'";
+  $sql = "SELECT id FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
+  $result = mysql_query($sql);
+  if(mysql_num_rows($result) == 0){
+    $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('DHCP', '$long_dhcp_start', '$long_dhcp_end', '$subnet_id')";
+  }
+  else{
+    $sql = "UPDATE acl SET start_ip='$long_dhcp_start', end_ip='$long_dhcp_end' WHERE name='DHCP' AND apply='$subnet_id'";
+  }
   mysql_query($sql);
   
   $notice = "The subnet has been updated.";

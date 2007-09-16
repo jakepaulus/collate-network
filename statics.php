@@ -76,7 +76,7 @@ function add_static(){
   if(mysql_num_rows($results) > '0'){
     $statics = array();
     while($static_ip = mysql_fetch_row($results)){
-	  array_push($statics, $static_ip); 
+	  array_push($statics, $static_ip['0']); 
 	}
 	$ipspace = array_diff($ipspace, $statics);  
   }
@@ -325,19 +325,8 @@ function list_statics(){
   }
   echo "</table><br />";
   
-  $sql = "SELECT start_ip, end_ip FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) == '1'){
-    list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result);
-	$dhcp_start = long2ip($long_dhcp_start);
-	$dhcp_end = long2ip($long_dhcp_end);
-	
-	echo "<h1>DHCP Range in \"$subnet_name\"</h1><br />\n".
-	     "<table width=\"55%\">
-		 <tr><th>Starting IP Address</th><th>Ending IP Address</th></tr>
-		 <tr><td>$dhcp_start</td><td>$dhcp_end</td></tr>
-		 </table>\n";
+  if($rows < 1){
+    echo "<p>No static IPs have been reserved for this subnet yet.</p>";
   }
   
   $goto = $_SERVER['REQUEST_URI'];
@@ -421,7 +410,25 @@ function list_statics(){
   else{
     $howmany = "";
   }
-  echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
+  
+  if($rows > 0){
+    echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
+  } 
+  
+  $sql = "SELECT start_ip, end_ip FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) == '1'){
+    list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result);
+	$dhcp_start = long2ip($long_dhcp_start);
+	$dhcp_end = long2ip($long_dhcp_end);
+	
+	echo "<br /><h1>DHCP Range in \"$subnet_name\"</h1><br />\n".
+	     "<table width=\"55%\">
+		 <tr><th>Starting IP Address</th><th>Ending IP Address</th></tr>
+		 <tr><td>$dhcp_start</td><td>$dhcp_end</td></tr>
+		 </table>\n";
+  }
   
 } // Ends list_statics function
 
