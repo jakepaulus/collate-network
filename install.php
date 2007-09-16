@@ -1,110 +1,110 @@
 <?php
 $install = 
 "
-DROP TABLE IF EXISTS `acl`;
-CREATE TABLE `acl` (
-  `id` int(9) NOT NULL auto_increment,
-  `name` varchar(25) NOT NULL,
-  `start_ip` int(10) NOT NULL,
-  `end_ip` int(10) NOT NULL,
-  `apply` varchar(25) NOT NULL,
-  PRIMARY KEY  (`id`)
+DROP TABLE IF EXISTS acl;
+CREATE TABLE acl (
+  id int(9) NOT NULL auto_increment,
+  name varchar(25) NOT NULL,
+  start_ip int(10) NOT NULL,
+  end_ip int(10) NOT NULL,
+  apply varchar(25) NOT NULL,
+  PRIMARY KEY  (id)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `blocks`;
-CREATE TABLE `blocks` (
-  `id` int(9) NOT NULL auto_increment,
-  `name` varchar(25) NOT NULL,
-  `start_ip` int(10) NOT NULL,
-  `end_ip` int(10) NOT NULL,
-  `note` varchar(255) NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
-  `modified_at` datetime NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `name` (`name`)
+DROP TABLE IF EXISTS blocks;
+CREATE TABLE blocks (
+  id int(9) NOT NULL auto_increment,
+  name varchar(25) NOT NULL,
+  start_ip int(10) NOT NULL,
+  end_ip int(10) NOT NULL,
+  note varchar(255) NOT NULL,
+  modified_by varchar(25) NOT NULL,
+  modified_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `logs`;
-CREATE TABLE `logs` (
-  `id` int(11) NOT NULL auto_increment,
-  `occuredat` datetime NOT NULL,
-  `username` varchar(30) NOT NULL,
-  `ipaddress` varchar(15) NOT NULL,
-  `level` varchar(6) NOT NULL,
-  `message` varchar(255) NOT NULL,
-  PRIMARY KEY  (`id`),
-  KEY `username` (`username`)
+DROP TABLE IF EXISTS logs;
+CREATE TABLE logs (
+  id int(11) NOT NULL auto_increment,
+  occuredat datetime NOT NULL,
+  username varchar(30) NOT NULL,
+  ipaddress varchar(15) NOT NULL,
+  level varchar(6) NOT NULL,
+  message varchar(255) NOT NULL,
+  PRIMARY KEY  (id),
+  KEY username (username)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `settings`;
-CREATE TABLE `settings` (
-  `name` varchar(50) NOT NULL,
-  `value` varchar(50) NOT NULL,
-  PRIMARY KEY  (`name`)
+DROP TABLE IF EXISTS settings;
+CREATE TABLE settings (
+  name varchar(50) NOT NULL,
+  value varchar(50) NOT NULL,
+  PRIMARY KEY  (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO `settings` VALUES ('passwdlength', '5');
-INSERT INTO `settings` VALUES ('accountexpire', '60');
-INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.0');
-INSERT INTO `settings` VALUES ('perms', '6');
-INSERT INTO `settings` (`name`, `value`) VALUES ('guidance', '');
+INSERT INTO settings VALUES ('passwdlength', '5');
+INSERT INTO settings VALUES ('accountexpire', '60');
+INSERT INTO settings VALUES ('loginattempts', '4');
+INSERT INTO settings VALUES ('version', '1.0');
+INSERT INTO settings VALUES ('perms', '6');
+INSERT INTO settings (name, value) VALUES ('guidance', '');
 
-DROP TABLE IF EXISTS `statics`;
-CREATE TABLE `statics` (
-  `id` int(10) NOT NULL auto_increment,
-  `ip` int(10) NOT NULL,
-  `name` varchar(25) NOT NULL,
-  `contact` varchar(25) NOT NULL,
-  `note` varchar(255) NOT NULL,
-  `subnet_id` int(9) NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
-  `modified_at` datetime NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `ip` (`ip`)
+DROP TABLE IF EXISTS statics;
+CREATE TABLE statics (
+  id int(10) NOT NULL auto_increment,
+  ip int(10) NOT NULL,
+  name varchar(25) NOT NULL,
+  contact varchar(25) NOT NULL,
+  note varchar(255) NOT NULL,
+  subnet_id int(9) NOT NULL,
+  modified_by varchar(25) NOT NULL,
+  modified_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY ip (ip)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `subnets`;
-CREATE TABLE `subnets` (
-  `id` int(9) NOT NULL auto_increment,
-  `name` varchar(25) NOT NULL,
-  `start_ip` int(10) NOT NULL,
-  `end_ip` int(10) NOT NULL,
-  `mask` int(10) NOT NULL,
-  `note` varchar(255) NOT NULL,
-  `block_id` tinyint(9) NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
-  `modified_at` datetime NOT NULL,
-  `guidance` longtext NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `name` (`name`)
+DROP TABLE IF EXISTS subnets;
+CREATE TABLE subnets (
+  id int(9) NOT NULL auto_increment,
+  name varchar(25) NOT NULL,
+  start_ip int(10) NOT NULL,
+  end_ip int(10) NOT NULL,
+  mask int(10) NOT NULL,
+  note varchar(255) NOT NULL,
+  block_id tinyint(9) NOT NULL,
+  modified_by varchar(25) NOT NULL,
+  modified_at datetime NOT NULL,
+  guidance longtext NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-  `id` int(9) NOT NULL auto_increment,
-  `username` varchar(25) NOT NULL,
-  `passwd` varchar(40) NOT NULL,
-  `tmppasswd` varchar(40) NOT NULL,
-  `accesslevel` tinyint(1) NOT NULL default '0',
-  `phone` varchar(25) NOT NULL,
-  `email` varchar(50) NOT NULL,
-  `loginattempts` tinyint(1) NOT NULL,
-  `passwdexpire` datetime NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `username` (`username`)
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+  id int(9) NOT NULL auto_increment,
+  username varchar(25) NOT NULL,
+  passwd varchar(40) NOT NULL,
+  tmppasswd varchar(40) NOT NULL,
+  accesslevel tinyint(1) NOT NULL default '0',
+  phone varchar(25) NOT NULL,
+  email varchar(50) NOT NULL,
+  loginattempts tinyint(1) NOT NULL,
+  passwdexpire datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY username (username)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 ";
 
 $upgrade_from_one_dot_zero = 
 "
-ALTER TABLE `subnets` ADD `guidance` LONGTEXT NOT NULL;
-ALTER TABLE `blocks` CHANGE `id` `id` INT( 9 ) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `logs` CHANGE `id` `id` INT( 11 ) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `statics` CHANGE `id` `id` INT( 10 ) NOT NULL AUTO_INCREMENT, CHANGE `subnet_id` `subnet_id` INT( 9 ) NOT NULL;
-ALTER TABLE `subnets` CHANGE `id` `id` INT( 9 ) NOT NULL AUTO_INCREMENT , CHANGE `block_id` `block_id` INT( 9 ) NOT NULL 
-INSERT INTO `settings` (`name`, `value`) VALUES ('guidance', '');
-UPDATE `settings` SET `value` = '1.2' WHERE `name` = 'version';
+ALTER TABLE subnets ADD guidance LONGTEXT NOT NULL;
+ALTER TABLE blocks CHANGE id id INT( 9 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE logs CHANGE id id INT( 11 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE statics CHANGE id id INT( 10 ) NOT NULL AUTO_INCREMENT, CHANGE subnet_id subnet_id INT( 9 ) NOT NULL;
+ALTER TABLE subnets CHANGE id id INT( 9 ) NOT NULL AUTO_INCREMENT , CHANGE block_id block_id INT( 9 ) NOT NULL;
+INSERT INTO settings (name, value) VALUES ('guidance', '');
+UPDATE settings SET value = '1.2' WHERE name = 'version';
 ";
 
 
