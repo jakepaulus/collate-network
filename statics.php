@@ -54,7 +54,7 @@ function add_static(){
   }
   
   require_once('./include/header.php');
-  
+    
   list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($results);
   $first_usable = $long_subnet_start_ip;
   $last_usable = $long_subnet_end_ip - '1';
@@ -68,19 +68,21 @@ function add_static(){
     $acl = range($start_ip, $end_ip);
 	$ipspace = array_diff($ipspace, $acl);
   }
-  
+    
   $sql = "SELECT ip FROM statics WHERE subnet_id='$subnet_id'";
   $results = mysql_query($sql);
   
   
   if(mysql_num_rows($results) > '0'){
+    $statics = array();
     while($static_ip = mysql_fetch_row($results)){
-	  $ipspace = array_diff($ipspace, $static_ip); 
-	}    
+	  array_push($statics, $static_ip); 
+	}
+	$ipspace = array_diff($ipspace, $statics);  
   }
   $ipspace = array_reverse($ipspace);
   $dotzeroaddress = array_pop($ipspace);
-  
+    
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip_addr = (empty($_GET['ip_addr'])) ? '' : $_GET['ip_addr'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
@@ -120,8 +122,7 @@ function add_static(){
   echo "</div>  <p style=\"clear: left;\"><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />\n".
 	   "<input type=\"submit\" value=\" Go \" /></p>\n".
        "</form>";
-
-   
+      
 } // Ends add_static function
 
 function submit_static(){
