@@ -64,7 +64,7 @@ function add_subnet (){
 	"<h1>Allocate a Subnet</h1>\n".
 	"<br />\n".
 	"<form action=\"subnets.php?op=submit\" method=\"post\">\n".
-	"<div style=\"float: left; width: 45%; border-right: 1px solid #000;\">\n".
+	"<div style=\"float: left; width: 45%; \">\n".
 	"  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
@@ -97,10 +97,10 @@ function add_subnet (){
 	}
 	array_push($ipspace, $block_long_end_ip);
 	$ipspace = array_reverse($ipspace);
-    echo "<div style=\"float: left; width: 45%; padding-left: 10px;\">\n".
+    echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
 	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n";
 		 
-    if($ipspace[0] == $ipspace[1]){
+    if(1==2){
 	  echo "<p>The IP Block is exhausted.</p>";
 	}
 	else{
@@ -110,22 +110,26 @@ function add_subnet (){
       if(count($ipspace) > '2'){
 	    while(!empty($ipspace)){
 	      $long_start = array_pop($ipspace);
-		  if(count($ipspace) != $ipspace_count - '1'){
-		    $start = long2ip($long_start + '1');
+		  if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
+		    $start = long2ip($long_start + 1);
 		  }
 		  else{
 	        $start = long2ip($long_start);
 		  }
 	      $long_end = array_pop($ipspace);
 		  if(count($ipspace) > '1'){
-		    $end = long2ip($long_end - '1');
+		    $end = long2ip($long_end - 1);
 		  }
 		  else{
 	        $end = long2ip($long_end);
 	      }
-	      if($long_start + 1 != $long_end){
+	      if($long_start + 1 != $long_end && $long_start != $long_end){
 	        echo "<tr><td>$start</td><td>$end</td></tr>";
 	      }
+		  elseif($error != "stated"){
+		    echo "<tr><td colspan=\"2\">The IP Space is exhausted.</td></tr>";
+			$error = "stated";
+		  }
 	    }
 	  }
 	  else{

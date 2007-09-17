@@ -54,7 +54,7 @@ DROP TABLE IF EXISTS statics;
 CREATE TABLE statics (
   id int(10) NOT NULL auto_increment,
   ip int(10) NOT NULL,
-  name varchar(25) NOT NULL,
+  name varchar(50) NOT NULL,
   contact varchar(25) NOT NULL,
   note varchar(255) NOT NULL,
   subnet_id int(9) NOT NULL,
@@ -107,6 +107,11 @@ INSERT INTO settings (name, value) VALUES ('guidance', '');
 UPDATE settings SET value = '1.2' WHERE name = 'version';
 ";
 
+$upgrade_from_one_dot_two = 
+"
+ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
+";
+
 
 require_once('./include/db_connect.php');
 
@@ -117,16 +122,21 @@ if(mysql_num_rows($result) != '0') { // See what version we're on
   $version = mysql_result($result, 0, 0);
   if($version == '1.0'){
     $results = multiple_query("$upgrade_from_one_dot_zero");
+	$results .= multiple_query("$upgrade_from_one_dot_two");
+  }
+  elseif($version == '1.2'){
+    $results = multiple_query("$upgrade_from_one_dot_two");
   }
 }
 else{ // We're installing
   $results = multiple_query($install);
 }
 
+
 $tok = strtok($results, "<br />");
 
 if($tok){ // There were erors.
-    ?>
+?>
   <html>
   <head>
     <title>Error!</title>
@@ -134,12 +144,10 @@ if($tok){ // There were erors.
   <body>
   <h1>An error has occured.</h1>
   <p>Below you will find the mysql erros that prevented this application from installing properly.</p>
-  <?php
-  echo $results;
-  ?>
+  <?php echo $results; ?>
   </body>
   </html>
-  <?php
+<?php
 }
 else{ // Everything went well.
   $notice = "This application has been successfully installed. Please delete install.php from your web server.";
