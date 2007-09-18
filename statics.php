@@ -328,7 +328,7 @@ function list_statics(){
   $totalrows = mysql_num_rows(mysql_query($sql));
   $numofpages = ceil($totalrows/$limit);
   if($page > $numofpages){
-    $page = '1';
+    $page = $numofpages;
   }
   $lowerlimit = $page * $limit - $limit;
   $sql .= " LIMIT $lowerlimit, $limit";
