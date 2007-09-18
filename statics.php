@@ -255,7 +255,7 @@ function update_static(){
   $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
   
   
-  $accesslevel = "3";
+  $accesslevel = "2";
   $message = "Static IP edit form submitted: $name";
   AccessControl($accesslevel, $message); 
   

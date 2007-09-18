@@ -90,9 +90,9 @@ function add_subnet (){
 	array_push($ipspace, $block_long_start_ip);
 	
 	$sql = "SELECT start_ip, end_ip FROM subnets WHERE block_id = '$block_id' ORDER BY start_ip ASC";
-	$results = mysql_query($sql);
+	$subnet_rows = mysql_query($sql);
 	
-	while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($results)){
+	while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
 	  array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
 	}
 	array_push($ipspace, $block_long_end_ip);
@@ -100,51 +100,35 @@ function add_subnet (){
     echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
 	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n";
 		 
-    if(1==2){
-	  echo "<p>The IP Block is exhausted.</p>";
-	}
-	else{
-	  echo "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
-    	
-      $ipspace_count = count($ipspace);
-      if(count($ipspace) > '2'){
-	    while(!empty($ipspace)){
-	      $long_start = array_pop($ipspace);
-		  if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
-		    $start = long2ip($long_start + 1);
-		  }
-		  else{
-	        $start = long2ip($long_start);
-		  }
-	      $long_end = array_pop($ipspace);
-		  if(count($ipspace) > '1'){
-		    $end = long2ip($long_end - 1);
-		  }
-		  else{
-	        $end = long2ip($long_end);
-	      }
-	      if($long_start + 1 != $long_end && $long_start != $long_end){
-	        echo "<tr><td>$start</td><td>$end</td></tr>";
-	      }
-		  elseif($error != "stated"){
-		    echo "<tr><td colspan=\"2\">The IP Space is exhausted.</td></tr>";
-			$error = "stated";
-		  }
-	    }
+
+    $ipspace_count = count($ipspace);	 
+
+    echo "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+
+    while(!empty($ipspace)){
+	  $long_start = array_pop($ipspace);
+	  if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
+	    $start = long2ip($long_start + 1);
 	  }
 	  else{
-	    while(!empty($ipspace)){
-	      $long_start = array_pop($ipspace);
-	      $start = long2ip($long_start);
-	      $long_end = array_pop($ipspace);
-	      $end = long2ip($long_end);
-	      if($long_start + 1 != $long_end){
-	        echo "<tr><td>$start</td><td>$end</td></tr>";
-	      }
-	    }
+	    $start = long2ip($long_start);
 	  }
-	  echo "</table>";
+		
+	  $long_end = array_pop($ipspace);
+	  if(count($ipspace) > '1'){
+	    $end = long2ip($long_end - 1);
+	  }
+	  else{
+	    $end = long2ip($long_end);
+	  }
+		
+	  if($long_start + 1 != $long_end && $long_start != $long_end){
+	    echo "<tr><td>$start</td><td>$end</td></tr>";
+	  }
 	}
+ 
+	echo "</table>";
+	
 	echo "</div>\n".
 	     "<p style=\"clear: left;\">\n".
 		 "<p>IP Guidance: (Optional) 
