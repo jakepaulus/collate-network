@@ -309,19 +309,22 @@ function list_statics(){
   require_once('./include/header.php');
   
   $subnet_name = mysql_result($results, 0, 0);
-   
-  echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
-       "<p style=\"text-align: right;\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
-	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></p>\n".
-	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Actions</th></tr>".
-	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
-  
-
-  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY ip ASC";
-    
+     
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
-
-  $limit = "10";
+  $show = (!isset($_GET['show'])) ? "1" : $_GET['show'];
+  
+  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY ip ASC";
+  
+  if(is_numeric($show) && $show <= '250' && $show > '5'){
+    $limit = $show;
+  }
+  elseif($show > '250'){
+    echo "<div class=\"tip\"><p>You can only ask for up to 250 results per page.</p></div>";
+	$limit = '250';
+  }
+  else{
+    $limit = "10";
+  }
   $lowerlimit = $page * $limit - $limit;
   $totalrows = mysql_num_rows(mysql_query($sql));
   $sql .= " LIMIT $lowerlimit, $limit";
@@ -329,108 +332,67 @@ function list_statics(){
   $rows = mysql_num_rows($row);
   $numofpages = ceil($totalrows/$limit); 
   
+  echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
+       "<form action=\"statics.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">";
+
+  echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />Page: <select name=\"page\">";
+  
+  $listed_page = '1';
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
+	}
+	else{
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
+	}
+	$listed_page++;
+  }
+
+  echo "</select> out of $numofpages</p></td>
+  <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+  <input type=\"submit\" value=\" Go \" /></p></td>";
+   
+
+ echo "<td align=\"right\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
+	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></td></tr></table></form>\n".
+	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Actions</th></tr>".
+	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
+   
   while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
     $ip = long2ip($ip);
     echo "<tr>
 	     <td>$ip</td><td>$name</td><td>$contact</td>
 		 <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>
 		  &nbsp;
-		 &nbsp;<a href=\"statics.php?op=edit&amp;static_id=$static_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td>
+		 &nbsp;<a href=\"statics.php?op=edit&amp;static_id=$static_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></a></td>
 		 </tr>\n";
-	echo "<tr><td>$note<td></tr>\n";
+	echo "<tr><td>$note</td></tr>\n";
     echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
   }
-  echo "</table><br />";
+  echo "</table>";
   
   if($rows < 1){
     echo "<p>No static IPs have been reserved for this subnet yet.</p>";
   }
+  echo "<p>&nbsp;</p>";
+  echo "<form action=\"statics.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n".
+       "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />Page: <select name=\"page\">";
   
-  $goto = $_SERVER['REQUEST_URI'];
-  if(stristr($_SERVER['REQUEST_URI'], "page")){
-    $goto = preg_replace("{[&]*page=[0-9]*}", '', $goto); // Matches a string containing page=[zero or more numeric characters] and replaces with nothing
-  }
-  if(preg_match("/\?[a-zA-Z]/", $goto)){  // At this point there could be a ? mark, but it might not be followed by anything...in which case we don't want to append an &.
-    $goto = $goto."&amp;";
-  }
-  elseif(!stristr($goto, "?")){
-    $goto = $goto."?";
-  }  
-    
-  if($numofpages > "1") {
-    if($page != "1") { // Generate Prev link only if previous pages exist.
-      $pageprev = $page - "1";
-       echo "<a href=\"{$goto}page=$pageprev\"> Prev </a>";
-    }
-    
-	if($numofpages < "10"){
-	  $i = "1";
-      while($i < $page) { // Build all page number links up to the current page
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-	    $i++;
-      }
-	}
-	else {
-	  if($page > "4") {
-	    echo "...";
-	  }
-	  $i = $page - "3";
-	  while($i < $page ) { // Build all page number links up to the current page
-	    if($i > "0"){
-          echo "<a href=\"{$goto}page=$i\"> $i </a>";
-	    }
-		$i++;
-      }
-	}
-    echo "[$page]"; // List Current page
-	
-	if($numofpages < "10"){	
-      $i = $page + "1"; // Now we'll build all the page numbers after the current page if they exist.
-      while(($numofpages-$page > "0") && ($i < $numofpages + "1")) {
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-        $i++;
-      }
+  $listed_page = '1';
+  
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
 	}
 	else{
-	  $i = $page + "1";
-	  $j = "1";
-	  while(($numofpages-$page > "0") && ($i <= $numofpages) && ($j <= "3")) {
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-        $i++;
-		$j++;
-      }
-	  if($i <= $numofpages){
-	    echo "...";
-	  }
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
 	}
-    if($page < $numofpages) { // Generate Next link if there is a page after this one
-      $nextpage = $page + "1";
-	  echo "<a href=\"{$goto}page=$nextpage\"> Next </a>";
-	}
+	$listed_page++;
   }
-      
-  // Regardless of how many pages there are, well show how many records there are and what records we're displaying.
 
-  if($lowerlimit == "0") { // The program is happy to start counting with 0, humans aren't.
-    $lowerlimit = "1";
-  }
-  else{
-    $lowerlimit++;
-  }
-  $upperlimit = $lowerlimit + $limit - 1;
-  if($upperlimit > $totalrows) {
-    $upperlimit = $totalrows;
-  }
-  if($result_count <= $totalrows){
-    $howmany = "$lowerlimit - $upperlimit out of";
-  }
-  else{
-    $howmany = "";
-  }
-  
-  if($rows > 0){
-    echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
-  } 
+  echo "</select> out of $numofpages</p></td>
+  <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+  <input type=\"submit\" value=\" Go \" /></p></td></table>";
   
   $sql = "SELECT start_ip, end_ip FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
   $result = mysql_query($sql);
@@ -440,7 +402,8 @@ function list_statics(){
 	$dhcp_start = long2ip($long_dhcp_start);
 	$dhcp_end = long2ip($long_dhcp_end);
 	
-	echo "<br /><h1>DHCP Range in \"$subnet_name\"</h1><br />\n".
+	echo "<h1>DHCP Range in \"$subnet_name\"</h1>\n".
+	     "<p>&nbsp;</p>\n".
 	     "<table width=\"55%\">
 		 <tr><th>Starting IP Address</th><th>Ending IP Address</th></tr>
 		 <tr><td>$dhcp_start</td><td>$dhcp_end</td></tr>
