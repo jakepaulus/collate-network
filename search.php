@@ -233,12 +233,12 @@ function search(){
   $message = "search conducted";
   AccessControl($accesslevel, $message); 
   
-  $first = clean($_GET['first']);
-  $second = clean($_GET['second']);
-  $search = clean($_GET['search']);
-  $fromdate = clean($_GET['fromdate']);
-  $todate = clean($_GET['todate']);
-  $when = clean($_GET['when']);
+  $first = $first_input = clean($_GET['first']);
+  $second = $second_input = clean($_GET['second']);
+  $search = $search_input = clean($_GET['search']);
+  $fromdate = $fromdate_input = clean($_GET['fromdate']);
+  $todate = $todate_input = clean($_GET['todate']);
+  $when = $when_input = clean($_GET['when']);
   if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
     $when = "all";
   }
@@ -351,14 +351,29 @@ function search(){
   }
   
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
+  $show = (!isset($_GET['show'])) ? "1" : $_GET['show'];
 
-  $limit = "10";
-  $lowerlimit = $page * $limit - $limit;
+  if(is_numeric($show) && $show <= '250' && $show > '5'){
+    $limit = $show;
+  }
+  elseif($show > '250'){
+    echo "<div class=\"tip\"><p>You can only ask for up to 250 results per page.</p></div>";
+	$limit = '250';
+  }
+  else{
+    $limit = "10";
+  }
+  
   $totalrows = mysql_num_rows(mysql_query($sql));
+  $numofpages = ceil($totalrows/$limit);
+  if($page > $numofpages){
+    $page = '1';
+  }
+  $lowerlimit = $page * $limit - $limit;
   $sql .= " LIMIT $lowerlimit, $limit";
   $row = mysql_query($sql);
   $rows = mysql_num_rows($row);
-  $numofpages = ceil($totalrows/$limit); 
+   
   if(!isset($extrasearchdescription)){
     $extrasearchdescription = "";
   }
@@ -373,6 +388,31 @@ function search(){
 	require_once('./include/footer.php');
 	exit();
   }
+  
+  echo "<form action=\"search.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n".
+       "<p><input type=\"hidden\" name=\"op\" value=\"search\" />
+	       <input type=\"hidden\" name=\"first\" value=\"$first_input\" />
+	       <input type=\"hidden\" name=\"second\" value=\"$second_input\" />
+		   <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
+		   <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
+		   <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
+		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />Page: <select name=\"page\">";
+  
+  $listed_page = '1';
+  
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
+	}
+	else{
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
+	}
+	$listed_page++;
+  }
+
+  echo "</select> out of $numofpages</p></td>
+  <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
 
   if($first == "subnets"){
     echo "<table width=\"100%\">\n". 
@@ -430,88 +470,30 @@ function search(){
     echo "</table>";
   }
   
-  $goto = $_SERVER['REQUEST_URI'];
-  if(stristr($_SERVER['REQUEST_URI'], "page")){
-    $goto = preg_replace("{[&]*page=[0-9]*}", '', $goto); // Matches a string containing page=[zero or more numeric characters] and replaces with nothing
-  }
-  if(preg_match("/\?[a-zA-Z]/", $goto)){  // At this point there could be a ? mark, but it might not be followed by anything...in which case we don't want to append an &.
-    $goto = $goto."&amp;";
-  }
-  elseif(!stristr($goto, "?")){
-    $goto = $goto."?";
-  }  
-    
-  if($numofpages > "1") {
-    if($page != "1") { // Generate Prev link only if previous pages exist.
-      $pageprev = $page - "1";
-       echo "<a href=\"{$goto}page=$pageprev\"> Prev </a>";
-    }
-    
-	if($numofpages < "10"){
-	  $i = "1";
-      while($i < $page) { // Build all page number links up to the current page
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-	    $i++;
-      }
-	}
-	else {
-	  if($page > "4") {
-	    echo "...";
-	  }
-	  $i = $page - "3";
-	  while($i < $page ) { // Build all page number links up to the current page
-	    if($i > "0"){
-          echo "<a href=\"{$goto}page=$i\"> $i </a>";
-	    }
-		$i++;
-      }
-	}
-    echo "[$page]"; // List Current page
-	
-	if($numofpages < "10"){	
-      $i = $page + "1"; // Now we'll build all the page numbers after the current page if they exist.
-      while(($numofpages-$page > "0") && ($i < $numofpages + "1")) {
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-        $i++;
-      }
+  echo "<form action=\"search.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n".
+       "<p><input type=\"hidden\" name=\"op\" value=\"search\" />
+	       <input type=\"hidden\" name=\"first\" value=\"$first_input\" />
+	       <input type=\"hidden\" name=\"second\" value=\"$second_input\" />
+		   <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
+		   <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
+		   <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
+		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />Page: <select name=\"page\">";
+  
+  $listed_page = '1';
+  
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
 	}
 	else{
-	  $i = $page + "1";
-	  $j = "1";
-	  while(($numofpages-$page > "0") && ($i <= $numofpages) && ($j <= "3")) {
-        echo "<a href=\"{$goto}page=$i\"> $i </a>";
-        $i++;
-		$j++;
-      }
-	  if($i <= $numofpages){
-	    echo "...";
-	  }
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
 	}
-    if($page < $numofpages) { // Generate Next link if there is a page after this one
-      $nextpage = $page + "1";
-	  echo "<a href=\"{$goto}page=$nextpage\"> Next </a>";
-	}
+	$listed_page++;
   }
-    
-    // Regardless of how many pages there are, well show how many records there are and what records we're displaying.
-	
-    if($lowerlimit == "0") { // The program is happy to start counting with 0, humans aren't.
-      $lowerlimit = "1";
-    }
-	else{
-	  $lowerlimit++;
-	}
-	$upperlimit = $lowerlimit + $limit - 1;
-	if($upperlimit > $totalrows) {
-	  $upperlimit = $totalrows;
-	}
-	if($result_count <= $totalrows){
-	  $howmany = "$lowerlimit - $upperlimit out of";
-	}
-	else{
-	  $howmany = "";
-	}
-    echo "<br />\n<br />\nShowing $howmany $totalrows results.<br />\n"; 
+
+  echo "</select> out of $numofpages</p></td>
+  <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
 
   require_once('./include/footer.php');
   

@@ -325,12 +325,15 @@ function list_statics(){
   else{
     $limit = "10";
   }
-  $lowerlimit = $page * $limit - $limit;
   $totalrows = mysql_num_rows(mysql_query($sql));
+  $numofpages = ceil($totalrows/$limit);
+  if($page > $numofpages){
+    $page = '1';
+  }
+  $lowerlimit = $page * $limit - $limit;
   $sql .= " LIMIT $lowerlimit, $limit";
   $row = mysql_query($sql);
   $rows = mysql_num_rows($row);
-  $numofpages = ceil($totalrows/$limit); 
   
   echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
        "<form action=\"statics.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">";
@@ -392,7 +395,7 @@ function list_statics(){
 
   echo "</select> out of $numofpages</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
-  <input type=\"submit\" value=\" Go \" /></p></td></table>";
+  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
   
   $sql = "SELECT start_ip, end_ip FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
   $result = mysql_query($sql);
