@@ -338,7 +338,15 @@ function list_statics(){
   echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
        "<form action=\"statics.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">";
 
-  echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />Page: <select name=\"page\">";
+  echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />";
+  
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }
+  
+  echo "Page: <select name=\"page\">";
   
   $listed_page = '1';
   while($listed_page <= $numofpages){
@@ -351,7 +359,16 @@ function list_statics(){
 	$listed_page++;
   }
 
-  echo "</select> out of $numofpages</p></td>
+  echo "</select> out of $numofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit\">
+	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  
+  echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
   <input type=\"submit\" value=\" Go \" /></p></td>";
    
@@ -379,7 +396,15 @@ function list_statics(){
   }
   echo "<p>&nbsp;</p>";
   echo "<form action=\"statics.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n".
-       "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />Page: <select name=\"page\">";
+       "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />";
+	   
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }
+	   
+  echo "Page: <select name=\"page\">";
   
   $listed_page = '1';
   
@@ -393,7 +418,16 @@ function list_statics(){
 	$listed_page++;
   }
 
-  echo "</select> out of $numofpages</p></td>
+  echo "</select> out of $numofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit\">
+	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  
+  echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
   <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
   
