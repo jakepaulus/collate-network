@@ -316,20 +316,20 @@ function search(){
 	if($when == "dates"){
 	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
 	  if($second == "ip"){
-	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
 		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
 	  }
 	  else{
-	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%' AND
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE $second LIKE '%$search%' AND
 		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
 	  }
 	}
 	else{
       if($second == "ip"){
-	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE ip & '$long_mask' = '$long_ip'";
 	  }
 	  else{
-	    $sql = "SELECT id, ip, name, contact, note FROM statics WHERE $second LIKE '%$search%'";
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE $second LIKE '%$search%'";
 	  }
 	}
   }
@@ -458,10 +458,10 @@ function search(){
 	echo "</table>\n";
   }
   elseif($first == "static IPs"){
-    echo "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Delete?</th></tr>".
+    echo "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Action</th></tr>".
 	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
   
-    while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
+    while(list($static_id,$ip,$name,$contact,$note,$subnet_id) = mysql_fetch_row($row)){
       $ip = long2ip($ip);
       echo "<tr>
 	       <td>$ip</td><td>$name</td><td>$contact</td>
