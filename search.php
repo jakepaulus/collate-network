@@ -404,7 +404,7 @@ function search(){
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
 		   
-  echo "Page: <select name=\"page\">";
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
   
   $listed_page = '1';
   
@@ -494,7 +494,15 @@ function search(){
 		   <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
 		   <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
 		   <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
-		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />Page: <select name=\"page\">";
+		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />";
+		   
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }		   
+
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
   
   $listed_page = '1';
   
@@ -508,7 +516,16 @@ function search(){
 	$listed_page++;
   }
 
-  echo "</select> out of $numofpages</p></td>
+  echo "</select> out of $numofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$next_page&amp;show=$limit\">
+	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  
+  echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
   <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
 

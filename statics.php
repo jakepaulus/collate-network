@@ -346,7 +346,7 @@ function list_statics(){
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
   
-  echo "Page: <select name=\"page\">";
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
   
   $listed_page = '1';
   while($listed_page <= $numofpages){
@@ -404,7 +404,7 @@ function list_statics(){
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
 	   
-  echo "Page: <select name=\"page\">";
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
   
   $listed_page = '1';
   
