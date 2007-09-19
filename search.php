@@ -351,7 +351,9 @@ function search(){
   }
   
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
-  $show = (!isset($_GET['show'])) ? "1" : $_GET['show'];
+  $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
+  
+  $_SESSION['show'] = $show;
 
   if(is_numeric($show) && $show <= '250' && $show > '5'){
     $limit = $show;

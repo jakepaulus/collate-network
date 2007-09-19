@@ -311,7 +311,9 @@ function list_statics(){
   $subnet_name = mysql_result($results, 0, 0);
      
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
-  $show = (!isset($_GET['show'])) ? "1" : $_GET['show'];
+  $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
+  
+  $_SESSION['show'] = $show;
   
   $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY ip ASC";
   
