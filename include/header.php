@@ -72,7 +72,7 @@ if($view == "printable"){ ?>
 
      // This little mess here makes sure that the print URL is formed properly.
     echo "<td align=\"right\">
-	        <a href=\"search.php\">Search</a> | 
+	        <a href=\"search.php\">Advanced Search</a> | 
 			<a href=\"http://".$_SERVER['SERVER_NAME'].htmlentities($_SERVER['REQUEST_URI']); 
     if(stristr($_SERVER['REQUEST_URI'], "?")){ 
       echo "&amp;"; 
