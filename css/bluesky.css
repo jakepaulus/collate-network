@@ -158,6 +158,12 @@ div.autocomplete ul li {
 font-size: .9em;
 }
 
+/* ----  InPlaceEditor style --------------------------------------------- */
+.inplaceeditor-empty {
+    font-style: italic;
+    color: #999;
+}
+
 /* content column: */
 
 div.tip {

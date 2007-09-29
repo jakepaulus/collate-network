@@ -17,18 +17,6 @@ switch($op){
 	submit_block();
 	break;
 	
-	case "edit";
-	edit_block();
-	break;
-	
-	case "update";
-	update_block();
-	break;
-	
-	case "delete";
-	delete_block();
-	break;
-	
 	default:
 	AccessControl("1", "Block list page viewed");
 	list_blocks();
@@ -76,6 +64,7 @@ function add_block(){
 	"</form>\n";
 
 } // Ends add_block function
+
 
 function submit_block() {
   $name = clean($_POST['name']);
@@ -169,129 +158,10 @@ function submit_block() {
 
 } // Ends submit_blocks function
 
-function edit_block(){
-
-  $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
-  
-  if(empty($block_id)){
-    $notice = "Please select a block to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT name, note FROM blocks WHERE id='$block_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "Please select a block to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  list($name,$note) = mysql_fetch_row($result);
-  
-  $accesslevel = "4";
-  $message = "Edit IP Block form accessed: $name";
-  AccessControl($accesslevel, $message);
-
-  require_once('./include/header.php');
-  
-  echo "<h1>Update Block: $name</h1>\n".
-	   "<br />\n".
-	   "<form action=\"blocks.php?op=update\" method=\"POST\">\n".
-	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
-	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-	   "  <p><input type=\"hidden\" name=\"block_id\" value=\"$block_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
-	   "</form>\n";
-
-} // Ends edit_block function
-
-function update_block(){
-  $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
-  $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
-  $block_id = (empty($_POST['block_id'])) ? '' : $_POST['block_id'];
-  
-  $accesslevel = "4";
-  $message = "Edit IP Block form submitted: $name";
-  AccessControl($accesslevel, $message);
-  
-  if(empty($name) || empty($note) || empty($block_id)){
-    $notice = "A form field was left blank";
-	header("Location: blocks.php?op=edit&block_id=$block_id&notice=$notice");
-	exit();
-  }
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "UPDATE blocks SET name='$name', note='$note', modified_by='$username', modified_at=now() WHERE id='$block_id'";
-  mysql_query($sql);
-  
-  $notice = "The block has been updated.";
-  header("Location: blocks.php?notice=$notice");
-  exit();
-
-} // Ends update_block function
-
-function delete_block(){
-
-  $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
-  $confirm = (empty($_GET['confirm'])) ? 'no' : $_GET['confirm'];
-  
-  if(empty($block_id)){
-    $notice = "Please select a block in order to delete it.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT name FROM blocks WHERE id='$block_id'";
-  $result = mysql_query($sql);
-	
-  if(mysql_num_rows($result) != '1'){
-	$notice = "That block was not found. Please try again.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $name = mysql_result($result, 0, 0);
-  
-  $accesslevel = "4";
-  $message = "IP Block deletion attempted: $name";
-  AccessControl($accesslevel, $message);
-  
-  if($confirm != "yes"){
-    require_once('./include/header.php');
-    
-	echo "Are you sure you'd like to delete the IP block \"$name\" and everything in it? There is no undo for this action!
-	      <br />\n".
-         "<br />".
-		 "<a href=\"blocks.php?op=delete&amp;block_id=$block_id&amp;confirm=yes\">
-		 <img src=\"./images/apply.gif\" alt=\"confirm\" /></a>".
-		 " &nbsp; <a href=\"blocks.php\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-    return;
-  }
-  
-  // First delete all static IPs
-  $sql = "DELETE FROM statics WHERE subnet_id=(SELECT id FROM subnets WHERE block_id='$block_id')";
-  mysql_query($sql);
-  
-  // Next, remove the DHCP ACLs
-  $sql = "DELETE FROM acl WHERE apply=(SELECT id FROM subnets WHERE block_id='$block_id')";
-  mysql_query($sql);
-  
-  // Next, remove the subnets
-  $sql = "DELETE FROM subnets WHERE block_id='$block_id'";
-  mysql_query($sql);
-  
-  // Lastly, delete the IP block
-  $sql = "DELETE FROM blocks WHERE id='$block_id'";
-  mysql_query($sql);
-  
-  $notice = "The $name block has been deleted";
-  header("Location: blocks.php?notice=$notice");
-  exit();
-  
-} // Ends delete_block function
 
 function list_blocks(){
   require_once('./include/header.php');
+  global $COLLATE;
  
   echo "<h1>All IP Blocks</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add\">
@@ -301,7 +171,7 @@ function list_blocks(){
 	     "<tr><th align=\"left\">Block Name</th>".
 	     "<th align=\"left\">Starting IP</th>".
 	     "<th align=\"left\">Ending IP</th>".
-	     "<th align=\"left\">Actions</th></tr>\n".
+	     "</tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note` FROM `blocks` ORDER BY `name` ASC";
@@ -311,18 +181,59 @@ function list_blocks(){
     $start_ip = long2ip($long_start_ip);
 	$end_ip = long2ip($long_end_ip);
 	
-    echo "<tr>
-	     <td><b><a href=\"subnets.php?block_id=$block_id\">$name</a></b></td><td>$start_ip</td>
+    echo "<tr id=\"block_".$block_id."_row_1\">
+	     <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
+		 <td><a href=\"subnets.php?block_id=$block_id\">$start_ip</a></td>
 		 <td>$end_ip</td>
-		 <td><a href=\"blocks.php?op=delete&amp;block_id=$block_id\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
-		 &nbsp;<a href=\"blocks.php?op=edit&amp;block_id=$block_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td></td>
+		 <td>";
+		 
+	if($_SESSION['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), new Effect.Fade('block_".$block_id."_row_2'), new Effect.Fade('block_".$block_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+	}
+    echo "</td>
 		 </tr>\n";
-	echo "<tr><td>$note<td></tr>\n";
-    echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+	echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
+    echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
+	
+	if($_SESSION['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+	  $javascript .=
+		   "<script type=\"text/javascript\"><!--\n".
+	       "  new Ajax.InPlaceEditor('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
+		      {highlightcolor: '#a5ddf8', 
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+				  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "  new Ajax.InPlaceEditor('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
+		      {highlightcolor: '#a5ddf8',  
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+				  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "--></script>\n";
+	}
   }
   
   echo "</table>";
+  
+  echo $javascript;
+  
 } // Ends list_blocks function
+
 
 // Netmask Validator // from the comments on php.net/ip2long
 function checkNetmask($ip) {

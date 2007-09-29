@@ -17,18 +17,6 @@ switch($op){
 	submit_subnet();
 	break;
 	
-	case "edit";
-	edit_subnet();
-	break;
-	
-	case "update";
-	update_subnet();
-	break;
-	
-	case "delete";
-	delete_subnet();
-	break;
-	
 	default:
 	AccessControl("1", "Subnet list viewed");
 	list_subnets();
@@ -48,13 +36,14 @@ function add_subnet (){
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip = (empty($_GET['ip'])) ? '' : $_GET['ip'];
   $gateway = (empty($_GET['gateway'])) ? '' : $_GET['gateway'];
-  $dhcp_start = (empty($_GET['dhcp_start'])) ? '' : $_GET['dhcp_start'];
-  $dhcp_end = (empty($_GET['dhcp_end'])) ? '' : $_GET['dhcp_end'];
+  $acl_name = (empty($_GET['acl_name'])) ? 'DHCP' : $_GET['acl_name'];
+  $acl_start = (empty($_GET['acl_start'])) ? '' : $_GET['acl_start'];
+  $acl_end = (empty($_GET['acl_end'])) ? '' : $_GET['acl_end'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
   $guidance = (empty($_GET['guidance'])) ? '' : $_GET['guidance'];
   $block_id = $_GET['block_id'];
 
-  echo "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">Enter the name of the subnet here. The name should be 
+  echo "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">Enter a unique name for the subnet here. The name should be 
 	descriptive of what the subnet will be used for. The name should be short and should not contain spaces.<br /><br/></div>\n".
 	"<div id=\"iptip\" style=\"display: none;\" class=\"tip\">Enter a subnet in CIDR notation such as 
 	\"192.168.1.0/24\" or using a subnet mask such as in \"192.168.1.0/255.255.255.0.\"<br /><br /></div>\n".
@@ -72,8 +61,9 @@ function add_subnet (){
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
 	"  <p>Default Gateway:<br /><input type=\"text\" value=\"$gateway\" name=\"gateway\" /></p>\n".
-	"  <p>DHCP Range:<br /><input type=\"text\" name=\"dhcp_start\" value=\"$dhcp_start\" size=\"15\" />\n".
-	"  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n".
+	"  <p>ACL Name:<br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" />\n".
+	"  <p>ACL Range:<br /><input type=\"text\" name=\"acl_start\" value=\"$acl_start\" size=\"15\" />\n".
+	"  to <input type=\"text\" name=\"acl_end\" value=\"$acl_end\" size=\"15\" />\n".
 	"  </p>\n".
 	"  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
 	" </div>";
@@ -145,8 +135,9 @@ function submit_subnet(){
   $name = clean($_POST['name']);
   $ip = clean($_POST['ip']);
   $gateway = clean($_POST['gateway']);
-  $dhcp_start = clean($_POST['dhcp_start']);
-  $dhcp_end = clean($_POST['dhcp_end']);
+  $acl_name = clean($_POST['acl_name']);
+  $acl_start = clean($_POST['acl_start']);
+  $acl_end = clean($_POST['acl_end']);
   $note = clean($_POST['note']);
   $guidance = clean($_POST['guidance']);
   
@@ -157,22 +148,22 @@ function submit_subnet(){
   if(empty($name) || empty($ip)){
     $notice = "Please verify that required fields have been completed.";
 	$guidance = urlencode($guidance);
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   // Make sure that the subnet name isn't already in use
-  $sql = "SELECT name FROM subnets WHERE name='$name' AND block_id = '$block_id'";
+  $sql = "SELECT name FROM subnets WHERE name='$name'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '0'){
-    $notice = "The subnet name you have chosen is already in use in this IP block. Please use another name.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    $notice = "The subnet name you have chosen already exists in the database. Please use another name.";
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(!strstr($ip, '/')){
     $notice = "You must supply the number of mask bits or a mask.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -180,7 +171,7 @@ function submit_subnet(){
   
   if(ip2long($start_ip) == FALSE){
     $notice = "The IP you have entered is not valid.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -188,7 +179,7 @@ function submit_subnet(){
   $long_ip = ip2long($start_ip);
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
     $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   elseif(!strstr($mask, '.')){
@@ -199,13 +190,13 @@ function submit_subnet(){
   }
   elseif(!checkNetmask($mask)){
     $notice = "The mask you have specified is not valid.";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
-  if(!empty($dhcp_start) && (ip2long($dhcp_start) == FALSE || ip2long($dhcp_end) == FALSE)){
-    $notice = "The DHCP Range you specified is not valid.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+  if(!empty($acl_start) && (ip2long($acl_start) == FALSE || ip2long($acl_end) == FALSE)){
+    $notice = "The ACL Range you specified is not valid.";
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -213,13 +204,13 @@ function submit_subnet(){
   $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
   $long_end_ip = $long_ip | (~$long_mask);
   
-  $long_dhcp_start = ip2long($dhcp_start);
-  $long_dhcp_end = ip2long($dhcp_end);
+  $long_acl_start = ip2long($acl_start);
+  $long_acl_end = ip2long($acl_end);
   
-  if(!empty($dhcp_start) && ($long_dhcp_start < $long_ip || $long_dhcp_start > $long_end_ip || $long_dhcp_end < $long_dhcp_start
-    || $long_dhcp_end > $long_end_ip)){
-	 $notice = "The DHCP Range you specified is not valid.";
-	 header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+  if(!empty($acl_start) && ($long_acl_start < $long_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start
+    || $long_acl_end > $long_end_ip)){
+	 $notice = "The ACL Range you specified is not valid.";
+	 header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -227,7 +218,7 @@ function submit_subnet(){
   
   if(!empty($gateway) && (ip2long($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
     $notice = "The Default Gateway you specified is not valid.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
@@ -236,7 +227,7 @@ function submit_subnet(){
   $search = mysql_query($sql);
   if(mysql_num_rows($search) != '1'){
     $notice = "The IP you entered does not match the block you have selected.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
 	}
   
@@ -250,17 +241,18 @@ function submit_subnet(){
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '0'){
     $notice = "The IP you entered overlaps with an subnet in the database.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&dhcp_start=$dhcp_start&dhcp_end=$dhcp_end&note=$note&guidance=$guidance&notice=$notice");
+	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
 		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
+		
   mysql_query($sql);
   
-  // Add an ACL for the DHCP range so users don't assign a static IP inside a DHCP scope.
-  if(!empty($dhcp_start)){
-    $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('DHCP', '$long_dhcp_start', '$long_dhcp_end', 
+  // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
+  if(!empty($acl_start)){
+    $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', 
 	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
 	
     mysql_query($sql);
@@ -279,138 +271,6 @@ function submit_subnet(){
   exit();
 } // ends submit_subnet function
 
-function edit_subnet(){
-
-  $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
-  $guidance = (empty($_GET['guidance'])) ? '' : $_GET['guidance'];
-  
-  if(empty($subnet_id)){
-    $notice = "Please select a block, then a subnet to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT name, note, guidance FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "Please select a block, then a subnet to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  list($name,$note,$guidance) = mysql_fetch_row($result);
-  
-  $accesslevel = "3";
-  $message = "Subnet edit form accessed: $name";
-  AccessControl($accesslevel, $message); 
-
-  require_once('./include/header.php');
-    
-  $sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) == '1'){
-    list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result);
-	$dhcp_start = long2ip($long_dhcp_start);
-	$dhcp_end = long2ip($long_dhcp_end);
-  }
-  
-  echo "<div id=\"guidance\" style=\"display: none;\" class=\"tip\">You may type a message that will be viewable to any user 
-	   adding a static IP in this subnet. The message should help the user understand what IP to use for the type of device they
-	   wish to reserve an IP address for. Some formatting will be maintained, HTML is not allowed.<br /><br /></div>\n".
-       "<h1>Update Subnet: $name</h1>\n".
-	   "<br />\n".
-	   "<form action=\"subnets.php?op=update\" method=\"POST\">\n".
-	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
-	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-	   "  <p>DHCP Range:<br /><input type=\"text\" name=\"dhcp_start\" value=\"$dhcp_start\" size=\"15\" />\n".
-	   "  to <input type=\"text\" name=\"dhcp_end\" value=\"$dhcp_end\" size=\"15\" />\n";
-	   
-  echo "<p>IP Guidance: (Optional) 
-	   <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	   "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"45\" />$guidance</textarea></p>\n".
-       "  <p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
-	   "</form>\n";
-
-} // Ends edit_subnet function
-
-function update_subnet(){
-
-  $subnet_id = (empty($_POST['subnet_id'])) ? '' : $_POST['subnet_id'];
-  $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
-  $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
-  $dhcp_start = (empty($_POST['dhcp_start'])) ? '' : $_POST['dhcp_start'];
-  $long_dhcp_start = ip2long($dhcp_start);
-  $dhcp_end = (empty($_POST['dhcp_end'])) ? '' : $_POST['dhcp_end'];
-  $long_dhcp_end = ip2long($dhcp_end);
-  $guidance = (empty($_POST['guidance'])) ? '' : clean($_POST['guidance']);
-  
-  $accesslevel = "3";
-  $message = "Subnet edit form submitted: $name";
-  AccessControl($accesslevel, $message); 
-  
-  if(empty($subnet_id)){
-    $notice = "Please select an IP block, then a subnet to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  elseif(empty($name)){
-    $notice = "The name field cannot be blank.";
-	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
-	exit();
-  }
-  
-  if(!empty($dhcp_start) && (ip2long($dhcp_start) == FALSE || ip2long($dhcp_end) == FALSE)){
-    $notice = "The DHCP Range you specified is not valid.";
-	header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT start_ip, end_ip, block_id FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "Please select an IP block, then a subnet to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  list($long_ip,$long_end_ip,$block_id) = mysql_fetch_row($result);
-  
-  if(!empty($dhcp_start) && ($long_dhcp_start < $long_ip || $long_dhcp_start > $long_end_ip || $long_dhcp_end < $long_dhcp_start
-    || $long_dhcp_end > $long_end_ip)){
-	 $notice = "The DHCP Range you specified is not valid.";
-	 header("Location: subnets.php?op=edit&subnet_id=$subnet_id&guidance=$guidance&notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT id FROM statics WHERE subnet_id='$subnet_id' AND (ip > '$long_dhcp_start' AND ip < '$long_dhcp_end')";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '0'){
-    $notice = "There are static IPs reserved in the DHCP range you selected. Please delete them first.";
-	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
-	exit();
-  }
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "UPDATE subnets SET name='$name', note='$note', modified_by='$username', modified_at=now(), guidance='$guidance' WHERE id='$subnet_id'";
-  mysql_query($sql);
-  
-  $sql = "SELECT id FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) == 0){
-    $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('DHCP', '$long_dhcp_start', '$long_dhcp_end', '$subnet_id')";
-  }
-  else{
-    $sql = "UPDATE acl SET start_ip='$long_dhcp_start', end_ip='$long_dhcp_end' WHERE name='DHCP' AND apply='$subnet_id'";
-  }
-  mysql_query($sql);
-  
-  $notice = "The subnet has been updated.";
-  header("Location: subnets.php?block_id=$block_id&notice=$notice");
-  exit();
-
-} // Ends update_subnet function
 
 function list_subnets(){
   require_once('./include/header.php');
@@ -445,8 +305,7 @@ function list_subnets(){
 	     "<tr><th align=\"left\">Subnet Name</th>".
 	     "<th align=\"left\">Network Address</th>".
 	     "<th align=\"left\">Subnet Mask</th>".
-		 "<th align=\"left\">Statics Used</th>".
-	     "<th align=\"left\">Actions</th></tr>\n".
+		 "<th align=\"left\">Statics Used</th></tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
   $results = mysql_query($sql);  
@@ -462,8 +321,8 @@ function list_subnets(){
 	
 	$sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
 	$result = mysql_query($sql);
-	while(list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result)){
-	  $subnet_size = $subnet_size - ($long_dhcp_end - $long_dhcp_start);
+	while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
+	  $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
 	}
 	
 	$percent_subnet_used = round('100' * ($static_count / $subnet_size));
@@ -480,82 +339,60 @@ function list_subnets(){
 	
 	$percent_subnet_used = "<b>~$percent_subnet_used%</b>";
 	
-    echo "<tr>
-	     <td><b><a href=\"statics.php?subnet_id=$subnet_id\">$name</a></b></td><td>$start_ip</td>
+    echo "<tr id=\"subnet_".$subnet_id."_row_1\">
+	     <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
 		 <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
-		 <td><a href=\"subnets.php?op=delete&amp;block_id=$block_id&amp;subnet_id=$subnet_id\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
-		 &nbsp;<a href=\"subnets.php?op=edit&amp;subnet_id=$subnet_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td>
+		 <td>";
 		 
+	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+	}
+    echo "</td>
 		 </tr>\n";
-	echo "<tr><td>$note</td></tr>\n";
-    echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+		 
+	echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
+    echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+	
+	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	       
+      $javascript .=
+		   "<script type=\"text/javascript\"><!--\n".
+	       "  new Ajax.InPlaceEditor('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
+		      {highlightcolor: '#a5ddf8', 
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+                  new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "  new Ajax.InPlaceEditor('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
+		      {highlightcolor: '#a5ddf8',  
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "--></script>\n";
+	}
   }
   
   echo "</table>";
+  
+  echo $javascript;
+  
 } // Ends list_subnets function
 
-function delete_subnet(){
-
-  $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
-  $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
-  $confirm = (empty($_GET['confirm'])) ? 'no' : $_GET['confirm'];
-  
-  if(empty($block_id)){
-    $notice = "Please select a block in order to delete a subnet from it.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  elseif(empty($subnet_id)){
-    $notice = "Please select a subnet to delete.";
-	header("Location: subnets.php?block_id=$block_id&notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT name FROM subnets WHERE id='$subnet_id' AND block_id='$block_id'";
-  $result = mysql_query($sql);
-	
-  if(mysql_num_rows($result) != '1'){
-	$notice = "That subnet was not found. Please try again.";
-	header("Location: subnets.php?block_id=$block_id&notice=$notice");
-	exit();
-  }
-  
-  $name = mysql_result($result, 0, 0);
-  
-  $accesslevel = "3";
-  $message = "Subnet deletion attempt: $name";
-  AccessControl($accesslevel, $message); 
-  
-  if($confirm != "yes"){
-    require_once('./include/header.php');
-    
-	echo "Are you sure you'd like to delete the subnet \"$name\" and everything in it? There is no undo for this action!
-	      <br />\n".
-         "<br />".
-		 "<a href=\"subnets.php?op=delete&amp;block_id=$block_id&amp;subnet_id=$subnet_id&amp;confirm=yes\">
-		 <img src=\"./images/apply.gif\" alt=\"confirm\" /></a>".
-		 " &nbsp; <a href=\"subnets.php?block_id=$block_id\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-    require_once('include/footer.php');
-	exit();
-  }
-  
-  // First delete all static IPs
-  $sql = "DELETE FROM statics WHERE subnet_id='$subnet_id'";
-  mysql_query($sql);
-  
-  // Next, remove the DHCP ACL
-  $sql = "DELETE FROM acl WHERE apply='$subnet_id'";
-  mysql_query($sql);
-  
-  // Lastly, remove the subnet
-  $sql = "DELETE FROM subnets WHERE id='$subnet_id' AND block_id='$block_id'";
-  mysql_query($sql);
-  
-  $notice = "The subnet $name has been deleted";
-  header("Location: subnets.php?block_id=$block_id&notice=$notice");
-  exit();
-  
-} // Ends delete_subnet function
     
 // Netmask Validator // from the comments on php.net/ip2long
 function checkNetmask($ip) {

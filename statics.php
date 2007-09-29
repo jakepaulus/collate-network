@@ -17,16 +17,12 @@ switch($op){
 	submit_static();
 	break;
 	
-	case "edit";
-	edit_static();
-	break;
-	
-	case "update";
-	update_static();
-	break;
-	
 	case "delete";
 	delete_static();
+	break;
+	
+	case "submit_acl";
+	submit_acl();
 	break;
 	
 	default:
@@ -142,6 +138,7 @@ function add_static(){
       
 } // Ends add_static function
 
+
 function submit_static(){
   $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
   $ip_addr = (empty($_POST['ip_addr'])) ? '' : clean($_POST['ip_addr']);
@@ -209,86 +206,6 @@ function submit_static(){
   exit();
 } // Ends submit_static function
 
-function edit_static(){
-
-  $static_id = (empty($_GET['static_id'])) ? '' : $_GET['static_id'];
-  
-  if(empty($static_id)){
-    $notice = "Please select a block, then a subnet, then a static IP to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT name, contact, note FROM statics WHERE id='$static_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "Please select a block, then a subnet, then a static IP to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  list($name,$contact,$note,$guidance) = mysql_fetch_row($result);
-  
-  $accesslevel = "2";
-  $message = "Static IP edit form accessed: $name";
-  AccessControl($accesslevel, $message); 
-  
-  require_once('./include/header.php');
-  
-  echo "<h1>Update Static IP: $name</h1>\n".
-	   "<br />\n".
-	   "<form action=\"statics.php?op=update\" method=\"POST\">\n".
-	   "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
-	   "  <p>Contact:<br /><input type=\"text\" name=\"contact\" value=\"$contact\" /></p>\n".
-	   "  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-       "  <p><input type=\"hidden\" name=\"static_id\" value=\"$static_id\" /><input type=\"submit\" value=\" Go \" /></p>\n".
-	   "</form>\n";
-
-} // Ends edit_static function
-
-function update_static(){
-
-  $static_id = (empty($_POST['static_id'])) ? '' : $_POST['static_id'];
-  $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
-  $contact = (empty($_POST['contact'])) ? '' : clean($_POST['contact']);
-  $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
-  
-  
-  $accesslevel = "2";
-  $message = "Static IP edit form submitted: $name";
-  AccessControl($accesslevel, $message); 
-  
-  if(empty($static_id)){
-    $notice = "Please select an IP block, then a subnet, then a static IP to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  elseif(empty($name) || empty($contact)){
-    $notice = "The name and contact fields cannot be blank.";
-	header("Location: statics.php?op=edit&static_id=$static_id&notice=$notice");
-	exit();
-  }
-  
-  $sql = "SELECT subnet_id FROM statics WHERE id='$static_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "Please select an IP block, then a subnet, then a static IP to edit.";
-	header("Location: blocks.php?notice=$notice");
-	exit();
-  }
-  
-  $subnet_id = mysql_result($result, 0, 0);  
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "UPDATE statics SET name='$name', contact='$contact', note='$note', modified_by='$username', modified_at=now() WHERE id='$static_id'";
-  mysql_query($sql);
-  
-  $notice = "The static IP reservation has been updated.";
-  header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
-  exit();
-
-} // Ends update_static function
 
 function list_statics(){
 
@@ -327,11 +244,13 @@ function list_statics(){
   else{
     $limit = "10";
   }
-  $totalrows = mysql_num_rows(mysql_query($sql));
+  $result = mysql_query($sql);
+  $totalrows = mysql_num_rows($result);
   $numofpages = ceil($totalrows/$limit);
   if($page > $numofpages){
     $page = $numofpages;
   }
+  if($page == '0'){ $page = '1';} // Keeps errors from occuring in the following SQL query if no rows have been added yet.
   $lowerlimit = $page * $limit - $limit;
   $sql .= " LIMIT $lowerlimit, $limit";
   $row = mysql_query($sql);
@@ -377,21 +296,72 @@ function list_statics(){
 
  echo "<td align=\"right\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></td></tr></table></form>\n".
-	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Actions</th></tr>".
+	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th></tr>".
 	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
    
   while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
     $ip = long2ip($ip);
-    echo "<tr>
-	     <td>$ip</td><td>$name</td><td>$contact</td>
-		 <td><a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$ip\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>
-		  &nbsp;
-		 &nbsp;<a href=\"statics.php?op=edit&amp;static_id=$static_id\"><img src=\"./images/edit.gif\" alt=\"edit\" /></a></td>
+    echo "<tr id=\"static_".$static_id."_row_1\">
+	     <td>$ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>
+		 <td><span id=\"edit_contact_".$static_id."\">$contact</span></td>
+		 <td>";
+		 
+	if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+	}
+    echo "</td>
 		 </tr>\n";
-	echo "<tr><td>$note</td></tr>\n";
-    echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+	echo "<tr id=\"static_".$static_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td></tr>\n";
+    echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+	
+	if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+      $javascript .=	  
+	       "<script type=\"text/javascript\"><!--\n".
+	       "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
+		      {highlightcolor: '#a5ddf8', 
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+                  new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "  new Ajax.InPlaceEditor('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
+		      {highlightcolor: '#a5ddf8',  
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		    "  new Ajax.InPlaceEditor('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
+		      {highlightcolor: '#a5ddf8',  
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "--></script>\n";
+	}
   }
   echo "</table>";
+  
+  
   
   if($rows < 1){
     echo "<p>No static IPs have been reserved for this subnet yet.</p>";
@@ -431,66 +401,131 @@ function list_statics(){
   
   echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
-  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
+  <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
   
-  $sql = "SELECT start_ip, end_ip FROM acl WHERE name='DHCP' AND apply='$subnet_id'";
+  $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE apply='$subnet_id' ORDER BY name ASC";
   $result = mysql_query($sql);
   
-  if(mysql_num_rows($result) == '1'){
-    list($long_dhcp_start,$long_dhcp_end) = mysql_fetch_row($result);
-	$dhcp_start = long2ip($long_dhcp_start);
-	$dhcp_end = long2ip($long_dhcp_end);
-	
-	echo "<h1>DHCP Range in \"$subnet_name\"</h1>\n".
-	     "<p>&nbsp;</p>\n".
-	     "<table width=\"55%\">
-		 <tr><th>Starting IP Address</th><th>Ending IP Address</th></tr>
-		 <tr><td>$dhcp_start</td><td>$dhcp_end</td></tr>
-		 </table>\n";
+  echo "<h1>ACL for \"$subnet_name\"</h1>\n";
+  
+  if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+    echo  "<p align=\"right\"><a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">\n".
+	      "<img src=\"./images/add.gif\" alt=\"Add\" /> Add an ACL Statement </a></p>\n";
   }
+  else{
+    echo "<p></p>";
+  }
+  
+  echo "<form action=\"statics.php?op=submit_acl&amp;subnet_id=$subnet_id\" method=\"post\"><table width=\"100%\">
+		<tr><th>Name</th><th>Starting IP Address</th><th>Ending IP Address</th></tr>
+		<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
+	
+  while(list($acl_id,$acl_name, $long_acl_start, $long_acl_end) = mysql_fetch_row($result)){
+	$acl_start = long2ip($long_acl_start);
+	$acl_end = long2ip($long_acl_end);	
+		 
+    echo "<tr id=\"acl_".$acl_id."\">
+	       <td><span id=\"edit_acl_name_".$acl_id."\">$acl_name</span></td>
+		   <td>$acl_start</td>
+		   <td>$acl_end</td>
+		   	<td>";
+		 
+	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete_acl&acl_id=$acl_id', {onSuccess:function(){ new Effect.Fade('acl_".$acl_id."'); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+	}
+    echo "</td>
+		 </tr>\n";
+	
+    if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	  $javascript .= 
+	       "<script type=\"text/javascript\"><!-- \n".
+	       "  new Ajax.InPlaceEditor('edit_acl_name_".$acl_id."', '_statics.php?op=edit_acl&acl_id=$acl_id&edit=name',
+		      {highlightcolor: '#a5ddf8', 
+			   callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+                  new Element.update('notice', transport.responseText.stripTags());
+			    }
+			  }
+			  );\n".
+		   "--></script>\n";
+	}
+  }
+  echo "<tr style=\"display: none;\" id=\"add_acl\">
+	     <td>
+		   <input type=\"text\" name=\"acl_name\" /><br />
+		   <input type=\"submit\" value=\" Go \" />
+		   <a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">cancel</a>
+		 </td>
+	     <td style=\"vertical-align: top\"><input type=\"text\" name=\"acl_start\" /></td>
+		 <td style=\"vertical-align: top\"><input type=\"text\" name=\"acl_end\" /></td>
+	   </tr>	 
+       ";
+  echo "</table></form>\n";
+	   
+  echo $javascript;
+
   
 } // Ends list_statics function
 
-function delete_static(){
-  $static_ip = (empty($_GET['static_ip'])) ? '' : $_GET['static_ip'];
-  $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
-  $confirm = (empty($_GET['confirm'])) ? 'no' : $_GET['confirm'];
-  
-  $accesslevel = "2";
-  $message = "Static IP delete attempt: $static_ip";
-  AccessControl($accesslevel, $message); 
 
+function submit_acl(){
+  $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
+  $acl_name = (empty($_POST['acl_name'])) ? '' : clean($_POST['acl_name']);
+  $acl_start = (empty($_POST['acl_start'])) ? '' : clean($_POST['acl_start']);
+  $acl_end = (empty($_POST['acl_end'])) ? '' : clean($_POST['acl_end']);
+  
   if(empty($subnet_id)){
-    $notice = "The static IP you tried to delete is not in a valid subnet.";
+    $notice = "Please select a block, then a subnet to add a new ACL Statement.";
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
-  elseif(empty($static_ip) || !long2ip($static_ip)){
-    $notice = "The static IP you tried to delete is not valid.";
-	header("Location: subnets.php?subnet_id=$subnet_id");
+  
+  if(empty($acl_name) || empty($acl_start) || empty($acl_end)){
+  // All fields are required
+    $notice = "All fields are required for a new ACL Statement.";
+    header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
+    exit();
+  }
+  
+  if(ip2long($acl_start) == FALSE || ip2long($acl_end) == FALSE){
+	$notice = "The ACL Range you specified is not valid.";
+	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
 	exit();
   }
   
-  if($confirm != "yes"){
-    require_once('./include/header.php');
-    echo "Are you sure you'd like to delete $static_ip?<br />\n".
-         "<br />".
-		 "<a href=\"statics.php?op=delete&amp;subnet_id=$subnet_id&amp;static_ip=$static_ip&amp;confirm=yes\">
-		 <img src=\"./images/apply.gif\" alt=\"confirm\" /></a>".
-		 " &nbsp; <a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"./images/cancel.gif\" alt=\"cancel\" /></a>";
-    require_once('include/footer.php');
+  $sql = "SELECT name, start_ip, end_ip FROM subnets WHERE id='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    $notice = "A valid subnet was not found while trying to add the ACL Statement you requested.";
+	header("Location: blocks.php?notice=$notice");
 	exit();
   }
   
-  $long_ip = ip2long($static_ip);
+  list($subnet_name,$long_start_ip,$long_end_ip) = mysql_fetch_row($result);
   
-  $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
+  AccessControl('3', "ACL for $subnet_name subnet edited");
+  
+  $long_acl_start = ip2long($acl_start);
+  $long_acl_end = ip2long($acl_end);
+  
+  if($long_acl_start < $long_start_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start || $long_acl_end > $long_end_ip){
+	$notice = "The ACL Range you specified is not valid.";
+	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
+	exit();
+  }
+  
+  $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES ('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
+  
   mysql_query($sql);
-    
-  $notice = "The static IP has been successfully deleted.";
+  
+  $notice = "The ACL statement was successfully added.";
   header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
-  
-  
-} // Ends delete_static function
-
+  exit();
+}
 ?>

@@ -23,6 +23,7 @@ if($view == "printable"){ ?>
 <?php } else { ?>
 <link rel="stylesheet" type="text/css" href="css/bluesky.css" />
 <script src="javascripts/scriptaculous.shrunk.js" type="text/javascript" charset="ISO-8859-1"></script>
+<script src="javascripts/scriptaculous.extensions.js" type="text/javascript"></script>
 <?php } ?>
 
 </head>
@@ -83,8 +84,10 @@ if($view == "printable"){ ?>
 </table>
     </div>
 <div id="main">
+<div id="notice" class="tip">
 <?php
   if(isset($_GET['notice'])){
-    echo "<div class=\"tip\"><p>".$_GET['notice']."</p></div>";
+    echo "<p>".$_GET['notice']."</p>";
   }
 ?>
+</div>
