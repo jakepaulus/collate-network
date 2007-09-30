@@ -110,12 +110,12 @@ UPDATE settings SET value = '1.2' WHERE name = 'version';
 $upgrade_from_one_dot_two = 
 "
 ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
-UPDATE settings SET value='1.3' WHERE name='version'";
+UPDATE settings SET value='1.3' WHERE name='version';
 ";
 
 $upgrade_from_one_dot_three = 
 "
-UPDATE settings SET value='1.4' WHERE name='version'";
+UPDATE settings SET value='1.4' WHERE name='version';
 ";
 
 
@@ -165,16 +165,13 @@ else{ // Everything went well.
   header("Location: index.php?notice=$notice");
 }
 
-function multiple_query($sql)
-   {
-   $tok = strtok($sql, ";");
-   while ($tok)
-       {
-       mysql_query($tok);
-	   $results = mysql_error()."<br />$results<br /><br />";
-       $tok = strtok(";");
-       }
-   return $results;
-   }
-   */
+function multiple_query($sql){
+  $tok = strtok($sql, ";");
+  while ($tok){
+    mysql_query($tok);
+	$results = mysql_error()."<br />$results<br /><br />";
+    $tok = strtok(";");
+  }
+  return $results;
+}
 ?>
