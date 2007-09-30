@@ -23,7 +23,16 @@ function edit_subnet(){
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
-  if(empty($subnet_id) || empty($edit)){ return; };
+  if(empty($subnet_id) || empty($edit)){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo "Please select a subnet to edit.";
+	exit();
+  }
+  elseif($edit == 'name' && strlen($value) < '3'){
+    header("HTTP/1.1 500 Internal Error");
+	echo "Subnet names must be three characters or longer.";
+	exit();
+  }
  
   $result = mysql_query("SELECT name FROM subnets WHERE name='$value'");
   

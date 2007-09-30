@@ -38,7 +38,16 @@ function edit_static(){
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
-  if(empty($static_id) || empty($edit)){ return; };
+  if(empty($static_id) || empty($edit)){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo "Please select a static reservation to edit.";
+	exit();
+  }
+  elseif($edit == 'name' || $edit == 'contact' && strlen($value) < '3'){
+    header("HTTP/1.1 500 Internal Error");
+	echo "This field is required and must be three characters or longer.";
+	exit();
+  }
  
   $result = mysql_query("SELECT name FROM statics WHERE name='$value'");
   

@@ -24,8 +24,15 @@ function edit_block(){
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
   if(empty($block_id) || empty($edit)){ 
-  echo "you did something weird.";
-  return; };
+    header("HTTP/1.1 500 Internal Error");
+	echo "Please select a block to edit.";
+	exit();
+  }
+  elseif($edit == 'name' && strlen($value) < '3'){
+    header("HTTP/1.1 500 Internal Error");
+	echo "Block names must be three characters or longer.";
+	exit();
+  }
 
   $result = mysql_query("SELECT name FROM blocks WHERE name='$value'");
   
