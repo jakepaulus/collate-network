@@ -12,7 +12,7 @@ switch($op){
   
   default:
   AccessControl("1", "Log tail viewed");
-  view_tail();
+  view_logs();
   break;
 }
 
@@ -56,22 +56,78 @@ function log_truncate(){
   
 } // Ends log_truncate function
 
-function view_tail() {
+function view_logs() {
   require_once('./include/header.php');
   global $COLLATE;
   
-  echo "<h1>Log Tail</h1>".
-       "<p style=\"text-align: right;\"><a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" /> ".
-       "Truncate Logs</a></p>";
+  $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
+  $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
   
-  $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY id DESC LIMIT 0, 25";
-  $row = mysql_query($sql);
+  $_SESSION['show'] = $show;
   
-  if(mysql_num_rows($row) < "1"){
-    echo "<p>No logs have been generated yet.</p>";
-	require_once('./include/footer.php');
-	exit();
+ $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY id DESC";
+  
+  if(is_numeric($show) && $show <= '250' && $show > '5'){
+    $limit = $show;
   }
+  elseif($show > '250'){
+    echo "<div class=\"tip\"><p>You can only ask for up to 250 results per page.</p></div>";
+	$limit = '250';
+  }
+  else{
+    $limit = "10";
+  }
+  $result = mysql_query($sql);
+  $totalrows = mysql_num_rows($result);
+  $numofpages = ceil($totalrows/$limit);
+  if($page > $numofpages){
+    $page = $numofpages;
+  }
+  if($page == '0'){ $page = '1';} // Keeps errors from occuring in the following SQL query if no rows have been added yet.
+  $lowerlimit = $page * $limit - $limit;
+  $sql .= " LIMIT $lowerlimit, $limit";
+  $row = mysql_query($sql);
+  $rows = mysql_num_rows($row);
+  
+  echo "<h1>Logs</h1>".
+       "<form action=\"logs.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">\n";
+	   
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"logs.php?page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }
+  
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
+  
+  $listed_page = '1';
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
+	}
+	else{
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
+	}
+	$listed_page++;
+  }
+
+  echo "</select> out of $numofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo "<a href=\"logs.php?page=$next_page&amp;show=$limit\">
+	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  
+  echo "</p></td>
+        <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+        <input type=\"submit\" value=\" Go \" /></p></td>";
+   
+
+ echo "<td align=\"right\"><a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" /> ".
+       "Truncate Logs</a></td></tr></table></form>\n";
+ 
   echo "<table width=\"100%\"><tr><td><b>Timestamp</b></td><td><b>Username</b></td><td><b>IP Address</b></td>".
        "<td><b>Severity</b></td><td><b>Message</b></td></tr>\n".
 	   "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
@@ -83,6 +139,45 @@ function view_tail() {
 	     "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>";
   }
   echo "</table>";
+  
+  if($rows < 1){
+    echo "<p>No logs have been generated yet.</p>";
+  }
+  echo "<p>&nbsp;</p>";
+  echo "<form action=\"logs.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n";
+	   
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"logs.php?page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }
+	   
+  echo "Page: <select onchange=\"this.form.submit();\" name=\"page\">";
+  
+  $listed_page = '1';
+  
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
+	}
+	else{
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
+	}
+	$listed_page++;
+  }
+
+  echo "</select> out of $numofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo "<a href=\"logs.php?page=$next_page&amp;show=$limit\">
+	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  
+  echo "</p></td>
+  <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
+  <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
   
   require_once('./include/footer.php');
 } // Ends view_tail function
