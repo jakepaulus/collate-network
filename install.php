@@ -46,7 +46,7 @@ CREATE TABLE settings (
 INSERT INTO settings VALUES ('passwdlength', '5');
 INSERT INTO settings VALUES ('accountexpire', '60');
 INSERT INTO settings VALUES ('loginattempts', '4');
-INSERT INTO settings VALUES ('version', '1.0');
+INSERT INTO settings VALUES ('version', '1.4');
 INSERT INTO settings VALUES ('perms', '6');
 INSERT INTO settings (name, value) VALUES ('guidance', '');
 
@@ -110,6 +110,12 @@ UPDATE settings SET value = '1.2' WHERE name = 'version';
 $upgrade_from_one_dot_two = 
 "
 ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
+UPDATE settings SET value='1.3' WHERE name='version'";
+";
+
+$upgrade_from_one_dot_three = 
+"
+UPDATE settings SET value='1.4' WHERE name='version'";
 ";
 
 
@@ -123,9 +129,14 @@ if(mysql_num_rows($result) != '0') { // See what version we're on
   if($version == '1.0'){
     $results = multiple_query("$upgrade_from_one_dot_zero");
 	$results .= multiple_query("$upgrade_from_one_dot_two");
+	$results .= multiple_query("$upgrade_from_one_dot_three");
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
+	$results .= multiple_query("$upgrade_from_one_dot_three");
+  }
+  elseif($version == '1.3'){
+    $results = multiple_query("$upgrade_from_one_dot_three");
   }
 }
 else{ // We're installing
