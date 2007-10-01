@@ -43,7 +43,7 @@ function edit_static(){
 	echo "Please select a static reservation to edit.";
 	exit();
   }
-  elseif($edit == 'name' || $edit == 'contact' && strlen($value) < '3'){
+  elseif(($edit == 'name' || $edit == 'contact') && strlen($value) < '3'){
     header("HTTP/1.1 500 Internal Error");
 	echo "This field is required and must be three characters or longer.";
 	exit();
