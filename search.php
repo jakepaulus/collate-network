@@ -449,7 +449,7 @@ function search(){
   
   echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
-  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
+  <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
 
   if($first == "subnets"){
     echo "<table width=\"100%\">\n". 
@@ -660,7 +660,7 @@ while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysq
   
   echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
-  <input type=\"submit\" value=\" Go \" /></p></td></table></form>";
+  <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
   
   echo $javascript;
 
