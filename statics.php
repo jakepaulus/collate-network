@@ -89,9 +89,9 @@ function add_static(){
 
   echo "<h1>Reserve a static IP</h1>\n".
        "<p align=\"right\"><a href=\"#\" 
-	   onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); \">IP Guidance</a>\n".
+	   onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); \">IP Guidance</a></p>\n".
+	   "<form action=\"statics.php?op=submit\" method=\"post\">\n".
 	   "<div style=\"float: left; width: 28%;\">\n".
-       "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
        "  <p>IP Address:<br /><select id=\"ip\" name=\"ip_addr\">\n";
 	
@@ -107,7 +107,7 @@ function add_static(){
 	   
   echo "</select>".
 	   " <a href=\"#\" onclick=\"
-	   new Element.update('helper', '<p><img src=&quot;images/loading.gif&quot; alt=&quot;&quot; /></p>'); 
+	   new Element.update('helper', '&lt;p&gt;&lt;img src=&quot;images/loading.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;'); 
 	   new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value);\">[Ping]</a>\n".
 	   "  </p> \n".
        "  <p>Contact Person:<br /><input type=\"text\" name=\"contact\" value=\"$contact\"/></p>\n".
@@ -121,14 +121,33 @@ function add_static(){
   $guidance = mysql_result($result, 0, 0);
   
   if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
-    echo "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
+    $help =  "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
 	     guidance information can be input into the settings page by an administrator.</p>";
   }
   elseif(!empty($guidance)){
-	echo "<p>".nl2br($guidance)."</p>";
+	$help = $guidance;
   }
   else{ 
-    echo nl2br($COLLATE['settings']['guidance']);
+    $help = $COLLATE['settings']['guidance'];
+  }
+  
+  echo "<span id=\"guidance\">$help</span>";
+  
+  if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+    echo "<script type=\"text/javascript\"><!--\n".
+	       "  new Ajax.InPlaceEditor('guidance', '_statics.php?op=edit_guidance&subnet_id=$subnet_id',
+		      {highlightcolor: '#a5ddf8', rows: '7', cols: '49',
+			  callback:
+			    function(form) {
+			      new Element.update('notice', '');
+                  return Form.serialize(form);
+			    },
+			   onFailure: 
+			    function(transport) {
+			      new Element.update('notice', transport.responseText.stripTags());
+			    }}
+			  );
+		  --></script>";
   }
 
 	   
@@ -182,9 +201,11 @@ function submit_static(){
   $results = mysql_query($sql);
   
   if(mysql_num_rows($results) > '0'){
+    $statics = array();
     while($static_ip = mysql_fetch_row($results)){
-	  $ipspace = array_diff($ipspace, $static_ip); 
-	}    
+	  array_push($statics, $static_ip['0']); 
+	}
+	$ipspace = array_diff($ipspace, $statics);  
   }
   
   $long_ip_addr = ip2long($ip_addr);	

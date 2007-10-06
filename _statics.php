@@ -20,6 +20,10 @@ switch($op){
 	ip_guidance();
 	break;
 	
+	case "edit_guidance";
+	edit_guidance();
+	break;
+	
 	case "delete";
 	delete_static();
 	break;
@@ -133,16 +137,53 @@ function ip_guidance(){
   list($guidance) = mysql_fetch_row($result);
 
   if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
-    echo "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
+    $help =  "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
 	     guidance information can be input into the settings page by an administrator.</p>";
   }
   elseif(!empty($guidance)){
-	echo "<p>".nl2br($guidance)."</p>";
+	$help = $guidance;
   }
   else{ 
-    echo nl2br($COLLATE['settings']['guidance']);
+    $help = $COLLATE['settings']['guidance'];
   }
+  
+  echo "<span id=\"guidance\">$help</span>";
+  
 } // Ends ip_guidance function  
+
+
+function edit_guidance(){
+
+  require_once('include/common.php');
+  
+  $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
+  $value = (empty($_POST['value'])) ? '' : nl2br(clean($_POST['value']));
+  
+  if(empty($subnet_id) || empty($value)){ 
+    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  }
+  
+  $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  }
+  
+  $name = mysql_result($result, 0, 0);
+  
+  AccessControl('3', "IP Guidance edited: $name");  
+    
+  $sql = "UPDATE subnets SET guidance='$value' WHERE id='$subnet_id'";
+  
+  mysql_query($sql);
+  
+  echo $value;
+  exit;
+
+} // End edit_guidance function
 
 
 function delete_static(){

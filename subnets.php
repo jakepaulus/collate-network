@@ -139,7 +139,7 @@ function submit_subnet(){
   $acl_start = clean($_POST['acl_start']);
   $acl_end = clean($_POST['acl_end']);
   $note = clean($_POST['note']);
-  $guidance = clean($_POST['guidance']);
+  $guidance = nl2br(clean($_POST['guidance']));
   
   $accesslevel = "3";
   $message = "Subnet Allocation form submitted: $name";
