@@ -60,13 +60,9 @@ function list_users(){
 function delete_user() {
   global $COLLATE;
   $username = clean($_GET['username']);
-  $accesslevel = "5";
-  $message = "user delete attempt: $username";
-  
-  AccessControl($accesslevel, $message);
+
   
   if($_GET['confirm'] != "yes") { // draw the confirmation page or error
-  
     $sql = "SELECT username FROM users WHERE username='$username'";
     $row = mysql_query($sql);
     if(mysql_num_rows($row) == '1') {
@@ -82,6 +78,10 @@ function delete_user() {
 	}
   }
   else { // delete the row, they are sure
+  $accesslevel = "5";
+  $message = "user deleted: $username";
+  
+  AccessControl($accesslevel, $message);
     $sql = "DELETE FROM users WHERE username='$username'";
     $result = mysql_query($sql);
 	$notice = "$username has been removed from the database.";
@@ -94,34 +94,29 @@ function add_user(){
   global $COLLATE;
   global $op;
   
+  
+  
   $username = (empty($_GET['username'])) ? '' : $_GET['username'];
   
   if($op == 'edit'){
-  
-  $accesslevel = "5";
-  $message = "User Edit form accessed: $username";
-  AccessControl($accesslevel, $message); // This is placed here to prevent false messages saying the system account was deleted.
-  
+    AccessControl('5', "User edit form accessed");
     $post_to = "users.php?op=submit&amp;action=edit";
-	    if(empty($username)){
+	if(empty($username)){
 	  $notice = "Please select a user to edit.";
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-		$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email FROM users WHERE username='$username'";
+	$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email FROM users WHERE username='$username'";
     $result = mysql_query($sql);
-		if(mysql_num_rows($result) != '1'){
+	if(mysql_num_rows($result) != '1'){
 	  $notice = "Please select a user to edit.";
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-		list($passwd,$tmppasswd,$accesslevel,$phone,$email) = mysql_fetch_row($result);
+	list($passwd,$tmppasswd,$accesslevel,$phone,$email) = mysql_fetch_row($result);
   }
-  else{
-  $accesslevel = "5";
-  $message = "Add User form accessed";
-  AccessControl($accesslevel, $message);
-    
+  else{  
+    AccessControl('5', "User add form accessed");  
     $post_to = "users.php?op=submit&amp;action=add";
 	$phone = (empty($_GET['phone'])) ? '' : $_GET['phone'];
 	$email = (empty($_GET['email'])) ? '' : $_GET['email'];
@@ -272,6 +267,8 @@ function submit_user(){
       header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
 	  exit();
     }
+	$accesslevel = "5";
+    $message = "User Edit form accessed: $username";
   }
 
   if($action == "add"){
@@ -280,16 +277,22 @@ function submit_user(){
   }
   elseif($action == "edit" && empty($tmppassword)){
     $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email' WHERE username='$username'";
+	$accesslevel = "5";
+    $message = "User Updated: $username";
   }
   elseif($action == "edit"){
     $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0' WHERE username='$username'";
+	$accesslevel = "5";
+    $message = "User Updated: $username";
   }
   else{
     $notice = "An error has occured. Please try again.";
 	header("Location: users.php?notice=$notice");
 	exit();
   }
-
+  
+  AccessControl($accesslevel, $message); // We only want to generate logs if something is actually happening...not each time the user is tossed back to the user add form.
+  
   mysql_query($sql);
   
   if($action == "edit"){

@@ -36,6 +36,9 @@ CREATE TABLE logs (
   KEY username (username)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+INSERT INTO logs (occuredat, username, level, message) VALUES
+(NOW(), 'system', '5', 'Collate:Network installed!');
+
 DROP TABLE IF EXISTS settings;
 CREATE TABLE settings (
   name varchar(50) NOT NULL,
@@ -116,6 +119,13 @@ UPDATE settings SET value='1.3' WHERE name='version';
 $upgrade_from_one_dot_three = 
 "
 UPDATE settings SET value='1.4' WHERE name='version';
+";
+
+$upgrade_from_one_dot_four = 
+"
+UPDATE settings SET value='1.5' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES
+(NOW(), 'system', '5', 'Collate:Network upgraded to version 1.5!');
 ";
 
 

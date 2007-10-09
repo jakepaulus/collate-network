@@ -42,11 +42,15 @@ function edit_subnet(){
 	  echo "That name already exists in the database.";
 	  exit;
 	}
-    AccessControl('3', "subnet #$subnet_id name edited");
+	$result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
+	$name = mysql_result($result, 0, 0);
+    AccessControl('3', "subnet #$subnet_id name changed from $name to $value");
 	$sql = "UPDATE subnets SET name='$value' WHERE id='$subnet_id'";
   }
   elseif($edit == 'note'){
-    AccessControl('3', "subnet #$subnet_id note edited");
+    $result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
+    $name = mysql_result($result, 0, 0);
+    AccessControl('3', "subnet #$subnet_id ($name) note edited");
 	$sql = "UPDATE subnets SET note='$value' WHERE id='$subnet_id'";
   }
   else{
@@ -82,7 +86,7 @@ function delete_subnet(){
   $name = mysql_result($result, 0, 0);
   
   $accesslevel = "3";
-  $message = "Subnet deletion attempt: $name";
+  $message = "Subnet #$subnet_id ($name) has been deleted";
   AccessControl($accesslevel, $message); 
   
   // First delete all static IPs

@@ -9,6 +9,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
   case "download";
+  AccessControl('1', "search exported"); 
   download();
   break;
   
@@ -17,6 +18,7 @@ switch($op){
   break;
   
   default: 
+  AccessControl('1', "search form accessed");
   require_once('./include/header.php');
   show_form();
   break;
@@ -30,9 +32,6 @@ switch($op){
  */
 
 function download(){
-  $accesslevel = "1";
-  $message = "search exported";
-  AccessControl($accesslevel, $message); 
     
   $first = clean($_GET['first']);
   $second = clean($_GET['second']);
@@ -677,12 +676,6 @@ while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysq
 
 function show_form(){
   global $COLLATE;
-  $accesslevel = "1";
-  $message = "search form accessed";
-  AccessControl($accesslevel, $message); 
-  
-  require_once('include/header.php');
-  
   ?>
   <script type="text/javascript" src="javascripts/options.js"></script>
   <script type="text/javascript" src="javascripts/calendarDateInput.js">

@@ -71,11 +71,7 @@ function submit_block() {
   $ip = clean($_POST['ip']);
   $end_ip = clean($_POST['end_ip']);
   $note = clean($_POST['note']);
-  
-  $accesslevel = "4";
-  $message = "Add IP Block form submitted: $name";
-  AccessControl($accesslevel, $message); 
-  
+ 
   if(empty($name) || empty($ip)){
     $notice = "Please verify that required fields have been completed.";
     header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
@@ -151,6 +147,12 @@ function submit_block() {
   }
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_ip', '$long_end_ip', '$note', '$username', now())";
+  
+  $accesslevel = "4";
+  $message = "IP Block added: $name";
+  AccessControl($accesslevel, $message); // We don't want to generate logs when nothing is really happening, so this goes down here.
+  
+  
   mysql_query($sql);
   $notice = "The IP block you entered has been added.";
   header("Location: blocks.php?notice=$notice");

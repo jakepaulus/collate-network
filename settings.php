@@ -6,10 +6,13 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op) {
   case "modify";
+  AccessControl('5', "settings form submitted"); 
   process();
   break;
   
   default:
+  AccessControl('5', "settings form accessed");
+  require_once('./include/header.php');
   form();
 }
 
@@ -19,12 +22,7 @@ require_once('./include/footer.php');
 
 function form() {
 global $COLLATE;
-  $accesslevel = "5";
-  $message = "settings form accessed";
-  AccessControl($accesslevel, $message);
-  
-require_once('./include/header.php');
-  
+
 ?>
 <h1>Settings</h1>
 <br />
@@ -105,11 +103,7 @@ require_once('./include/footer.php');
 
 function process() {
 global $COLLATE;
-  $accesslevel = "5";
-  $message = "settings form submitted";
-  AccessControl($accesslevel, $message); 
-  
- 
+
   $perms = clean($_POST['perms']);
   $accountexpire = clean($_POST['accountexpire']);
   $passwdlength = clean($_POST['passwdlength']);

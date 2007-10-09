@@ -53,18 +53,20 @@ function edit_static(){
 	exit();
   }
  
-  $result = mysql_query("SELECT name FROM statics WHERE name='$value'");
+  $result = mysql_query("SELECT ip, name FROM statics WHERE id='$static_id'");
+  list($long_ip, $name) = mysql_fetch_row($result);
+  $static_ip = long2ip($long_ip);
   
   if($edit == 'name'){
-    AccessControl('2', "static #$static_id name edited");
+    AccessControl('2', "static IP $static_ip name changed from $name to $value");
 	$sql = "UPDATE statics SET name='$value' WHERE id='$static_id'";
   }
   elseif($edit == 'contact'){
-    AccessControl('2', "static #$static_id contact edited");
+    AccessControl('2', "static IP $static_ip ($name) contact edited");
 	$sql = "UPDATE statics SET contact='$value' WHERE id='$static_id'";
   }
   elseif($edit == 'note'){
-    AccessControl('2', "static #$static_id note edited");
+    AccessControl('2', "static IP $static_ip ($name) note edited");
 	$sql = "UPDATE statics SET note='$value' WHERE id='$static_id'";
   }
   else{
@@ -93,8 +95,18 @@ function edit_acl(){
 	echo "You must supply a name for each ACL statement.";  
   }
   
+  $sql = "SELECT name FROM subnets WHERE id=(SELECT apply FROM acl WHERE id='$acl_id')";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  }
+  
+  $subnet_name = mysql_result($result, 0, 0);
+  
   if($edit == 'name'){
-    AccessControl('3', "ACL name updated");
+    AccessControl('3', "ACL statement name updated in $subnet_name subnet");
 	$sql = "UPDATE acl SET name='$value' where id='$acl_id'";
   }
   else{
@@ -174,7 +186,7 @@ function edit_guidance(){
   
   $name = mysql_result($result, 0, 0);
   
-  AccessControl('3', "IP Guidance edited: $name");  
+  AccessControl('3', "IP Guidance edited for $name subnet");  
     
   $sql = "UPDATE subnets SET guidance='$value' WHERE id='$subnet_id'";
   
@@ -190,16 +202,16 @@ function delete_static(){
   require_once('include/common.php');
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
-  
-  $accesslevel = "2";
-  $message = "Static IP delete attempt: $static_ip";
-  AccessControl($accesslevel, $message); 
 
   if(empty($static_ip) || !long2ip($static_ip)){
     header("HTTP/1.1 500 Internal Error");
     echo "The static IP you tried to delete is not valid.";
 	exit();
   }
+  
+  $accesslevel = "2";
+  $message = "Static IP deleted: $static_ip";
+  AccessControl($accesslevel, $message); 
 
   $long_ip = ip2long($static_ip);
   
@@ -221,7 +233,17 @@ function delete_acl(){
 	echo "Please select an ACL Statement to delete.";
   }
   
-  AccessControl('3', "ACL Statement #$acl_id deleted.");
+  $sql = "SELECT name FROM subnets WHERE id=(SELECT apply FROM acl WHERE id='$acl_id')";
+  $result = mysql_query($sql);
+  
+  if(mysql_num_rows($result) != '1'){
+    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  }
+  
+  $subnet_name = mysql_result($result, 0, 0);
+  
+  AccessControl('3', "ACL Statement #$acl_id deleted in $subnet_name subnet");
   
   $sql = "DELETE FROM acl WHERE id='$acl_id'";
   

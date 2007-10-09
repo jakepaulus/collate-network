@@ -33,7 +33,7 @@ function edit_block(){
 	echo "Block names must be three characters or longer.";
 	exit();
   }
-
+  
   $result = mysql_query("SELECT name FROM blocks WHERE name='$value'");
   
   if($edit == 'name'){
@@ -42,11 +42,15 @@ function edit_block(){
 	  echo "That name already exists in the database.";
 	  exit;
 	}
-    AccessControl('4', "Block #$block_id name edited");
+	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
+	$name = mysql_result($result, 0);
+    AccessControl('4', "Block #$block_id name changed from $name to $value");
 	$sql = "UPDATE blocks SET name='$value' WHERE id='$block_id'";
   }
   elseif($edit == 'note'){
-    AccessControl('4', "Block #$block_id note edited");
+    $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
+    $name = mysql_result($result, 0);
+    AccessControl('4', "Block #$block_id ($name) note edited");
 	$sql = "UPDATE blocks SET note='$value' WHERE id='$block_id'";
   }
   else{
@@ -82,7 +86,7 @@ function delete_block(){
   $name = mysql_result($result, 0, 0);
   
   $accesslevel = "4";
-  $message = "IP Block deleted: $name";
+  $message = "IP Block #$block_id ($name) deleted!";
   AccessControl($accesslevel, $message);
     
   // First delete all static IPs

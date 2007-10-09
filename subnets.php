@@ -9,7 +9,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
 	case "add";
-	AccessControl("3", "Subnet Allocation form accessed");
+	AccessControl("3", "Subnet add form accessed");
 	add_subnet();
 	break;
 	
@@ -140,11 +140,7 @@ function submit_subnet(){
   $acl_end = clean($_POST['acl_end']);
   $note = clean($_POST['note']);
   $guidance = nl2br(clean($_POST['guidance']));
-  
-  $accesslevel = "3";
-  $message = "Subnet Allocation form submitted: $name";
-  AccessControl($accesslevel, $message); 
-  
+
   if(empty($name) || empty($ip)){
     $notice = "Please verify that required fields have been completed.";
 	$guidance = urlencode($guidance);
@@ -244,6 +240,11 @@ function submit_subnet(){
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
+  
+  $accesslevel = "3";
+  $message = "Subnet added: $name";
+  AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This goes down here just before we know stuff is actually going to be written.
+  
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
 		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";

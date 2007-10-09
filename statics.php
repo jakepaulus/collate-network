@@ -164,11 +164,7 @@ function submit_static(){
   $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
   $contact = (empty($_POST['contact'])) ? '' : clean($_POST['contact']);
   $subnet_id = (empty($_POST['subnet_id'])) ? '' : clean($_POST['subnet_id']);
-  
-  $accesslevel = "2";
-  $message = "Static IP Reservation form submitted: $name";
-  AccessControl($accesslevel, $message); 
-  
+    
   if(empty($name) || empty($ip_addr) || empty($contact) || empty($subnet_id)){
     $notice = "You have left a required field blank.";
 	header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&ip_addr=$ip_addr&contact=$contact&note=$note&notice=$notice");
@@ -219,7 +215,11 @@ function submit_static(){
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
 		 VALUES('$long_ip_addr', '$name', '$contact', '$note', '$subnet_id', '$username', now())";
-		 
+
+  $accesslevel = "2";
+  $message = "Static IP Reserved: $ip_addr ($name)";
+  AccessControl($accesslevel, $message); // No need to generate logs if nothing is happening. Here, we know data is about to be written to the db.		 
+
   mysql_query($sql);
   
   $notice ="$ip_addr has been reserved for $name.";
