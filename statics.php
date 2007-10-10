@@ -121,8 +121,7 @@ function add_static(){
   $guidance = mysql_result($result, 0, 0);
   
   if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
-    $help =  "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
-	     guidance information can be input into the settings page by an administrator.</p>";
+    $help =  '';
   }
   elseif(!empty($guidance)){
 	$help = $guidance;
@@ -229,6 +228,8 @@ function submit_static(){
 
 
 function list_statics(){
+
+  global $COLLATE;
 
   if(!isset($_GET['subnet_id']) || empty($_GET['subnet_id'])){
     $notice = "Please select the IP Block and Subnet you would like to reserve an IP address from.";

@@ -1,5 +1,6 @@
 <?php
 
+require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
@@ -15,7 +16,8 @@ switch($op){
 
 
 function edit_subnet(){
-  require_once('include/common.php');
+
+  global $COLLATE;
 
 // EditInPlace POSTS form value as: $_POST['value']
 
@@ -64,7 +66,8 @@ function edit_subnet(){
 
 
 function delete_subnet(){
-  require_once('include/common.php');
+
+  global $COLLATE;
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
   

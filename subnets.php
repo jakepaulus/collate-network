@@ -274,6 +274,7 @@ function submit_subnet(){
 
 
 function list_subnets(){
+  global $COLLATE;
   require_once('./include/header.php');
  
   if(!isset($_GET['block_id']) || empty($_GET['block_id'])){

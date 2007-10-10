@@ -1,5 +1,5 @@
 <?php
-
+require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
@@ -34,7 +34,8 @@ switch($op){
 }
 
 function edit_static(){
-  require_once('include/common.php');
+
+  global $COLLATE;
 
 // EditInPlace POSTS form value as: $_POST['value']
 
@@ -80,7 +81,8 @@ function edit_static(){
 
 
 function edit_acl(){
-  require_once('include/common.php');
+
+  global $COLLATE;
   
 // EditInPlace POSTS form value as: $_POST['value']
 
@@ -137,7 +139,8 @@ function ping_host(){
 
 
 function ip_guidance(){
-  require_once('include/common.php');
+
+  global $COLLATE;
   
   $subnet_id = $_GET['subnet_id'];
   
@@ -149,8 +152,7 @@ function ip_guidance(){
   list($guidance) = mysql_fetch_row($result);
 
   if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
-    $help =  "<p>Sorry, there is no guidance available. This data can be input when allocating or editing a subnet. Default
-	     guidance information can be input into the settings page by an administrator.</p>";
+    $help =  '';
   }
   elseif(!empty($guidance)){
 	$help = $guidance;
@@ -166,7 +168,7 @@ function ip_guidance(){
 
 function edit_guidance(){
 
-  require_once('include/common.php');
+  global $COLLATE;
   
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $value = (empty($_POST['value'])) ? '' : nl2br(clean($_POST['value']));
@@ -199,7 +201,8 @@ function edit_guidance(){
 
 
 function delete_static(){
-  require_once('include/common.php');
+  
+  global $COLLATE;
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
 
@@ -224,7 +227,8 @@ function delete_static(){
 
 
 function delete_acl(){
-  require_once('include/common.php');
+
+  global $COLLATE;
   
   $acl_id = (empty($_GET['acl_id'])) ? '' : clean($_GET['acl_id']);
   

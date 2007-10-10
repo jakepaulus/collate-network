@@ -1,5 +1,6 @@
 <?php
 
+require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
@@ -15,7 +16,8 @@ switch($op){
 
 
 function edit_block(){
-  require_once('include/common.php');
+  
+  global $COLLATE;
 
 // EditInPlace POSTS form value as: $_POST['value']
 
@@ -64,7 +66,8 @@ function edit_block(){
 
 
 function delete_block(){
-  require_once('include/common.php');
+
+  global $COLLATE;
   
   $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
   

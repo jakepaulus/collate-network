@@ -48,7 +48,7 @@ while ($column = mysql_fetch_assoc($result)) {
  function AccessControl($accesslevel, $message) {
    global $COLLATE;
    
-  if($COLLATE['settings']['perms'] > $accesslevel) {
+  if($COLLATE['settings']['perms'] >= $accesslevel) {
     return;
   }
   elseif(!isset($_SESSION['username'])) { // the user isn't logged in.

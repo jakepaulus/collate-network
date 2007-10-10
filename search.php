@@ -32,7 +32,7 @@ switch($op){
  */
 
 function download(){
-    
+  global $COLLATE;
   $first = clean($_GET['first']);
   $second = clean($_GET['second']);
   $search = clean($_GET['search']);
@@ -233,7 +233,7 @@ function download(){
 }
 
 function search(){
-
+  global $COLLATE;
   $export = (!isset($_GET['export'])) ? 'off' : $_GET['export'];
   
   if($export == "on"){ // The download function has to be a separate page because we've already produced output to the browser in this function that we don't want in the spreadsheet.
@@ -243,7 +243,7 @@ function search(){
 	exit();
   }
    
-  global $COLLATE;
+  
   $accesslevel = "1";
   $message = "search conducted";
   AccessControl($accesslevel, $message); 
@@ -539,7 +539,7 @@ while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysq
 	echo "</table>\n";
   }
   elseif($first == "static IPs"){
-    echo "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Action</th></tr>".
+    echo "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th></tr>".
 	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
   
   while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
