@@ -63,6 +63,7 @@ CREATE TABLE statics (
   subnet_id int(9) NOT NULL,
   modified_by varchar(25) NOT NULL,
   modified_at datetime NOT NULL,
+  last_checked_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY ip (ip)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -123,6 +124,7 @@ UPDATE settings SET value='1.4' WHERE name='version';
 
 $upgrade_from_one_dot_four = 
 "
+ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
 UPDATE settings SET value='1.5' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES
 (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!');
@@ -140,17 +142,25 @@ if(mysql_num_rows($result) != '0') { // See what version we're on
     $results = multiple_query("$upgrade_from_one_dot_zero");
 	$results .= multiple_query("$upgrade_from_one_dot_two");
 	$results .= multiple_query("$upgrade_from_one_dot_three");
+	$results .= multiple_query("$upgrade_from_one_dot_four");
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
 	$results .= multiple_query("$upgrade_from_one_dot_three");
+	$results .= multiple_query("$upgrade_from_one_dot_four");
   }
   elseif($version == '1.3'){
     $results = multiple_query("$upgrade_from_one_dot_three");
+	$results .= multiple_query("$upgrade_from_one_dot_four");
   }
+  elseif($version == '1.4'){
+    $results = multiple_query("$upgrade_from_one_dot_four");
+  }
+  $notice = "This application has been successfully upgraded to version 1.5. Please delete install.php from your web server.";
 }
 else{ // We're installing
   $results = multiple_query($install);
+  $notice = "This application has been successfully installed. Please delete install.php from your web server.";
 }
 
 
@@ -171,7 +181,7 @@ if($tok){ // There were erors.
 <?php
 }
 else{ // Everything went well.
-  $notice = "This application has been successfully installed. Please delete install.php from your web server.";
+  
   header("Location: index.php?notice=$notice");
 }
 
