@@ -60,15 +60,15 @@ function edit_static(){
   
   if($edit == 'name'){
     AccessControl('2', "static IP $static_ip name changed from $name to $value");
-	$sql = "UPDATE statics SET name='$value' WHERE id='$static_id'";
+	$sql = "UPDATE statics SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   elseif($edit == 'contact'){
     AccessControl('2', "static IP $static_ip ($name) contact edited");
-	$sql = "UPDATE statics SET contact='$value' WHERE id='$static_id'";
+	$sql = "UPDATE statics SET contact='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   elseif($edit == 'note'){
     AccessControl('2', "static IP $static_ip ($name) note edited");
-	$sql = "UPDATE statics SET note='$value' WHERE id='$static_id'";
+	$sql = "UPDATE statics SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   else{
     return;
@@ -161,7 +161,7 @@ function ip_guidance(){
     $help = $COLLATE['settings']['guidance'];
   }
   
-  echo "<span id=\"guidance\">$help</span>";
+  echo "<pre><span id=\"guidance\">$help</span></pre>";
   
 } // Ends ip_guidance function  
 
@@ -171,7 +171,7 @@ function edit_guidance(){
   global $COLLATE;
   
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
-  $value = (empty($_POST['value'])) ? '' : nl2br(clean($_POST['value']));
+  $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
   if(empty($subnet_id) || empty($value)){ 
     header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
@@ -190,7 +190,7 @@ function edit_guidance(){
   
   AccessControl('3', "IP Guidance edited for $name subnet");  
     
-  $sql = "UPDATE subnets SET guidance='$value' WHERE id='$subnet_id'";
+  $sql = "UPDATE subnets SET guidance='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   
   mysql_query($sql);
   

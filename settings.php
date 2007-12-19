@@ -93,6 +93,9 @@ global $COLLATE;
   <p><b>Default IP Usage Guidance:</b> (Optional)<br />
   <textarea name="guidance" rows="10" cols="45"><?php echo $COLLATE['settings']['guidance']; ?></textarea></p>
   
+  <p><b>DNS Servers</b><br />
+  <input name="dns" type="text" size="30" value="<?php echo $COLLATE['settings']['dns']; ?>" /></p>
+  <br />
   <p><input type="submit" value="Submit" /> <input type="reset" /></p>
   
 </form>
@@ -109,6 +112,7 @@ global $COLLATE;
   $passwdlength = clean($_POST['passwdlength']);
   $loginattempts = clean($_POST['loginattempts']);
   $guidance = clean($_POST['guidance']);
+  $dns = clean($_POST['dns']);
   
 
   if($COLLATE['settings']['perms'] != $perms){
@@ -137,6 +141,10 @@ global $COLLATE;
   }
   if($COLLATE['settings']['guidance'] != $guidance) {
     $sql = "UPDATE settings SET value='$guidance' WHERE name='guidance'";
+	mysql_query($sql);
+  }
+  if($COLLATE['settings']['dns'] != $dns){
+    $sql = "UPDATE settings SET value='$dns' WHERE name='dns'";
 	mysql_query($sql);
   }
   

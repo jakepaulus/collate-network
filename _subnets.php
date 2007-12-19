@@ -24,6 +24,7 @@ function edit_subnet(){
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
+  $username = (empty($_SESSION['username'])) ? '' : clean($_SESSION['username']);
   
   if(empty($subnet_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
@@ -47,13 +48,13 @@ function edit_subnet(){
 	$result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
 	$name = mysql_result($result, 0, 0);
     AccessControl('3', "subnet #$subnet_id name changed from $name to $value");
-	$sql = "UPDATE subnets SET name='$value' WHERE id='$subnet_id'";
+	$sql = "UPDATE subnets SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   elseif($edit == 'note'){
     $result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
     $name = mysql_result($result, 0, 0);
     AccessControl('3', "subnet #$subnet_id ($name) note edited");
-	$sql = "UPDATE subnets SET note='$value' WHERE id='$subnet_id'";
+	$sql = "UPDATE subnets SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   else{
     return;

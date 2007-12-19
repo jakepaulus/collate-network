@@ -130,7 +130,7 @@ function add_static(){
     $help = $COLLATE['settings']['guidance'];
   }
   
-  echo "<span id=\"guidance\">$help</span>";
+  echo "<pre><span id=\"guidance\">$help</span></pre>";
   
   if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
     echo "<script type=\"text/javascript\"><!--\n".
@@ -158,6 +158,8 @@ function add_static(){
 
 
 function submit_static(){
+  global $COLLATE;
+  
   $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
   $ip_addr = (empty($_POST['ip_addr'])) ? '' : clean($_POST['ip_addr']);
   $note = (empty($_POST['note'])) ? '' : clean($_POST['note']);
@@ -170,7 +172,7 @@ function submit_static(){
     exit();
   }
   
-  $sql = "SELECT name, start_ip, end_ip FROM subnets WHERE id='$subnet_id'";
+  $sql = "SELECT name, start_ip, end_ip, mask FROM subnets WHERE id='$subnet_id'";
   $results = mysql_query($sql);
   
   if(mysql_num_rows($results) != '1'){
@@ -178,7 +180,7 @@ function submit_static(){
 	header("Location: blocks.php?notice=$notice");
   }
   
-  list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($results);
+  list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip,$long_mask) = mysql_fetch_row($results);
   $first_usable = $long_subnet_start_ip;
   $last_usable = $long_subnet_end_ip - '1';
   $whole_subnet = range($first_usable, $last_usable);
@@ -220,10 +222,24 @@ function submit_static(){
   AccessControl($accesslevel, $message); // No need to generate logs if nothing is happening. Here, we know data is about to be written to the db.		 
 
   mysql_query($sql);
+    
+  // Everything looks good so here's a success page with all of the information.
+  require_once('./include/header.php');
   
-  $notice ="$ip_addr has been reserved for $name.";
-  header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
-  exit();
+  $mask = long2ip($long_mask);
+  $sql = "SELECT ip FROM statics WHERE subnet_id = '$subnet_id' AND note = 'Default Gateway'";
+  $gateway = long2ip(mysql_result(mysql_query($sql), '0'));
+  
+  echo "<h1>Your IP has been reserved!</h1><br />\n".
+       "<p><b>Name:</b> $name</p>\n".
+	   "<p><b>IP Address:</b> $ip_addr</p>\n".
+	   "<p><b>Subnet Mask:</b> $mask</p>\n".
+	   "<p><b>Gateway:</b> $gateway</p>\n".
+	   "<p><b>DNS Servers:</b> ".$COLLATE['settings']['dns']."</p><br />\n".
+	   "<br />\n".
+	   "<p><b><a href=\"statics.php?subnet_id=$subnet_id\">Continue to Statics List</a></b></p>\n";
+  
+  
 } // Ends submit_static function
 
 

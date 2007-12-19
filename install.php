@@ -51,7 +51,8 @@ INSERT INTO settings VALUES ('accountexpire', '60');
 INSERT INTO settings VALUES ('loginattempts', '4');
 INSERT INTO settings VALUES ('version', '1.4');
 INSERT INTO settings VALUES ('perms', '6');
-INSERT INTO settings (name, value) VALUES ('guidance', '');
+INSERT INTO settings VALUES ('guidance', '');
+INSERT INTO settings VALUES ('dns', '');
 
 DROP TABLE IF EXISTS statics;
 CREATE TABLE statics (
@@ -125,9 +126,9 @@ UPDATE settings SET value='1.4' WHERE name='version';
 $upgrade_from_one_dot_four = 
 "
 ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
+INSERT INTO settings VALUES ('dns', '');
 UPDATE settings SET value='1.5' WHERE name='version';
-INSERT INTO logs (occuredat, username, level, message) VALUES
-(NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!');
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!');
 ";
 
 

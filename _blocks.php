@@ -47,13 +47,13 @@ function edit_block(){
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
     AccessControl('4', "Block #$block_id name changed from $name to $value");
-	$sql = "UPDATE blocks SET name='$value' WHERE id='$block_id'";
+	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   elseif($edit == 'note'){
     $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
     $name = mysql_result($result, 0);
     AccessControl('4', "Block #$block_id ($name) note edited");
-	$sql = "UPDATE blocks SET note='$value' WHERE id='$block_id'";
+	$sql = "UPDATE blocks SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   else{
     return;
