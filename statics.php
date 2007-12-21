@@ -228,7 +228,17 @@ function submit_static(){
   
   $mask = long2ip($long_mask);
   $sql = "SELECT ip FROM statics WHERE subnet_id = '$subnet_id' AND note = 'Default Gateway'";
-  $gateway = long2ip(mysql_result(mysql_query($sql), '0'));
+  $result = mysql_query($sql);
+  if(mysql_num_rows($result) === '1'){
+    $gateway = long2ip(mysql_result($result, '0'));    
+  }
+  else{
+    $gateway = "*";
+    $error = "<p><b>*</b>This field relies on a static IP having the note \"Default Gateway\" being reserved. ".
+	         "This could not be found for this subnet. Please have your administrator correct ".
+			 "this in order to see this information properly.</p><br />";
+  }
+  
   
   echo "<h1>Your IP has been reserved!</h1><br />\n".
        "<p><b>Name:</b> $name</p>\n".
@@ -236,6 +246,7 @@ function submit_static(){
 	   "<p><b>Subnet Mask:</b> $mask</p>\n".
 	   "<p><b>Gateway:</b> $gateway</p>\n".
 	   "<p><b>DNS Servers:</b> ".$COLLATE['settings']['dns']."</p><br />\n".
+	   "$error".
 	   "<br />\n".
 	   "<p><b><a href=\"statics.php?subnet_id=$subnet_id\">Continue to Statics List</a></b></p>\n";
   
