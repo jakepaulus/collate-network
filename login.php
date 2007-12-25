@@ -214,7 +214,14 @@ function cn_login() {
 	exit();
   }
   
-  $auth = auth($username, $password);
+  if($COLLATE['settings']['ldap_auth'] === 'on'){
+	$auth = ldap_auth($username,$password);
+  }
+  else{
+    $auth = auth($username, $password);
+  }
+  
+  
   
   if($auth == FALSE){
     $level = "5";
@@ -279,8 +286,7 @@ function cn_login() {
 
 function auth($username, $password){
   global $COLLATE;
-  $username = clean($username);
-  $password = sha1(clean($password));
+  $password = sha1($password);
   
   $sql = "SELECT passwd, tmppasswd, accesslevel, loginattempts, passwdexpire FROM users WHERE username='$username'";
   $row = mysql_query($sql);
@@ -306,9 +312,48 @@ function auth($username, $password){
   $auth['accesslevel'] = $accesslevel;
   $auth['loginattempts'] = $loginattempts;
   $auth['passwdexpire'] = $passwdexpire;
-  $auth['passwd'] = $passwd;
   
   return $auth;
 } // Ends auth function
 
+function ldap_auth($username, $password){
+  global $COLLATE;  
+  // First make sure that they are a valid application user, then check their password in the Directory.
+  $sql = "SELECT accesslevel, loginattempts, passwdexpire FROM users WHERE username='$username'";
+  $row = mysql_query($sql);
+  if(mysql_num_rows($row) != "1"){
+    return FALSE;    
+  }
+  
+  list($accesslevel,$loginattempts,$passwdexpire) = mysql_fetch_row($row);
+  
+  if($loginattempts >= $COLLATE['settings']['loginattempts']){
+    return "locked";
+  }
+  
+  // If we've gotten this far, a good username, password combination has been supplied.
+  $auth['accesslevel'] = $accesslevel;
+  $auth['loginattempts'] = $loginattempts;
+  $auth['passwdexpire'] = $passwdexpire;
+    
+  // connect to ldap server
+  $ldapconn = ldap_connect($COLLATE['settings']['ldap_server'])
+    or die("Could not connect to LDAP server.");
+	
+  if(!strstr($username, "@")){
+    $username .= $COLLATE['settings']['domain'];
+  }
+
+  if ($ldapconn) {
+    // binding to ldap server
+    $ldapbind = ldap_bind($ldapconn, $username, $password);
+	
+    // verify binding
+    if (!$ldapbind) {
+      $auth = false;
+    }
+    return $auth;
+  }
+  
+} // Ends ad_auth function
 ?>

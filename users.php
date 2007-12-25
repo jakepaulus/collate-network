@@ -94,8 +94,6 @@ function add_user(){
   global $COLLATE;
   global $op;
   
-  
-  
   $username = (empty($_GET['username'])) ? '' : $_GET['username'];
   
   if($op == 'edit'){
@@ -216,11 +214,14 @@ function add_user(){
 	   "<input type=\"radio\" name=\"perms\" $show4 $checked4 value=\"4\" />Add IP Blocks<br />\n".
 	   "<input type=\"radio\" name=\"perms\" $show $checked5 value=\"5\" />Admin<br />\n".
        "</p>\n".
-	   "<div id=\"extraforms\" $hidden>\n".
-	   "<p>Temporary Password:<br />\n".
-	   "<input id=\"tmppassword\" name=\"tmppassword\" type=\"text\" size=\"30\" />\n".
-	   "<a href=\"#\" onclick=\"new Effect.toggle($('passwordtip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a></p>\n".
-	   "</div>\n".
+	   "<div id=\"extraforms\" $hidden>\n";
+  
+  if($COLLATE['settings']['ldap_auth'] === 'off'){
+	echo "<p>Temporary Password:<br />\n".
+	     "<input id=\"tmppassword\" name=\"tmppassword\" type=\"text\" size=\"30\" />\n".
+	     "<a href=\"#\" onclick=\"new Effect.toggle($('passwordtip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a></p>\n";
+  }
+  echo "</div>\n".
        "<p style=\"clear: left.\"><input type=\"submit\" value=\" Go \" /></p>\n".
        "</form>\n";
 

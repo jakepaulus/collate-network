@@ -127,6 +127,9 @@ $upgrade_from_one_dot_four =
 "
 ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
 INSERT INTO settings VALUES ('dns', '');
+INSERT INTO settings VALUES ('ldap_auth', 'off');
+INSERT INTO settings VALUES ('ldap_server', 'server.example.com');
+INSERT INTO settings VALUES ('domain', 'example.com');
 UPDATE settings SET value='1.5' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!');
 ";

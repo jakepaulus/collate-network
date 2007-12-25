@@ -229,7 +229,7 @@ function submit_static(){
   $mask = long2ip($long_mask);
   $sql = "SELECT ip FROM statics WHERE subnet_id = '$subnet_id' AND note = 'Default Gateway'";
   $result = mysql_query($sql);
-  if(mysql_num_rows($result) === '1'){
+  if(mysql_num_rows($result) == '1'){
     $gateway = long2ip(mysql_result($result, '0'));    
   }
   else{

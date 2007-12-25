@@ -63,10 +63,22 @@ global $COLLATE;
   </blockquote>
   </p>
   
-  <p><b>Number of days before user's passwords expire:</b> (0 for no expiration)<br />
+  <p><b>Authentication Method:</b><br />
+  <select name="ldap_auth">
+    <option value="off" <?php if($COLLATE['settings']['ldap_auth'] == 'off'){ echo "selected=\"selected\""; } ?>> Database </option>
+	<option value="on" <?php if($COLLATE['settings']['ldap_auth'] == 'on'){ echo "selected=\"selected\""; } ?>> LDAP </option>
+  </select></p>
+  
+  <p><b>LDAP Server:</b> (ignored for Database authentication)<br />
+  <input name="ldap_server" type="text" size="20" value="<?php echo $COLLATE['settings']['ldap_server']; ?>" /></p>
+  
+  <p><b>Default Domain Name:</b> (ignored when "@" present in username<br />
+  <input name="domain" type="text" size="20" value="<?php echo $COLLATE['settings']['domain']; ?>" /></p>
+  
+  <p><b>Number of days before user's passwords expire:</b> (0 for no expiration - ignored for ldap)<br />
   <input name="accountexpire" type="text" size="10" value="<?php echo $COLLATE['settings']['accountexpire']; ?>" /></p>
   
-  <p><b>Minimum Password Length:</b><br />
+  <p><b>Minimum Password Length:</b> (ignored for ldap)<br />
   <select name="passwdlength">
     <option value="5" <?php if($COLLATE['settings']['passwdlength'] == "5") { echo "selected=\"selected\""; } ?>> 5 </option>
 	<option value="6" <?php if($COLLATE['settings']['passwdlength'] == "6") { echo "selected=\"selected\""; } ?>> 6 </option>
@@ -105,9 +117,12 @@ require_once('./include/footer.php');
 } // Ends form function
 
 function process() {
-global $COLLATE;
+  global $COLLATE;
 
   $perms = clean($_POST['perms']);
+  $ldap_auth = clean($_POST['ldap_auth']);
+  $ldap_server = clean($_POST['ldap_server']);
+  $domain = clean($_POST['domain']);
   $accountexpire = clean($_POST['accountexpire']);
   $passwdlength = clean($_POST['passwdlength']);
   $loginattempts = clean($_POST['loginattempts']);
@@ -126,7 +141,19 @@ global $COLLATE;
 	}
     $sql = "UPDATE settings SET value='$perms' WHERE name='perms'";
 	mysql_query($sql);
+  }
+  if($COLLATE['settings']['ldap_auth'] != $ldap_auth) {
+    $sql = "UPDATE settings SET value='$ldap_auth' WHERE name='ldap_auth'";
+	mysql_query($sql);
+  }  
+  if($COLLATE['settings']['ldap_server'] != $ldap_server) {
+    $sql = "UPDATE settings SET value='$ldap_server' WHERE name='ldap_server'";
+	mysql_query($sql);
   } 
+  if($COLLATE['settings']['domain'] != $domain) {
+    $sql = "UPDATE settings SET value='$domain' WHERE name='domain'";
+	mysql_query($sql);
+  }   
   if($COLLATE['settings']['passwdlength'] != $passwdlength) {
     $sql = "UPDATE settings SET value='$passwdlength' WHERE name='passwdlength'";
 	mysql_query($sql);

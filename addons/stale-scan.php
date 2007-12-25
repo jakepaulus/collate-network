@@ -59,21 +59,19 @@ $result = mysql_query($sql);
 if(mysql_num_rows($result) < '1'){ exit("\r\nError:\r\nThere are no IPs to check\r\n"); }
 
 while(list($long_ip, $last_checked_at) = mysql_fetch_row($result)){
-  if($last_checked_at != '1111-11-11 11:11:11'){
-    $ip = long2ip($long_ip);
+  $ip = long2ip($long_ip);
   
-    $output = &system("$command $ip > /dev/null", $return);
-    $pingedhosts++;  
+  $output = &system("$command $ip > /dev/null", $return);
+  $pingedhosts++;  
   
-    if($return == '0'){ // Host responded
-      $sql = "UPDATE statics SET last_checked_at=NOW() WHERE ip='$long_ip'";
-	  mysql_query($sql);
-	  $updatedhosts++;
-      if($verbose == 'on'){ echo '!'; }
-    }
-    else{ // Dead host
-      if($verbose == 'on'){ echo '.'; }
-    }  
+  if($return == '0'){ // Host responded
+    $sql = "UPDATE statics SET last_checked_at=NOW() WHERE ip='$long_ip'";
+	mysql_query($sql);
+	$updatedhosts++;
+    if($verbose == 'on'){ echo '!'; }
+  }
+  else{ // Dead host
+    if($verbose == 'on'){ echo '.'; }
   }
 }
 if($verbose == 'on'){
