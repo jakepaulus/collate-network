@@ -1,104 +1,107 @@
 <?php
 $install = 
 "
-DROP TABLE IF EXISTS acl;
-CREATE TABLE acl (
-  id int(9) NOT NULL auto_increment,
-  name varchar(25) NOT NULL,
-  start_ip int(10) NOT NULL,
-  end_ip int(10) NOT NULL,
-  apply varchar(25) NOT NULL,
-  PRIMARY KEY  (id)
+CREATE TABLE `acl` (
+  `id` int(9) NOT NULL auto_increment,
+  `name` varchar(25) NOT NULL,
+  `start_ip` int(10) NOT NULL,
+  `end_ip` int(10) NOT NULL,
+  `apply` varchar(25) NOT NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS blocks;
-CREATE TABLE blocks (
-  id int(9) NOT NULL auto_increment,
-  name varchar(25) NOT NULL,
-  start_ip int(10) NOT NULL,
-  end_ip int(10) NOT NULL,
-  note varchar(255) NOT NULL,
-  modified_by varchar(25) NOT NULL,
-  modified_at datetime NOT NULL,
-  PRIMARY KEY  (id),
-  UNIQUE KEY name (name)
+CREATE TABLE `blocks` (
+  `id` int(9) NOT NULL auto_increment,
+  `name` varchar(25) NOT NULL,
+  `start_ip` int(10) NOT NULL,
+  `end_ip` int(10) NOT NULL,
+  `note` varchar(255) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS logs;
-CREATE TABLE logs (
-  id int(11) NOT NULL auto_increment,
-  occuredat datetime NOT NULL,
-  username varchar(30) NOT NULL,
-  ipaddress varchar(15) NOT NULL,
-  level varchar(6) NOT NULL,
-  message varchar(255) NOT NULL,
-  PRIMARY KEY  (id),
-  KEY username (username)
+CREATE TABLE `ldap-servers` (
+  `id` tinyint(4) NOT NULL auto_increment,
+  `domain` varchar(128) NOT NULL,
+  `server` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES
-(NOW(), 'system', 'high', 'Collate:Network installed!');
 
-DROP TABLE IF EXISTS settings;
-CREATE TABLE settings (
-  name varchar(50) NOT NULL,
-  value varchar(50) NOT NULL,
-  PRIMARY KEY  (name)
+CREATE TABLE `logs` (
+  `id` int(11) NOT NULL auto_increment,
+  `occuredat` datetime NOT NULL,
+  `username` varchar(30) NOT NULL,
+  `ipaddress` varchar(15) NOT NULL,
+  `level` varchar(6) NOT NULL,
+  `message` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO settings VALUES ('passwdlength', '5');
-INSERT INTO settings VALUES ('accountexpire', '60');
-INSERT INTO settings VALUES ('loginattempts', '4');
-INSERT INTO settings VALUES ('version', '1.4');
-INSERT INTO settings VALUES ('perms', '6');
-INSERT INTO settings VALUES ('guidance', '');
-INSERT INTO settings VALUES ('dns', '');
-
-DROP TABLE IF EXISTS statics;
-CREATE TABLE statics (
-  id int(10) NOT NULL auto_increment,
-  ip int(10) NOT NULL,
-  name varchar(50) NOT NULL,
-  contact varchar(25) NOT NULL,
-  note varchar(255) NOT NULL,
-  subnet_id int(9) NOT NULL,
-  modified_by varchar(25) NOT NULL,
-  modified_at datetime NOT NULL,
-  last_checked_at datetime NOT NULL,
-  PRIMARY KEY  (id),
-  UNIQUE KEY ip (ip)
+CREATE TABLE `settings` (
+  `name` varchar(50) NOT NULL,
+  `value` longtext NOT NULL,
+  PRIMARY KEY  (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS subnets;
-CREATE TABLE subnets (
-  id int(9) NOT NULL auto_increment,
-  name varchar(25) NOT NULL,
-  start_ip int(10) NOT NULL,
-  end_ip int(10) NOT NULL,
-  mask int(10) NOT NULL,
-  note varchar(255) NOT NULL,
-  block_id tinyint(9) NOT NULL,
-  modified_by varchar(25) NOT NULL,
-  modified_at datetime NOT NULL,
-  guidance longtext NOT NULL,
-  PRIMARY KEY  (id),
-  UNIQUE KEY name (name)
+INSERT INTO `settings` VALUES ('passwdlength', '5');
+INSERT INTO `settings` VALUES ('accountexpire', '60');
+INSERT INTO `settings` VALUES ('loginattempts', '4');
+INSERT INTO `settings` VALUES ('version', '1.4+ (dev)');
+INSERT INTO `settings` VALUES ('perms', '6');
+INSERT INTO `settings` VALUES ('guidance', '');
+INSERT INTO `settings` VALUES ('dns', '');
+INSERT INTO `settings` VALUES ('auth_type', 'db');
+INSERT INTO `settings` VALUES ('domain', '');
+
+CREATE TABLE `statics` (
+  `id` int(10) NOT NULL auto_increment,
+  `ip` int(10) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `contact` varchar(25) NOT NULL,
+  `note` varchar(255) NOT NULL,
+  `subnet_id` int(9) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
+  `last_checked_at` datetime NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `ip` (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
-  id int(9) NOT NULL auto_increment,
-  username varchar(25) NOT NULL,
-  passwd varchar(40) NOT NULL,
-  tmppasswd varchar(40) NOT NULL,
-  accesslevel tinyint(1) NOT NULL default '0',
-  phone varchar(25) NOT NULL,
-  email varchar(50) NOT NULL,
-  loginattempts tinyint(1) NOT NULL,
-  passwdexpire datetime NOT NULL,
-  PRIMARY KEY  (id),
-  UNIQUE KEY username (username)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1
+CREATE TABLE `subnets` (
+  `id` int(9) NOT NULL auto_increment,
+  `name` varchar(25) NOT NULL,
+  `start_ip` int(10) NOT NULL,
+  `end_ip` int(10) NOT NULL,
+  `mask` int(10) NOT NULL,
+  `note` varchar(255) NOT NULL,
+  `block_id` tinyint(9) NOT NULL,
+  `modified_by` varchar(25) NOT NULL,
+  `modified_at` datetime NOT NULL,
+  `guidance` longtext NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE `users` (
+  `id` int(9) NOT NULL auto_increment,
+  `username` varchar(25) NOT NULL,
+  `passwd` varchar(40) NOT NULL,
+  `tmppasswd` varchar(40) NOT NULL,
+  `accesslevel` tinyint(1) NOT NULL default '0',
+  `phone` varchar(25) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `loginattempts` tinyint(1) NOT NULL,
+  `passwdexpire` datetime NOT NULL,
+  `ldapexempt` tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.5 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -127,11 +130,17 @@ $upgrade_from_one_dot_four =
 "
 ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
 INSERT INTO settings VALUES ('dns', '');
-INSERT INTO settings VALUES ('ldap_auth', 'off');
-INSERT INTO settings VALUES ('ldap_server', 'server.example.com');
+INSERT INTO settings VALUES ('auth_type', 'db');
 INSERT INTO settings VALUES ('domain', 'example.com');
 UPDATE settings SET value='1.5' WHERE name='version';
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!');
+ALTER TABLE users ADD ldapexempt TINYINT( 1 ) NOT NULL DEFAULT '0';
+CREATE TABLE `ldap-servers` (
+  id TINYINT( 4 ) NOT NULL AUTO_INCREMENT ,
+  domain VARCHAR( 128 ) NOT NULL ,
+  server VARCHAR( 255 ) NOT NULL ,
+  PRIMARY KEY (id)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!')
 ";
 
 

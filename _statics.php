@@ -173,9 +173,13 @@ function edit_guidance(){
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
-  if(empty($subnet_id) || empty($value)){ 
+  if(empty($subnet_id)){ 
     header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
 	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  }
+  
+  if(empty($value)){
+    $value = NULL;
   }
   
   $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
@@ -193,6 +197,10 @@ function edit_guidance(){
   $sql = "UPDATE subnets SET guidance='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   
   mysql_query($sql);
+  
+  if($value == NULL){
+	$value = $COLLATE['settings']['guidance'];
+  }
   
   echo $value;
   exit;

@@ -29,7 +29,7 @@ global $COLLATE;
 <p><b>Current Settings are shown by default. Click Reset at the bottom to see current settings again.</b></p>
 
 <form id="settings" action="settings.php?op=modify" method="post">
-  <p><b>Check permissions for the following access:</b><br />
+  <p><b>Check permissions for the following access:</b></p>
   
   <?php
   
@@ -53,44 +53,69 @@ global $COLLATE;
 	}
 
   ?>
-  <blockquote>
-    <input type="radio" name="perms" <?php echo $checked1; ?> value="1" />Read-Only<br />
-	<input type="radio" name="perms" <?php echo $checked2; ?> value="2" />Reserve IPs<br />
-    <input type="radio" name="perms" <?php echo $checked3; ?> value="3" />Allocate Subnets<br />
-	<input type="radio" name="perms" <?php echo $checked4; ?> value="4" />Add IP Blocks<br />
-	<input type="radio" name="perms" <?php echo $checked5; ?> value="5" />Admin<br />
-	<input type="radio" name="perms" <?php echo $checked0; ?> value="6" />None (Turn off authentication)<br />
-  </blockquote>
-  </p>
+  <ul class="plain">
+    <li><input type="radio" name="perms" <?php echo $checked1; ?> value="1" />Read-Only (Must login to see/do anything)</li>
+	<li><input type="radio" name="perms" <?php echo $checked2; ?> value="2" />Reserve IPs</li>
+    <li><input type="radio" name="perms" <?php echo $checked3; ?> value="3" />Allocate Subnets</li>
+	<li><input type="radio" name="perms" <?php echo $checked4; ?> value="4" />Add IP Blocks</li>
+	<li><input type="radio" name="perms" <?php echo $checked5; ?> value="5" />Admin</li>
+	<li><input type="radio" name="perms" <?php echo $checked0; ?> value="6" />None (Turn off authentication)</li>
+  </ul>
   
-  <p><b>Authentication Method:</b><br />
-  <select name="ldap_auth">
-    <option value="off" <?php if($COLLATE['settings']['ldap_auth'] == 'off'){ echo "selected=\"selected\""; } ?>> Database </option>
-	<option value="on" <?php if($COLLATE['settings']['ldap_auth'] == 'on'){ echo "selected=\"selected\""; } ?>> LDAP </option>
-  </select></p>
+  <p><b>Authentication Method:</b></p>
+  <ul class="plain">
+    <li><input type="radio" name="auth_type" value="db" <?php if($COLLATE['settings']['auth_type'] == 'db'){ echo "checked=\"checked\""; } ?> onclick="new Effect.Appear('db_auth', {duration: 0.2}); new Effect.Fade('ldap_auth', {duration: 0.2});" />Database</li>
+    <li><input type="radio" name="auth_type" value="ldap" <?php if($COLLATE['settings']['auth_type'] == 'ldap'){ echo "checked=\"checked\""; } ?> onclick="new Effect.Appear('ldap_auth', {duration: 0.2}); new Effect.Fade('db_auth', {duration: 0.2});" />LDAP</li>
+  </ul>
   
-  <p><b>LDAP Server:</b> (ignored for Database authentication)<br />
-  <input name="ldap_server" type="text" size="20" value="<?php echo $COLLATE['settings']['ldap_server']; ?>" /></p>
+  <div id="ldap_auth" <?php if($COLLATE['settings']['auth_type'] == "db"){ echo "style=\"display: none;\""; } ?>>
+	<table width="70%">
+	<?php
+	$sql = "select id,domain, server from `ldap-servers`";
+	$result = mysql_query($sql);
+	if(mysql_num_rows($result) == '0'){
+	  ?>
+	  <tr><th>Domain</th><th>Authentication Server</th></tr>
+	  <tr><td><input type="text" name="new_domain" /></td><td><input type="text" name="new_ldap_server" /></td></tr>
+	  <?php
+	}
+	else{
+	  ?>
+	  <tr><th>Domain</th><th>Authentication Server</th><td><a href="#" onclick="javascript:Effect.toggle($('add_domain'),'appear',{duration:0})"><img src="./images/add.gif" alt="Add" /> Add a Domain </a></td></tr>
+	  <?php
+	  while(list($id,$domain,$server) = mysql_fetch_row($result)){
+	    echo "<tr id=\"ldap_server_$id\"><td>$domain</td><td>$server</td><td><a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_settings.php?op=delete_ldap_server&ldap_server_id=$id', {onSuccess:function(){ new Effect.Fade('ldap_server_".$id."') }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
+	  }
+	  ?>
+	  <tr id="add_domain" style="display: none;"><td><input type="text" name="new_domain" /></td><td><input type="text" name="new_ldap_server" /></td></tr>
+	  <?php
+	}
+	
+	?>
+	</table>
+	<br />
+	
+	<p><b>Default Domain Name:</b> (ignored when "@" present in username)<br />
+	<input name="domain" type="text" size="20" value="<?php echo $COLLATE['settings']['domain']; ?>" /></p>
+  </div>
   
-  <p><b>Default Domain Name:</b> (ignored when "@" present in username<br />
-  <input name="domain" type="text" size="20" value="<?php echo $COLLATE['settings']['domain']; ?>" /></p>
-  
-  <p><b>Number of days before user's passwords expire:</b> (0 for no expiration - ignored for ldap)<br />
-  <input name="accountexpire" type="text" size="10" value="<?php echo $COLLATE['settings']['accountexpire']; ?>" /></p>
-  
-  <p><b>Minimum Password Length:</b> (ignored for ldap)<br />
-  <select name="passwdlength">
-    <option value="5" <?php if($COLLATE['settings']['passwdlength'] == "5") { echo "selected=\"selected\""; } ?>> 5 </option>
+  <div id="db_auth" <?php if($COLLATE['settings']['auth_type'] == "ldap"){ echo "style=\"display: none;\""; } ?>>
+	<p><b>Number of days before user's passwords expire:</b> (0 for no expiration)<br />
+	<input name="accountexpire" type="text" size="10" value="<?php echo $COLLATE['settings']['accountexpire']; ?>" /></p>
+
+	<p><b>Minimum Password Length:</b><br />
+	<select name="passwdlength">
+	<option value="5" <?php if($COLLATE['settings']['passwdlength'] == "5") { echo "selected=\"selected\""; } ?>> 5 </option>
 	<option value="6" <?php if($COLLATE['settings']['passwdlength'] == "6") { echo "selected=\"selected\""; } ?>> 6 </option>
 	<option value="7" <?php if($COLLATE['settings']['passwdlength'] == "7") { echo "selected=\"selected\""; } ?>> 7 </option>
 	<option value="8" <?php if($COLLATE['settings']['passwdlength'] == "8") { echo "selected=\"selected\""; } ?>> 8 </option>
 	<option value="9" <?php if($COLLATE['settings']['passwdlength'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
 	<option value="10" <?php if($COLLATE['settings']['passwdlength'] == "10") { echo "selected=\"selected\""; } ?>> 10 </option>
-  </select></p>
-  
-  <p><b>Number of failed login attempts before account is locked:</b> (0 for infinite)<br />
-  <select name="loginattempts">
-    <option value="0" <?php if($COLLATE['settings']['loginattempts'] == "0") { echo "selected=\"selected\""; } ?>> 0 </option>
+	</select></p>
+
+	<p><b>Number of failed login attempts before account is locked:</b> (0 for infinite)<br />
+	<select name="loginattempts">
+	<option value="0" <?php if($COLLATE['settings']['loginattempts'] == "0") { echo "selected=\"selected\""; } ?>> 0 </option>
 	<option value="1" <?php if($COLLATE['settings']['loginattempts'] == "1") { echo "selected=\"selected\""; } ?>> 1 </option>
 	<option value="2" <?php if($COLLATE['settings']['loginattempts'] == "2") { echo "selected=\"selected\""; } ?>> 2 </option>
 	<option value="3" <?php if($COLLATE['settings']['loginattempts'] == "3") { echo "selected=\"selected\""; } ?>> 3 </option>
@@ -100,15 +125,16 @@ global $COLLATE;
 	<option value="7" <?php if($COLLATE['settings']['loginattempts'] == "7") { echo "selected=\"selected\""; } ?>> 7 </option>
 	<option value="8" <?php if($COLLATE['settings']['loginattempts'] == "8") { echo "selected=\"selected\""; } ?>> 8 </option>
 	<option value="9" <?php if($COLLATE['settings']['loginattempts'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
-  </select></p>
+	</select></p>
+  </div>
   
   <p><b>Default IP Usage Guidance:</b> (Optional)<br />
   <textarea name="guidance" rows="10" cols="45"><?php echo $COLLATE['settings']['guidance']; ?></textarea></p>
   
   <p><b>DNS Servers</b><br />
-  <input name="dns" type="text" size="30" value="<?php echo $COLLATE['settings']['dns']; ?>" /></p>
-  <br />
-  <p><input type="submit" value="Submit" /> <input type="reset" /></p>
+  <input name="dns" type="text" size="30" value="<?php echo $COLLATE['settings']['dns']; ?>" /><br />&nbsp;</p>
+
+  <p><input type="submit" value="Submit" /> <a href="panel.php">Cancel</a></p>
   
 </form>
 
@@ -120,8 +146,9 @@ function process() {
   global $COLLATE;
 
   $perms = clean($_POST['perms']);
-  $ldap_auth = clean($_POST['ldap_auth']);
-  $ldap_server = clean($_POST['ldap_server']);
+  $auth_type = clean($_POST['auth_type']);
+  $new_domain = clean($_POST['new_domain']);
+  $new_ldap_server = clean($_POST['new_ldap_server']);
   $domain = clean($_POST['domain']);
   $accountexpire = clean($_POST['accountexpire']);
   $passwdlength = clean($_POST['passwdlength']);
@@ -142,14 +169,30 @@ function process() {
     $sql = "UPDATE settings SET value='$perms' WHERE name='perms'";
 	mysql_query($sql);
   }
-  if($COLLATE['settings']['ldap_auth'] != $ldap_auth) {
-    $sql = "UPDATE settings SET value='$ldap_auth' WHERE name='ldap_auth'";
+  if($COLLATE['settings']['auth_type'] != $auth_type) {
+    if($auth_type == 'ldap'){
+	  if (!function_exists('ldap_connect')){
+	    $notice = "Your server does not currently support LDAP authentication. Database authentication will be used. All other ";
+	  }
+	  else{
+	  $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
+	  }
+	}
+	else{
+      $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
+	}
 	mysql_query($sql);
   }  
-  if($COLLATE['settings']['ldap_server'] != $ldap_server) {
-    $sql = "UPDATE settings SET value='$ldap_server' WHERE name='ldap_server'";
+  
+  if(!empty($new_domain) && !empty($new_ldap_server)){
+    // new server - make changes...maybe
+	$sql = "INSERT INTO `ldap-servers` (domain, server) VALUES ('$new_domain', '$new_ldap_server')";
 	mysql_query($sql);
-  } 
+  }
+  elseif(!empty($new_domain) || !empty($new_ldap_server)){
+    // filled one but not the other - error
+	$notice = "A field was left blank with the new LDAP server you tried to enter. The new server entry has not been added. All other ";
+  }  
   if($COLLATE['settings']['domain'] != $domain) {
     $sql = "UPDATE settings SET value='$domain' WHERE name='domain'";
 	mysql_query($sql);
@@ -175,7 +218,7 @@ function process() {
 	mysql_query($sql);
   }
   
-  $notice = "Collate:Network Settings have been updated.";
+  $notice .= "Collate:Network Settings have been updated.";
   header("Location: panel.php?notice=$notice");
   exit();
 } // Ends process function

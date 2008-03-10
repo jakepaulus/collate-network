@@ -104,20 +104,21 @@ function add_user(){
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-	$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email FROM users WHERE username='$username'";
+	$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email,ldapexempt FROM users WHERE username='$username'";
     $result = mysql_query($sql);
 	if(mysql_num_rows($result) != '1'){
 	  $notice = "Please select a user to edit.";
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-	list($passwd,$tmppasswd,$accesslevel,$phone,$email) = mysql_fetch_row($result);
+	list($passwd,$tmppasswd,$accesslevel,$phone,$email,$ldapexempt) = mysql_fetch_row($result);
   }
   else{  
     AccessControl('5', "User add form accessed");  
     $post_to = "users.php?op=submit&amp;action=add";
 	$phone = (empty($_GET['phone'])) ? '' : $_GET['phone'];
 	$email = (empty($_GET['email'])) ? '' : $_GET['email'];
+	$ldapexempt = (empty($_GET['ldapexempt'])) ? '0' : $_GET['ldapexempt'];
 	$accesslevel = '0';
   }
   
@@ -149,7 +150,7 @@ function add_user(){
        "    <input name=\"email\" type=\"text\" value=\"$email\" /></p>\n";
       
   echo "<p>User's Permissions:<br />\n";
-
+  
   $hide = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
   $show = "onclick=\"new Effect.Appear('extraforms', {duration: 0.2})\"";
   $show1 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
@@ -216,13 +217,21 @@ function add_user(){
        "</p>\n".
 	   "<div id=\"extraforms\" $hidden>\n";
   
-  if($COLLATE['settings']['ldap_auth'] === 'off'){
+  if($COLLATE['settings']['auth_type'] === 'db'){
 	echo "<p>Temporary Password:<br />\n".
 	     "<input id=\"tmppassword\" name=\"tmppassword\" type=\"text\" size=\"30\" />\n".
 	     "<a href=\"#\" onclick=\"new Effect.toggle($('passwordtip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a></p>\n";
   }
-  echo "</div>\n".
-       "<p style=\"clear: left.\"><input type=\"submit\" value=\" Go \" /></p>\n".
+  
+  echo "</div>\n";
+      ?>
+  
+  <p><input type="checkbox" name="ldapexempt" <?php if($ldapexempt){ echo "checked=\"checked\""; } ?> />
+  Exempt Users from LDAP authentication even when it is enabled?</p>
+  <br />
+  
+  <?php
+  echo "<p style=\"clear: left.\"><input type=\"submit\" value=\" Go \" /></p>\n".
        "</form>\n";
 
 } // Ends add_user function
@@ -234,9 +243,15 @@ function submit_user(){
   $phone = clean($_POST['phone']);
   $email = clean($_POST['email']);
   $perms = clean($_POST['perms']);
-  
+  $ldapexempt = (empty($_POST['ldapexempt'])) ? '0' : clean($_POST['ldapexempt']);
+  if($ldapexempt == "on"){ 
+    $ldapexempt = TRUE;
+  }
+  else{
+    $ldapexempt = FALSE;
+  }
   $action = clean($_GET['action']);
-  
+    
   $accesslevel = "3";
   $message = "new user add attempted: $username";
   AccessControl($accesslevel, $message); 
@@ -273,16 +288,16 @@ function submit_user(){
   }
 
   if($action == "add"){
-    $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email) 
-           VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email')";
+    $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, ldapexempt) 
+           VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$ldapexempt')";
   }
   elseif($action == "edit" && empty($tmppassword)){
-    $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email' WHERE username='$username'";
+    $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
     $message = "User Updated: $username";
   }
   elseif($action == "edit"){
-    $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0' WHERE username='$username'";
+    $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
     $message = "User Updated: $username";
   }

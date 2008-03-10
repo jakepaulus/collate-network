@@ -78,6 +78,14 @@ function change_password(){
   }
   
   $auth = auth($username, $passwd);
+  
+  if($auth == 'ldap'){
+    $notice = "Your administrator has configured your account for LDAP authentication. You cannot change your password using the Change Password form. Please contact your administrator if you need assistance changing your password.";
+    $returnto = urlencode($returnto);
+	header("Location: index.php?notice=$notice");
+	exit();
+  }
+  
   $password = sha1(clean($password));
   
   if($auth == FALSE){
@@ -168,19 +176,11 @@ function cn_logout(){
 
 function cn_login() {
   global $COLLATE;
-  if(isset($_GET['action'])){
-    $action = clean($_GET['action']);
-  }
-  else{
-    $action = "show form";
-  }
-  if(isset($_GET['returnto'])){
-    $returnto = $_GET['returnto'];
-  }
-  else {
-    $returnto = "";
-  }
   
+  $action = (empty($_GET['action'])) ? 'show form' : $_GET['action'];
+  
+  $returnto = (empty($_GET['returnto'])) ? '' : $_GET['returnto'];
+    
   if(isset($_SESSION['username'])) { // The user is already logged in
     $notice = "You are already logged in as ".$COLLATE['user']['username'].".";
 	header("Location: index.php?notice=$notice");
@@ -214,15 +214,13 @@ function cn_login() {
 	exit();
   }
   
-  if($COLLATE['settings']['ldap_auth'] === 'on'){
-	$auth = ldap_auth($username,$password);
+  $auth = auth($username, $password);
+     
+  if($auth == 'ldap'){
+    $auth = ldap_auth($username,$password);
+	$authtype = 'ldap';
   }
-  else{
-    $auth = auth($username, $password);
-  }
-  
-  
-  
+     
   if($auth == FALSE){
     $level = "5";
 	$message = "authentication failed: $username";
@@ -253,13 +251,15 @@ function cn_login() {
     header("Location: login.php?op=changepasswd&username=$username&returnto=$returnto&notice=$notice");
 	exit();
   }
-  elseif($auth['loginattempts'] != "0") { // Normal successful login.
+  else{ // Normal successful login.
     $sql = "UPDATE users SET loginattempts='0' WHERE username='$username'";
 	mysql_query($sql);
   }
   
-  // Normal successful login:
-  
+  if($authtype == 'ldap'){
+    $_SESSION['auth_type'] = 'ldap';
+  }
+ 
   $_SESSION['username'] = $username;
   $_SESSION['accesslevel'] = $auth['accesslevel'];
   session_write_close();
@@ -288,13 +288,17 @@ function auth($username, $password){
   global $COLLATE;
   $password = sha1($password);
   
-  $sql = "SELECT passwd, tmppasswd, accesslevel, loginattempts, passwdexpire FROM users WHERE username='$username'";
+  $sql = "SELECT passwd, tmppasswd, accesslevel, loginattempts, passwdexpire,ldapexempt FROM users WHERE username='$username'";
   $row = mysql_query($sql);
   if(mysql_num_rows($row) != "1"){
     return FALSE;    
   }
   
-  list($passwd,$tmppasswd,$accesslevel,$loginattempts,$passwdexpire) = mysql_fetch_row($row);
+  list($passwd,$tmppasswd,$accesslevel,$loginattempts,$passwdexpire,$ldapexempt) = mysql_fetch_row($row);
+  
+  if($COLLATE['settings']['auth_type'] == 'ldap' && $ldapexempt == false){
+    return "ldap";
+  }
   
   if($loginattempts >= $COLLATE['settings']['loginattempts']){
     return "locked";
@@ -319,31 +323,45 @@ function auth($username, $password){
 function ldap_auth($username, $password){
   global $COLLATE;  
   // First make sure that they are a valid application user, then check their password in the Directory.
-  $sql = "SELECT accesslevel, loginattempts, passwdexpire FROM users WHERE username='$username'";
+  $sql = "SELECT accesslevel, loginattempts FROM users WHERE username='$username'";
   $row = mysql_query($sql);
   if(mysql_num_rows($row) != "1"){
     return FALSE;    
   }
   
-  list($accesslevel,$loginattempts,$passwdexpire) = mysql_fetch_row($row);
+  list($accesslevel,$loginattempts) = mysql_fetch_row($row);
   
   if($loginattempts >= $COLLATE['settings']['loginattempts']){
     return "locked";
   }
   
-  // If we've gotten this far, a good username, password combination has been supplied.
-  $auth['accesslevel'] = $accesslevel;
-  $auth['loginattempts'] = $loginattempts;
-  $auth['passwdexpire'] = $passwdexpire;
-    
+  $username = utf8_encode($username);
+  $password = utf8_encode($password);
+ 
+  // Find domain if there is one -- If no domain exists, return error
+  if(!strstr($username, "@")){
+    $username .= "@".$COLLATE['settings']['domain'];
+  }
+  
+  // Tokenize based on @ sign. Second token is domain name. Look up domain name in database to find ldap server
+  $nothing = strtok($username, "@"); // Dump first token...sloppy don't care right now.
+  $domain = strtok("@");
+  
+  if(empty($domain)){
+    $domain = $COLLATE['settings']['domain'];
+  }
+  
+  $sql = "SELECT domain, server FROM `ldap-servers` WHERE domain='$domain'";
+  $result = mysql_query($sql);
+  if(mysql_num_rows($result) != '1'){
+    return FALSE;
+  }
+  list($domain,$ldap_server) = mysql_fetch_row($result);
+  	
   // connect to ldap server
-  $ldapconn = ldap_connect($COLLATE['settings']['ldap_server'])
+  $ldapconn = ldap_connect($ldap_server)
     or die("Could not connect to LDAP server.");
 	
-  if(!strstr($username, "@")){
-    $username .= $COLLATE['settings']['domain'];
-  }
-
   if ($ldapconn) {
     // binding to ldap server
     $ldapbind = ldap_bind($ldapconn, $username, $password);
@@ -352,6 +370,11 @@ function ldap_auth($username, $password){
     if (!$ldapbind) {
       $auth = false;
     }
+	else{
+	  $auth = array();
+	  $auth['accesslevel'] = $accesslevel;
+	  $auth['passwdexpire'] = '0000-00-00 00:00:00';
+	}
     return $auth;
   }
   

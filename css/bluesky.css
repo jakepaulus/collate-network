@@ -30,7 +30,7 @@ body {
 }
  
 #page { 
-    width: 85%; 
+    width: 80%; 
 	min-width: 900px;
     text-align: left;  
     margin-left: auto; 
@@ -167,7 +167,7 @@ div.autocomplete ul li {
 
 /* content column: */
 
-div.tip {
+.tip {
 	font-style: italic;
     font-weight: bold;
 	color: green;
@@ -245,6 +245,12 @@ hr.division {
     height: 2px;
     color: #E0E0E0;
     background-color: #E0E0E0;
+}
+
+ul.plain {
+      list-style-type:none;
+      margin-left:20px;
+	  margin-bottom: 10px;
 }
 
 /* footer: */

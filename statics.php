@@ -84,7 +84,7 @@ function add_static(){
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip_addr = (empty($_GET['ip_addr'])) ? '' : $_GET['ip_addr'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
-  $contact = (empty($_GET['contact'])) ? '' : $_GET['contact'];
+  $contact = (empty($_GET['contact'])) ? $_SESSION['username'] : $_GET['contact'];
   
 
   echo "<h1>Reserve a static IP</h1>\n".

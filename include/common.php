@@ -72,6 +72,14 @@ while ($column = mysql_fetch_assoc($result)) {
 
 
 function clean($variable){ 
+
+  $invalid = array();
+  $invalid['0'] = '"'; // removes single quotes
+  $invalid['1'] = '\\"'; // removes single quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
+  $invalid['2'] = '\''; // removes double quotes
+  $invalid['3'] = '\\\''; // removes double quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
+
+  $variable = str_replace($invalid, '', $variable);
   $variable = strip_tags(trim($variable)); 
   return $variable;
 }
