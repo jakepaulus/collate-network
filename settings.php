@@ -55,7 +55,7 @@ global $COLLATE;
 
   ?>
   <ul class="plain">
-    <li><input type="radio" name="perms" <?php echo $checked1; ?> value="1" />Read-Only (Must login to see/do anything)</li>
+    <li><input type="radio" name="perms" <?php echo $checked1; ?> value="0" />Read-Only (Must login to see/do anything)</li>
 	<li><input type="radio" name="perms" <?php echo $checked2; ?> value="2" />Reserve IPs</li>
     <li><input type="radio" name="perms" <?php echo $checked3; ?> value="3" />Allocate Subnets</li>
 	<li><input type="radio" name="perms" <?php echo $checked4; ?> value="4" />Add IP Blocks</li>
