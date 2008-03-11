@@ -26,9 +26,10 @@ global $COLLATE;
 ?>
 <h1>Settings</h1>
 <br />
-<p><b>Current Settings are shown by default. Click Reset at the bottom to see current settings again.</b></p>
-
+<h3>Athorization</h3>
+<hr />
 <form id="settings" action="settings.php?op=modify" method="post">
+<div style="margin-left: 25px;">
   <p><b>Check permissions for the following access:</b></p>
   
   <?php
@@ -61,14 +62,18 @@ global $COLLATE;
 	<li><input type="radio" name="perms" <?php echo $checked5; ?> value="5" />Admin</li>
 	<li><input type="radio" name="perms" <?php echo $checked0; ?> value="6" />None (Turn off authentication)</li>
   </ul>
-  
-  <p><b>Authentication Method:</b></p>
+  </div>
+  <br />
+  <h3>Authentication</h3>
+  <hr />
+  <br />
+  <div style="margin-left: 20px;">
+  <p><b>Default Authentication Method:</b></p>
   <ul class="plain">
-    <li><input type="radio" name="auth_type" value="db" <?php if($COLLATE['settings']['auth_type'] == 'db'){ echo "checked=\"checked\""; } ?> onclick="new Effect.Appear('db_auth', {duration: 0.2}); new Effect.Fade('ldap_auth', {duration: 0.2});" />Database</li>
-    <li><input type="radio" name="auth_type" value="ldap" <?php if($COLLATE['settings']['auth_type'] == 'ldap'){ echo "checked=\"checked\""; } ?> onclick="new Effect.Appear('ldap_auth', {duration: 0.2}); new Effect.Fade('db_auth', {duration: 0.2});" />LDAP</li>
+    <li><input type="radio" name="auth_type" value="db" <?php if($COLLATE['settings']['auth_type'] == 'db'){ echo "checked=\"checked\""; } ?> />Database</li>
+    <li><input type="radio" name="auth_type" value="ldap" <?php if($COLLATE['settings']['auth_type'] == 'ldap'){ echo "checked=\"checked\""; } ?> />LDAP</li>
   </ul>
   
-  <div id="ldap_auth" <?php if($COLLATE['settings']['auth_type'] == "db"){ echo "style=\"display: none;\""; } ?>>
 	<table width="70%">
 	<?php
 	$sql = "select id,domain, server from `ldap-servers`";
@@ -81,7 +86,7 @@ global $COLLATE;
 	}
 	else{
 	  ?>
-	  <tr><th>Domain</th><th>Authentication Server</th><td><a href="#" onclick="javascript:Effect.toggle($('add_domain'),'appear',{duration:0})"><img src="./images/add.gif" alt="Add" /> Add a Domain </a></td></tr>
+	  <tr><th>Domain</th><th>LDAP Server</th><td><a href="#" onclick="javascript:Effect.toggle($('add_domain'),'appear',{duration:0})"><img src="./images/add.gif" alt="Add" /> Add a Domain </a></td></tr>
 	  <?php
 	  while(list($id,$domain,$server) = mysql_fetch_row($result)){
 	    echo "<tr id=\"ldap_server_$id\"><td>$domain</td><td>$server</td><td><a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_settings.php?op=delete_ldap_server&ldap_server_id=$id', {onSuccess:function(){ new Effect.Fade('ldap_server_".$id."') }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
@@ -95,15 +100,13 @@ global $COLLATE;
 	</table>
 	<br />
 	
-	<p><b>Default Domain Name:</b> (ignored when "@" present in username)<br />
+	<p><b>Default Domain Name:</b> (ignored when "@" present in username or for database authentication )<br />
 	<input name="domain" type="text" size="20" value="<?php echo $COLLATE['settings']['domain']; ?>" /></p>
-  </div>
   
-  <div id="db_auth" <?php if($COLLATE['settings']['auth_type'] == "ldap"){ echo "style=\"display: none;\""; } ?>>
-	<p><b>Number of days before user's passwords expire:</b> (0 for no expiration)<br />
+	<p><b>Number of days before user's passwords expire:</b> (0 for no expiration, ignored for LDAP users)<br />
 	<input name="accountexpire" type="text" size="10" value="<?php echo $COLLATE['settings']['accountexpire']; ?>" /></p>
 
-	<p><b>Minimum Password Length:</b><br />
+	<p><b>Minimum Password Length:</b> (not applicable to LDAP users)<br />
 	<select name="passwdlength">
 	<option value="5" <?php if($COLLATE['settings']['passwdlength'] == "5") { echo "selected=\"selected\""; } ?>> 5 </option>
 	<option value="6" <?php if($COLLATE['settings']['passwdlength'] == "6") { echo "selected=\"selected\""; } ?>> 6 </option>
@@ -127,13 +130,17 @@ global $COLLATE;
 	<option value="9" <?php if($COLLATE['settings']['loginattempts'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
 	</select></p>
   </div>
-  
+  <br />
+  <h3>User Guidance</h3>
+  <hr />
+  <br />
+  <div style="margin-left: 25px;">
   <p><b>Default IP Usage Guidance:</b> (Optional)<br />
   <textarea name="guidance" rows="10" cols="45"><?php echo $COLLATE['settings']['guidance']; ?></textarea></p>
   
   <p><b>DNS Servers</b><br />
   <input name="dns" type="text" size="30" value="<?php echo $COLLATE['settings']['dns']; ?>" /><br />&nbsp;</p>
-
+  </div>
   <p><input type="submit" value="Submit" /> <a href="panel.php">Cancel</a></p>
   
 </form>
@@ -175,7 +182,7 @@ function process() {
 	    $notice = "Your server does not currently support LDAP authentication. Database authentication will be used. All other ";
 	  }
 	  else{
-	  $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
+	    $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
 	  }
 	}
 	else{

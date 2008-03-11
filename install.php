@@ -50,7 +50,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.4+ (dev)');
+INSERT INTO `settings` VALUES ('version', '1.5');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -112,34 +112,29 @@ ALTER TABLE logs CHANGE id id INT( 11 ) NOT NULL AUTO_INCREMENT;
 ALTER TABLE statics CHANGE id id INT( 10 ) NOT NULL AUTO_INCREMENT, CHANGE subnet_id subnet_id INT( 9 ) NOT NULL;
 ALTER TABLE subnets CHANGE id id INT( 9 ) NOT NULL AUTO_INCREMENT , CHANGE block_id block_id INT( 9 ) NOT NULL;
 INSERT INTO settings (name, value) VALUES ('guidance', '');
-UPDATE settings SET value = '1.2' WHERE name = 'version';
 ";
 
 $upgrade_from_one_dot_two = 
 "
 ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
-UPDATE settings SET value='1.3' WHERE name='version';
 ";
 
-$upgrade_from_one_dot_three = 
-"
-UPDATE settings SET value='1.4' WHERE name='version';
-";
+
 
 $upgrade_from_one_dot_four = 
 "
-ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
-INSERT INTO settings VALUES ('dns', '');
-INSERT INTO settings VALUES ('auth_type', 'db');
-INSERT INTO settings VALUES ('domain', 'example.com');
-UPDATE settings SET value='1.5' WHERE name='version';
-ALTER TABLE users ADD ldapexempt TINYINT( 1 ) NOT NULL DEFAULT '0';
 CREATE TABLE `ldap-servers` (
-  id TINYINT( 4 ) NOT NULL AUTO_INCREMENT ,
-  domain VARCHAR( 128 ) NOT NULL ,
-  server VARCHAR( 255 ) NOT NULL ,
-  PRIMARY KEY (id)
+  `id` tinyint(4) NOT NULL auto_increment,
+  `domain` varchar(128) NOT NULL,
+  `server` varchar(255) NOT NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+INSERT INTO `settings` VALUES ('dns', '');
+INSERT INTO `settings` VALUES ('auth_type', 'db');
+INSERT INTO `settings` VALUES ('domain', '');
+ALTER TABLE statics ADD last_checked_at datetime NOT NULL;
+ALTER TABLE users ADD ldapexempt TINYINT( 1 ) NOT NULL DEFAULT '0';
+UPDATE settings SET value='1.5' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!')
 ";
 
@@ -154,20 +149,14 @@ if(mysql_num_rows($result) != '0') { // See what version we're on
   if($version == '1.0'){
     $results = multiple_query("$upgrade_from_one_dot_zero");
 	$results .= multiple_query("$upgrade_from_one_dot_two");
-	$results .= multiple_query("$upgrade_from_one_dot_three");
 	$results .= multiple_query("$upgrade_from_one_dot_four");
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
-	$results .= multiple_query("$upgrade_from_one_dot_three");
 	$results .= multiple_query("$upgrade_from_one_dot_four");
   }
-  elseif($version == '1.3'){
-    $results = multiple_query("$upgrade_from_one_dot_three");
+  elseif($version == '1.3' || $version == '1.4'){
 	$results .= multiple_query("$upgrade_from_one_dot_four");
-  }
-  elseif($version == '1.4'){
-    $results = multiple_query("$upgrade_from_one_dot_four");
   }
   $notice = "This application has been successfully upgraded to version 1.5. Please delete install.php from your web server.";
 }

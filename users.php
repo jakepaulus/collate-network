@@ -104,14 +104,14 @@ function add_user(){
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-	$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email,ldapexempt FROM users WHERE username='$username'";
+	$sql = "SELECT passwd, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt FROM users WHERE username='$username'";
     $result = mysql_query($sql);
 	if(mysql_num_rows($result) != '1'){
 	  $notice = "Please select a user to edit.";
 	  header("Location: users.php?notice=$notice");
 	  exit();
 	}
-	list($passwd,$tmppasswd,$accesslevel,$phone,$email,$ldapexempt) = mysql_fetch_row($result);
+	list($passwd,$tmppasswd,$accesslevel,$phone,$email,$loginattempts,$ldapexempt) = mysql_fetch_row($result);
   }
   else{  
     AccessControl('5', "User add form accessed");  
@@ -215,19 +215,18 @@ function add_user(){
 	   "<input type=\"radio\" name=\"perms\" $show4 $checked4 value=\"4\" />Add IP Blocks<br />\n".
 	   "<input type=\"radio\" name=\"perms\" $show $checked5 value=\"5\" />Admin<br />\n".
        "</p>\n".
-	   "<div id=\"extraforms\" $hidden>\n";
-  
-  if($COLLATE['settings']['auth_type'] === 'db'){
-	echo "<p>Temporary Password:<br />\n".
-	     "<input id=\"tmppassword\" name=\"tmppassword\" type=\"text\" size=\"30\" />\n".
-	     "<a href=\"#\" onclick=\"new Effect.toggle($('passwordtip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a></p>\n";
-  }
-  
-  echo "</div>\n";
+	   "<div id=\"extraforms\" $hidden>\n".
+	   "  <p>Temporary Password:<br />\n".
+	   "  <input id=\"tmppassword\" name=\"tmppassword\" type=\"text\" size=\"30\" />\n".
+	   "  <a href=\"#\" onclick=\"new Effect.toggle($('passwordtip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a></p>\n".
+	   "</div>\n";
       ?>
   
   <p><input type="checkbox" name="ldapexempt" <?php if($ldapexempt){ echo "checked=\"checked\""; } ?> />
   Exempt Users from LDAP authentication even when it is enabled?</p>
+  
+  <p><input type="checkbox" name="locked" <?php if($loginattempts >= $COLLATE['settings']['loginattempts']){ echo "checked=\"checked\""; } ?> />
+  Account is locked</p>
   <br />
   
   <?php
@@ -243,6 +242,7 @@ function submit_user(){
   $phone = clean($_POST['phone']);
   $email = clean($_POST['email']);
   $perms = clean($_POST['perms']);
+  $locked = (empty($_POST['locked'])) ? 'off' : clean($_POST['locked']);
   $ldapexempt = (empty($_POST['ldapexempt'])) ? '0' : clean($_POST['ldapexempt']);
   if($ldapexempt == "on"){ 
     $ldapexempt = TRUE;
@@ -286,18 +286,25 @@ function submit_user(){
 	$accesslevel = "5";
     $message = "User Edit form accessed: $username";
   }
+  
+  if($locked == "on"){
+    $loginattempts = $COLLATE['settings']['loginattempts'];
+  }
+  else{
+    $loginattempts = '0';
+  }
 
   if($action == "add"){
-    $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, ldapexempt) 
-           VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$ldapexempt')";
+    $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt) 
+           VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$loginattempts', '$ldapexempt')";
   }
   elseif($action == "edit" && empty($tmppassword)){
-    $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email', ldapexempt='$ldapexempt' WHERE username='$username'";
+    $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email', loginattempts='$loginattempts', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
     $message = "User Updated: $username";
   }
   elseif($action == "edit"){
-    $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0', ldapexempt='$ldapexempt' WHERE username='$username'";
+    $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0', loginattempts='$loginattempts', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
     $message = "User Updated: $username";
   }
