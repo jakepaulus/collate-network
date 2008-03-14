@@ -88,7 +88,7 @@ function add_static(){
   
 
   echo "<h1>Reserve a static IP</h1>\n".
-       "<p align=\"right\"><a href=\"#\" 
+       "<p style=\"text-align: right;\"><a href=\"#\" 
 	   onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); \">IP Guidance</a></p>\n".
 	   "<form action=\"statics.php?op=submit\" method=\"post\">\n".
 	   "<div style=\"float: left; width: 28%;\">\n".
@@ -458,7 +458,7 @@ function list_statics(){
   echo "<h1>ACL for \"$subnet_name\"</h1>\n";
   
   if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
-    echo  "<p align=\"right\"><a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">\n".
+    echo  "<p style=\"text-align: right;\"><a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">\n".
 	      "<img src=\"./images/add.gif\" alt=\"Add\" /> Add an ACL Statement </a></p>\n";
   }
   else{

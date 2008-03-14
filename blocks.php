@@ -47,7 +47,7 @@ function add_block(){
 	"  be used for. An example would be \"Point to Point subnets.\"<br /><br /></div>\n".
 	"<h1>Add Block</h1>\n".
 	"<br />\n".
-	"<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
+	"<form action=\"blocks.php?op=submit\" method=\"post\">\n".
 	"  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	"    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	"  </p>\n".
@@ -136,8 +136,7 @@ function submit_block() {
   
   // We need to make sure this new block doesn't overlap an existing block
   $sql = "SELECT id FROM blocks WHERE (start_ip <= '$long_ip' AND end_ip >= '$long_ip') OR 
-          (start_ip <= '$long_end_ip' AND end_ip >= '$long_end_ip') OR
-		  (start_ip >= '$long_ip' AND end_ip <= '$long_end_ip')";
+          (start_ip <= '$long_end_ip' AND end_ip >= '$long_end_ip')";
   
   $search = mysql_query($sql);
   if(mysql_num_rows($search) != '0'){
@@ -145,6 +144,7 @@ function submit_block() {
 	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
+ 
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_ip', '$long_end_ip', '$note', '$username', now())";
   

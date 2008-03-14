@@ -15,10 +15,12 @@ require_once('./include/header.php');
 <table width="100%">
 <tr><td><br /></td></tr>
 <tr>
-<td align="center" style="width: 25%"><a href="./users.php"><img height="48" width="48" alt="Users" src="./images/users.gif" /><br /></a><b>Manage Users</b></td>
-<td align="center" style="width: 25%"><a href="./blocks.php"><img height="48" width="48" alt="Blocks" src="./images/block.gif" /></a><br /><b>Manage IP</b></td>
-<td align="center" style="width: 25%"><a href="./docs/documentation.txt"><img height="48" width="48" alt="[?]" src="./images/help_large.gif" /></a><br />
-<b>Documentation</b></td>
+<td align="center" style="width: 25%"><a href="./users.php"><img height="48" width="48" alt="Users" src="./images/users.gif" /><br /></a>
+<b>Manage Users</b></td>
+<td align="center" style="width: 25%"><a href="./blocks.php"><img height="48" width="48" alt="Blocks" src="./images/block.gif" /></a><br />
+<b>Manage IP</b></td>
+<td align="center" style="width: 25%"><a href="http://code.google.com/p/collate-network/w/list"><img height="48" width="48" alt="[?]" src="./images/help_large.gif" /></a><br />
+<b>Help</b></td>
 <td align="center" style="width: 25%"><a href="./logs.php"><img height="48" width="48" alt="[?]" src="./images/logs.gif" /></a><br /><b>Logs</b></td>
 </tr>
 <tr><td><br /></td></tr>
