@@ -88,7 +88,7 @@ CREATE TABLE `subnets` (
 
 CREATE TABLE `users` (
   `id` int(9) NOT NULL auto_increment,
-  `username` varchar(25) NOT NULL,
+  `username` varchar(100) NOT NULL,
   `passwd` varchar(40) NOT NULL,
   `tmppasswd` varchar(40) NOT NULL,
   `accesslevel` tinyint(1) NOT NULL default '0',
