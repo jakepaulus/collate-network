@@ -49,7 +49,7 @@ function list_users(){
   while(list($username,$phone,$email) = mysql_fetch_row($result)){
     echo "<tr><td>$username</td><td>$phone</td><td>$email</td>
 	     <td><a href=\"users.php?op=delete&amp;username=$username\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
-		 &nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/edit.gif\" alt=\"edit\" /></td></tr>".
+		 &nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/edit.gif\" alt=\"edit\" /></a></td></tr>".
 	     "<tr><td colspan=\"4\"><hr class=\"division\" /></td></tr>";
   }
   
@@ -226,8 +226,7 @@ function add_user(){
   Exempt Users from LDAP authentication even when it is enabled?</p>
   
   <p><input type="checkbox" name="locked" <?php if($loginattempts >= $COLLATE['settings']['loginattempts']){ echo "checked=\"checked\""; } ?> />
-  Account is locked</p>
-  <br />
+  Account is locked<br /></p>
   
   <?php
   echo "<p style=\"clear: left.\"><input type=\"submit\" value=\" Go \" /></p>\n".
