@@ -13,7 +13,7 @@
 #
 # Here is how we scan. Feel free to modify the options to adjust performance...
 # BUT BE CAREFUL
-$command = "ping -c 4 -n -A";
+$command = "ping -c 3 -n -A";
 #--------------------------------------------------------------------------------
 
 // We don't want this script to be run from a browser by accident

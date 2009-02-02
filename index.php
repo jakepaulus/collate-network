@@ -19,7 +19,8 @@ require_once('./include/header.php');
     <h3>Documentation</h3>
       <p>
       Documentation for this application can be found in the docs directory that came with this distribution. You can read the 
-	  documenation online by clicking <a href="http://code.google.com/p/collate-network/w/list">this link</a>. 
+	  documenation online at 
+	  <a href="http://collate.info/">Collate.info</a>.
       </p>
 
 <?php require_once('./include/footer.php'); ?>

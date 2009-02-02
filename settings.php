@@ -26,7 +26,7 @@ global $COLLATE;
 ?>
 <h1>Settings</h1>
 <br />
-<h3>Authorization</h3>
+<h3>Athorization</h3>
 <hr />
 <form id="settings" action="settings.php?op=modify" method="post">
 <div style="margin-left: 25px;">
@@ -63,10 +63,10 @@ global $COLLATE;
 	<li><input type="radio" name="perms" <?php echo $checked0; ?> value="6" />None (Turn off authentication)</li>
   </ul>
   </div>
-  <p>&nbsp;</p>
+  <br />
   <h3>Authentication</h3>
   <hr />
-  <p>&nbsp;</p>
+  <br />
   <div style="margin-left: 20px;">
   <p><b>Default Authentication Method:</b></p>
   <ul class="plain">
@@ -98,7 +98,7 @@ global $COLLATE;
 	
 	?>
 	</table>
-	<p>&nbsp;</p>
+	<br />
 	
 	<p><b>Default Domain Name:</b> (ignored when "@" present in username or for database authentication )<br />
 	<input name="domain" type="text" size="20" value="<?php echo $COLLATE['settings']['domain']; ?>" /></p>
@@ -130,15 +130,15 @@ global $COLLATE;
 	<option value="9" <?php if($COLLATE['settings']['loginattempts'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
 	</select></p>
   </div>
-  <p>&nbsp;</p>
+  <br />
   <h3>User Guidance</h3>
   <hr />
-  <p>&nbsp;</p>
+  <br />
   <div style="margin-left: 25px;">
   <p><b>Default IP Usage Guidance:</b> (Optional)<br />
   <textarea name="guidance" rows="10" cols="45"><?php echo $COLLATE['settings']['guidance']; ?></textarea></p>
   
-  <p><b>DNS Servers</b> (Optional)<br />
+  <p><b>DNS Servers</b><br />
   <input name="dns" type="text" size="30" value="<?php echo $COLLATE['settings']['dns']; ?>" /><br />&nbsp;</p>
   </div>
   <p><input type="submit" value="Submit" /> <a href="panel.php">Cancel</a></p>

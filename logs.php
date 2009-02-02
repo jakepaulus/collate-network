@@ -120,7 +120,7 @@ function view_logs() {
 	
   }
   
-  echo "</td>
+  echo "</p></td>
         <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
         <input type=\"submit\" value=\" Go \" /></p></td>";
    
@@ -175,7 +175,7 @@ function view_logs() {
 	
   }
   
-  echo "</td>
+  echo "</p></td>
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
   <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
   
