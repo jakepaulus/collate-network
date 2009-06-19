@@ -164,19 +164,26 @@ function submit_block() {
 function list_blocks(){
   require_once('./include/header.php');
   global $COLLATE;
+  
+  if ($_GET['sort'] == 'network') { 
+    $sort = 'start_ip';
+  }
+  else {
+    $sort = 'name';
+  }
  
   echo "<h1>All IP Blocks</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Add a Block </a></p>";
 	   
   echo "<table width=\"100%\">\n". // Here we actually build the HTML table
-	     "<tr><th align=\"left\">Block Name</th>".
-	     "<th align=\"left\">Starting IP</th>".
+	     "<tr><th align=\"left\"><a href=\"blocks.php\">Block Name</a></th>".
+	     "<th align=\"left\"><a href=\"blocks.php?sort=network\">Starting IP</a></th>".
 	     "<th align=\"left\">Ending IP</th>".
 	     "</tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
-  $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note` FROM `blocks` ORDER BY `name` ASC";
+  $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note` FROM `blocks` ORDER BY `$sort` ASC";
   $results = mysql_query($sql);
   
   while(list($block_id,$name,$long_start_ip,$long_end_ip,$note) = mysql_fetch_row($results)){

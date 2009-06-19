@@ -264,15 +264,36 @@ function search(){
 	exit();
   }
   
+  // -----------------------------------------------Build our sort variable---------------------------------------------
+  if($first == '0'){ // subnet search
+    // use what they ask for or default to what they searched by
+    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'network' || $_GET['sort'] == 'name' )){
+      $sort = $_GET['sort'];
+    }
+    else{
+      $sort = $second;
+    }
+    if($sort == 'ip' || $sort == 'network'){ $sort = 'start_ip'; }
+  }
+  else{ // static IP search or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
+    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact')){
+        $sort = $_GET['sort'];
+    }
+    else{
+      $sort = $second;
+    }
+  }
+  //-----------------------------------------------------------------------------------------------------------------------------
+  
   if(($first == '0' || $first == '1') && $second == "ip"){
   
     if(!strstr($search, '/')){
-	  $ip = $search;
-	  $mask = '32';
-	}
-	else{
+      $ip = $search;
+      $mask = '32';
+	  }
+	  else{
       list($ip,$mask) = explode('/', $search);
-	}
+	  }
   
     if(ip2long($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
@@ -303,25 +324,25 @@ function search(){
   
   if($first == "0") { // Subnet search
     $first = "subnets";
-	$First = "Subnets";
+    $First = "Subnets";
 	
 	if($when == "dates"){
 	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
 	  if($second == "ip"){
 	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
-		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
       }
 	  else{
 	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
-		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
 	  }
 	}
 	else{
 	  if($second == "ip"){
-	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip'";
+	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$sort` ASC";
       }
 	  else{
-	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%'";
+	    $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$sort` ASC";
 	  }
 	}
   }
@@ -332,19 +353,19 @@ function search(){
 	  $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
 	  if($second == "ip"){
 	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
-		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
 	  }
 	  else{
 	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE $second LIKE '%$search%' AND
-		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59'";
+		modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
 	  }
 	}
 	else{
       if($second == "ip"){
-	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE ip & '$long_mask' = '$long_ip'";
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE ip & '$long_mask' = '$long_ip' ORDER BY `$sort` ASC";
 	  }
 	  else{
-	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE $second LIKE '%$search%'";
+	    $sql = "SELECT id, ip, name, contact, note, subnet_id FROM statics WHERE $second LIKE '%$search%' ORDER BY `$sort` ASC";
 	  }
 	}
   }
@@ -452,8 +473,8 @@ function search(){
 
   if($first == "subnets"){
     echo "<table width=\"100%\">\n". 
-	     "<tr><th align=\"left\">Subnet Name</th>".
-	     "<th align=\"left\">Network Address</th>".
+	     "<tr><th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=name\">Subnet Name</th>".
+	     "<th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=network\">Network Address</th>".
 	     "<th align=\"left\">Subnet Mask</th>".
 	     "<th align=\"left\">Statics Used</th></tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
@@ -539,7 +560,7 @@ while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysq
 	echo "</table>\n";
   }
   elseif($first == "static IPs"){
-    echo "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th></tr>".
+    echo "<table width=\"100%\"><tr><th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=ip\">IP Address</a></th><th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=name\">Name</a></th><th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=contact\">Contact</a></th></tr>".
 	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
   
   while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){

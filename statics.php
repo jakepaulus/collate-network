@@ -264,6 +264,12 @@ function list_statics(){
   }
    
   $subnet_id = clean($_GET['subnet_id']);
+  if ($_GET['sort'] != 'name' && $_GET['sort'] != 'contact') { 
+    $sort = 'ip';
+  }
+  else {
+    $sort = $_GET['sort'];
+  }
     
   $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
   $results = mysql_query($sql);
@@ -281,7 +287,7 @@ function list_statics(){
   
   $_SESSION['show'] = $show;
   
-  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY ip ASC";
+  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY `$sort` ASC";
   
   if(is_numeric($show) && $show <= '250' && $show > '5'){
     $limit = $show;
@@ -345,7 +351,10 @@ function list_statics(){
 
  echo "<td align=\"right\"><a href=\"statics.php?op=add&amp;subnet_id=$subnet_id\">
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Reserve an IP </a></td></tr></table></form>\n".
-	   "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th></tr>".
+	   "<table width=\"100%\">".
+     "<tr><th><a href=\"statics.php?subnet_id=$subnet_id\">IP Address</a></th>".
+     "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=name\">Name</a></th>".
+     "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=contact\">Contact</a></th></tr>".
 	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
    
   while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){

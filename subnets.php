@@ -283,6 +283,12 @@ function list_subnets(){
 	exit();
   }
   $block_id = $_GET['block_id'];
+  if ($_GET['sort'] == 'network') { 
+    $sort = 'start_ip';
+  }
+  else {
+    $sort = 'name';
+  }
   
   $sql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
   $result = mysql_query($sql);
@@ -299,13 +305,13 @@ function list_subnets(){
 	   <img src=\"./images/add.gif\" alt=\"Add\" /> Allocate a Subnet </a></p>";
 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` 
-	  WHERE `block_id` = '$block_id' ORDER BY `name` ASC";
+	  WHERE `block_id` = '$block_id' ORDER BY `$sort` ASC";
 
     
    
   echo "<table width=\"100%\">\n". 
-	     "<tr><th align=\"left\">Subnet Name</th>".
-	     "<th align=\"left\">Network Address</th>".
+	     "<tr><th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=name\">Subnet Name</a></th>".
+	     "<th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=network\">Network Address</a></th>".
 	     "<th align=\"left\">Subnet Mask</th>".
 		 "<th align=\"left\">Statics Used</th></tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
