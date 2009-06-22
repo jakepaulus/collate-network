@@ -31,6 +31,10 @@ switch($op){
 	case "delete_acl";
 	delete_acl();
 	break;
+  
+  case "toggle_stale-scan";
+  toggle_stalescan();
+  break;
 }
 
 function edit_static(){
@@ -214,10 +218,10 @@ function delete_static(){
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
 
-  if(empty($static_ip) || !long2ip($static_ip)){
+  if(empty($static_ip) || !ip2long($static_ip)){
     header("HTTP/1.1 500 Internal Error");
     echo "The static IP you tried to delete is not valid.";
-	exit();
+    exit();
   }
   
   $accesslevel = "2";
@@ -265,5 +269,51 @@ function delete_acl(){
 
 } // Ends delete_acl function
 
+
+function toggle_stalescan(){
+  
+  global $COLLATE;
+  
+  $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
+  $toggle = (empty($_GET['toggle'])) ? '' : clean($_GET['toggle']);
+  $referer = $_SERVER['HTTP_REFERER'];
+  if(empty($referer)){
+    $referer='./search.php?notice=';
+  }
+  else{
+    $referer=$referer.'&notice=';
+  }
+
+  if(empty($static_ip) || !ip2long($static_ip)){
+    $error="The static IP you tried to modify is not valid.";
+    header("Location: $referer"."$error");
+    exit();
+  }
+  
+  $accesslevel = "2";
+  $message = "Static IP deleted: $static_ip";
+  AccessControl($accesslevel, $message); 
+
+  $long_ip = ip2long($static_ip);
+  if($toggle == 'on'){
+    $count='0';
+  }
+  elseif($toggle == 'off'){
+    $count='-1';
+  }
+  else{
+    $error="You tried to toggle failed scanning to an invalid status.";
+    header("Location: $referer"."$error");
+    exit();
+  }
+  
+  $sql = "UPDATE statics SET failed_scans='$count' WHERE ip='$long_ip' LIMIT 1";
+  mysql_query($sql);
+    
+  $notice="Stale Scan has been turned $toggle for the IP $static_ip";
+  header("Location: $referer"."$notice");
+  exit();
+  
+} // Ends delete_static function
 
 ?>

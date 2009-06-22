@@ -13,10 +13,11 @@ store[1] = new Array(
 	'name', 'name',
 	'contact', 'contact',
 	'note', 'note',
-	'last modified by', 'modified_by');
+	'last modified by', 'modified_by',
+  'failed scans count', 'failed_scans');
 	
 store[2] = new Array(
-	'user', 'username',
+	'username', 'username',
 	'level', 'level',
 	'message', 'message');
 

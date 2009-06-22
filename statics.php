@@ -168,7 +168,7 @@ function submit_static(){
     
   if(empty($name) || empty($ip_addr) || empty($contact) || empty($subnet_id)){
     $notice = "You have left a required field blank.";
-	header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&ip_addr=$ip_addr&contact=$contact&note=$note&notice=$notice");
+    header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&ip_addr=$ip_addr&contact=$contact&note=$note&notice=$notice");
     exit();
   }
   
@@ -177,7 +177,7 @@ function submit_static(){
   
   if(mysql_num_rows($results) != '1'){
     $notice = "The subnet you provided is not valid. Please select an IP block and a subnet to reserve an IP address from.";
-	header("Location: blocks.php?notice=$notice");
+    header("Location: blocks.php?notice=$notice");
   }
   
   list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip,$long_mask) = mysql_fetch_row($results);
@@ -191,7 +191,7 @@ function submit_static(){
   
   while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
     $acl = range($start_ip, $end_ip);
-	$ipspace = array_diff($ipspace, $acl);
+    $ipspace = array_diff($ipspace, $acl);
   }
   
   $sql = "SELECT ip FROM statics WHERE subnet_id='$subnet_id'";
@@ -209,8 +209,8 @@ function submit_static(){
   
   if(array_search($long_ip_addr, $ipspace) == FALSE){
     $notice = "The IP Address supplied is not valid. Please choose another.";
-	header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&contact=$contact&note=$note&notice=$notice");
-	exit();
+    header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&contact=$contact&note=$note&notice=$notice");
+    exit();
   }
   
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];

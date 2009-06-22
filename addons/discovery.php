@@ -13,7 +13,11 @@
 #
 # Here is how we scan. Feel free to modify the options to adjust performance...
 # BUT BE CAREFUL
-$command = "ping -c 3 -n -A";
+$pingcommand = "/bin/ping -c 3 -n -A -w 2";
+$dnscommand = "/usr/bin/dig";
+$dnsserver['0']="10.1.1.1";  // Add additional servers if needed
+#$dnsserver['1']="172.16.244.14";
+
 #--------------------------------------------------------------------------------
 
 // We don't want this script to be run from a browser by accident
@@ -31,9 +35,10 @@ foreach ($argv as $arg) {
 
 if(isset($_ARG['h']) || isset($_ARG['help'])){
   echo "\r\n".
-       "This script takes two options: \r\n".
+       "This script takes three options: \r\n".
 	   " -h (or --help): Outputs this message \r\n".
 	   " -v (or --verbose): Outputs detail about the progress of the script \r\n".
+     " -n (or --numeric): Skip name resolution when adding hosts \r\n".
 	   "\r\n".
 	   "Please read the documenation for this script at http://code.google.com/p/collate-network/w/list before running \r\n".
        "this on a schedule. \r\n".
@@ -53,9 +58,12 @@ require_once('../include/db_connect.php');
 // Create array containing all unreserved IPs in all reserved subnets excluding ACL'd IP space
 
 // loop whole operation over each subnet  
+$pingedhosts = '0';
+$newhosts = '0';
+
 $sql = "SELECT id, start_ip, end_ip FROM subnets";
-$results = mysql_query($sql);
-while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($results)){
+$subnet_results = mysql_query($sql);
+while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($subnet_results)){
   $first_usable = $long_subnet_start_ip;
   $last_usable = $long_subnet_end_ip - '1';
   $subnet = range($first_usable, $last_usable);
@@ -82,21 +90,42 @@ while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_r
   $dotzeroaddress = array_pop($subnet);
   
   
-  $pingedhosts = '0';
-  $newhosts = '0';
-  
   while(!empty($subnet)){
     $ip = long2ip(array_pop($subnet));
     
-    $output = &system("$command $ip > /dev/null", $return);
+    $output = &system("$pingcommand $ip > /dev/null", $return);
     $pingedhosts++;  
     
     if($return == '0'){ // Host responded
+    
+      if(!isset($_ARG['n']) && !isset($_ARG['numeric'])){ // Do dns lookups
+        foreach ($dnsserver as &$server){
+          //exec ( string $command [, array &$output [, int &$return_var ]] )
+          exec ("$dnscommand @$server -x $ip +short", $name, $return);
+          $name = $name['0'];
+          if(!empty($name)){ // a server responded
+            break;
+          }
+          elseif($name == ';; connection timed out; no servers could be reach'){
+            echo "invalid DNS server configured at the top of this script";
+            exit(2);
+          }
+        }
+      }
+      else{
+        $name='discovered-host';
+      }
+    
       $long_ip_addr = ip2long($ip);
       
       $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
-  		 VALUES('$long_ip_addr', 'discovered-host', 'Network Admin', 'Added by discovery addon', '$subnet_id', 'system', now())";
+  		 VALUES('$long_ip_addr', '$name', 'Network Admin', 'Added by discovery addon', '$subnet_id', 'system', now())";
     	mysql_query($sql);
+      
+      // Log what we've added to the DB
+      $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), 'system', '', 'normal', 'Static IP Reserved by discovery addon: $ip ($name)')";
+      mysql_query($sql);
+  
     	$newhosts++;
       if($verbose == 'on'){ echo '!'; }
     }

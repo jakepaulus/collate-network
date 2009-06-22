@@ -66,7 +66,7 @@ CREATE TABLE `statics` (
   `subnet_id` int(9) NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
-  `last_checked_at` datetime NOT NULL,
+  `failed_scans` INT( 16 ) NOT NULL DEFAULT  '0',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `ip` (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -119,8 +119,6 @@ $upgrade_from_one_dot_two =
 ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
 ";
 
-
-
 $upgrade_from_one_dot_four = 
 "
 CREATE TABLE `ldap-servers` (
@@ -138,6 +136,14 @@ UPDATE settings SET value='1.5' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.5!')
 ";
 
+$upgrade_from_one_dot_five =
+"
+ALTER TABLE statics CHANGE last_checked_at failed_scans INT( 16 ) NOT NULL DEFAULT '0';
+UPDATE statics SET failed_scans='0';
+ALTER TABLE users CHANGE username username varchar ( 50 ) NOT NULL;
+UPDATE settings SET value='1.6' WHERE name='version'
+";
+
 
 require_once('./include/db_connect.php');
 
@@ -148,21 +154,43 @@ if(mysql_num_rows($result) != '0') { // See what version we're on
   $version = mysql_result($result, 0, 0);
   if($version == '1.0'){
     $results = multiple_query("$upgrade_from_one_dot_zero");
-	$results .= multiple_query("$upgrade_from_one_dot_two");
-	$results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_two");
+    $results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_five");
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
-	$results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_five");
   }
   elseif($version == '1.3' || $version == '1.4'){
-	$results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_four");
+    $results .= multiple_query("$upgrade_from_one_dot_five");
   }
-  $notice = "This application has been successfully upgraded to version 1.5. Please delete install.php from your web server.";
+  elseif($version == '1.5'){
+    $results .= multiple_query("$upgrade_from_one_dot_five");
+  }
+  elseif($version == '1.6'){
+    // We're at the current version!
+    ?>
+      <html>
+      <head>
+        <title>Error!</title>
+      </head>
+      <body>
+        <h1>You're already up to date</h1>
+        <p>This script will bring your database to version 1.6. You're already running 1.6 so there's nothing to do.
+            If you think you're seeing this in error please file a bug report.</p>
+      </body>
+      </html>
+    <?php
+    exit();
+  }
+  $notice = "This application has been successfully upgraded to version 1.6.";
 }
 else{ // We're installing
   $results = multiple_query($install);
-  $notice = "This application has been successfully installed. Please delete install.php from your web server.";
+  $notice = "This application has been successfully installed.";
 }
 
 

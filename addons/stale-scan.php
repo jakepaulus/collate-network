@@ -13,7 +13,7 @@
 #
 # Here is how we scan. Feel free to modify the options to adjust performance...
 # BUT BE CAREFUL
-$command = "ping -c 3 -n -A";
+$command = "ping -c 3 -n -A -w 2";
 #--------------------------------------------------------------------------------
 
 // We don't want this script to be run from a browser by accident
@@ -51,32 +51,33 @@ else{
 require_once('../include/db_connect.php');
 
 $pingedhosts = '0';
-$updatedhosts = '0';
+$goodhosts = '0';
 
-$sql = "SELECT ip, last_checked_at FROM statics WHERE last_checked_at != '1111-11-11 11:11:11'";
+$sql = "SELECT ip FROM statics WHERE failed_scans != '-1'";
 $result = mysql_query($sql);
 
 if(mysql_num_rows($result) < '1'){ exit("\r\nError:\r\nThere are no IPs to check\r\n"); }
 
-while(list($long_ip, $last_checked_at) = mysql_fetch_row($result)){
+while(list($long_ip) = mysql_fetch_row($result)){
   $ip = long2ip($long_ip);
   
   $output = &system("$command $ip > /dev/null", $return);
   $pingedhosts++;  
   
   if($return == '0'){ // Host responded
-    $sql = "UPDATE statics SET last_checked_at=NOW() WHERE ip='$long_ip'";
-	mysql_query($sql);
-	$updatedhosts++;
+    $sql = "UPDATE statics SET failed_scans='0' WHERE ip='$long_ip'";
+    $goodhosts++;
     if($verbose == 'on'){ echo '!'; }
   }
-  else{ // Dead host
+  else{ // Dead host 
+    $sql = "UPDATE statics SET failed_scans=failed_scans+1 WHERE ip='$long_ip'";
     if($verbose == 'on'){ echo '.'; }
   }
+  mysql_query($sql);
 }
 if($verbose == 'on'){
   echo "\r\n".
-       "Scanned $pingedhosts hosts and was able to reach $updatedhosts.\r\n".
+       "Scanned $pingedhosts hosts and was able to reach $goodhosts.\r\n".
 	   "\r\n";
 }
 

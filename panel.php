@@ -23,7 +23,8 @@ require_once('./include/header.php');
 </tr>
 <tr><td><br /></td></tr>
 <tr>
-<td align="center" style="width: 25%"><a href="search.php?op=search&first=1&second=name&search=discovered"><img height="48" width="48" alt="Discovered Hosts" src="./images/discovered.png"></a><br /><b>Discovered Hosts</b></td>
+<td align="center" style="width: 25%"><a href="search.php?op=search&first=1&second=note&search=Added%20by%20discovery%20addon"><img height="48" width="48" alt="Discovered Hosts" src="./images/discovered.png"></a><br /><b>Discovered Hosts</b></td>
+<td align="center" style="width: 25%"><a href="search.php?op=search&first=1&second=failed_scans&search=4"><img height="48" width="48" alt="Discovered Hosts" src="./images/stale.gif"></a><br /><b>Stale Hosts</b></td>
 <?php if(isset($_SESSION['username']) && $_SESSION['auth_type'] != 'ldap'){ ?>
 <td align="center" style="width: 25%"><a href="./login.php?op=changepasswd"><img height="48" width="48" alt="Change Password" src="./images/password.gif" /></a><br />
 <b>Change Your Password</b></td>
