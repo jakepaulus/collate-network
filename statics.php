@@ -318,7 +318,7 @@ function list_statics(){
   
   if($page != '1'){
     $previous_page = $page - 1;
-	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit\">
+	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
   
@@ -339,7 +339,7 @@ function list_statics(){
   
   if($page != $numofpages){
     $next_page = $page + 1;
-    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit\">
+    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
 	
   }
@@ -430,7 +430,7 @@ function list_statics(){
 	   
   if($page != '1'){
     $previous_page = $page - 1;
-	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit\">
+	echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$previous_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
 	   
@@ -452,7 +452,7 @@ function list_statics(){
   
   if($page != $numofpages){
     $next_page = $page + 1;
-    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit\">
+    echo "<a href=\"statics.php?subnet_id=$subnet_id&amp;page=$next_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
 	
   }

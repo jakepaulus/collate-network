@@ -298,21 +298,24 @@ function search() {
   // -----------------------------------------------Build our sort variable---------------------------------------------
   if($first == '0'){ // subnet search
     // use what they ask for or default to what they searched by
+    // $sort is what the URI uses, $order and $full_order go into the SQL query - $full_order includes ASC or DESC
     if(!empty($_GET['sort']) && ( $_GET['sort'] == 'network' || $_GET['sort'] == 'name' )){
       $sort = $_GET['sort'];
     }
     else{
       $sort = $second;
     }
-    if($sort == 'network'){ $sort = 'start_ip'; }
+    $order = $sort;
+    if($sort == 'network' || $sort == 'ip'){ $order = 'start_ip'; }
   }
   else{ // static IP search or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
     if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact')){
-        $sort = $_GET['sort'];
+      $sort = $_GET['sort'];
     }
     else{
       $sort = $second;
     }
+    $order = $sort;
   }
   //-----------------------------------------------------------------------------------------------------------------------------
   
@@ -361,57 +364,59 @@ function search() {
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
         }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
         }
       else{
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
       }
     }
   }
   elseif($first == "1"){ // Statics earch
     $first = "static IPs";
     if($sort == 'failed_scans'){
-      $sort = "`failed_scans` DESC";
+      $full_order = "`failed_scans` DESC";
     }
     else {
-      $sort = "`$sort` ASC";
+      $full_order = "`$sort` ASC";
     }
 	
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
         $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY $sort";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY $full_order";
       }
       elseif($second == 'failed_scans'){
         $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE 
               (failed_scans >= '$search' OR failed_scans = '-1') AND modified_at > '$fromdate 00:00:00' 
-              AND modified_at < '$todate 23:59:59' ORDER BY $sort";
+              AND modified_at < '$todate 23:59:59' ORDER BY $full_order";
       }
       else{
         $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE $second LIKE '%$search%' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY $sort";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY $full_order";
       }
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' ORDER BY $sort";
+        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' 
+        ORDER BY $full_order";
       }
       elseif($second == 'failed_scans') {
         $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE (failed_scans >= '$search' 
-        OR failed_scans = '-1') ORDER BY $sort";
+        OR failed_scans = '-1') ORDER BY $full_order";
       }
       else{
-        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE $second LIKE '%$search%' ORDER BY $sort";
+        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE $second LIKE '%$search%' 
+        ORDER BY $full_order";
       }
     }
   }
@@ -422,10 +427,10 @@ function search() {
     if($when == "dates"){
       $extrasearchdescription = "and the event occured between $fromdate and $todate";
       $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' AND ".
-             "occuredat>='$fromdate 00:00:00' AND occuredat<='$todate 23:59:59' ORDER BY id DESC";
+             "occuredat>='$fromdate 00:00:00' AND occuredat<='$todate 23:59:59' ORDER BY `id` DESC";
     }
     else{
-      $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' ORDER BY id DESC";
+      $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' ORDER BY `id` DESC";
     }
   }
   if($second == "username"){
@@ -490,7 +495,7 @@ function search() {
 		   
   if($page != '1'){
     $previous_page = $page - 1;
-    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$previous_page&amp;show=$limit\">
+    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$previous_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }
 		   
@@ -512,7 +517,7 @@ function search() {
   
   if($page != $numofpages){
     $next_page = $page + 1;
-    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$next_page&amp;show=$limit\">
+    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$next_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
 	
   }
@@ -716,7 +721,7 @@ function search() {
 		   
   if($page != '1'){
     $previous_page = $page - 1;
-	echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$previous_page&amp;show=$limit\">
+	echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$previous_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
   }		   
 
@@ -738,7 +743,7 @@ function search() {
   
   if($page != $numofpages){
     $next_page = $page + 1;
-    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$next_page&amp;show=$limit\">
+    echo "<a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=$next_page&amp;show=$limit&amp;sort=$sort\">
 	      <img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
 	
   }
