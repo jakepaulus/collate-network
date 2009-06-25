@@ -102,7 +102,7 @@ while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_r
         foreach ($dnsserver as &$server){
           //exec ( string $command [, array &$output [, int &$return_var ]] )
           exec ("$dnscommand @$server -x $ip +short", $name, $return);
-          $name = $name['0'];
+          $name = (empty($name['0'])) ? '' : $name['0'];
           if(!empty($name)){ // a server responded
             break;
           }

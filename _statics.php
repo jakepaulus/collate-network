@@ -291,7 +291,7 @@ function toggle_stalescan(){
   }
   
   $accesslevel = "2";
-  $message = "Static IP deleted: $static_ip";
+  $message = "Stale Scan toggled $toggle for IP: $static_ip";
   AccessControl($accesslevel, $message); 
 
   $long_ip = ip2long($static_ip);
