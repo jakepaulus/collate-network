@@ -40,6 +40,7 @@ function change_password(){
   ?>
   <h1>Change Your Password</h1>
   <br />
+  <div style="float: left; width: 28%;">
   <form action="login.php?op=changepasswd&amp;action=change&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
   <p><b>Username:</b><br />
   <input name="username" type="text" size="15" /></p>
@@ -51,8 +52,27 @@ function change_password(){
   <input name="confirm" type="password" size="15" /></p>  
   <p><input type="submit" value=" Go " /></p>
   </form>
-  
+  </div>
   <?php
+  if($COLLATE['settings']['auth_type'] != 'db'){
+      echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".
+           "<p><b>Note:</b><br />\n".
+           "Your account may use LDAP authentication. In which case, your username must be formatted properly.</p>\n";
+           
+      if(!empty($COLLATE['settings']['domain'])){
+        echo "<p>If your username is in the domain ".$COLLATE['settings']['domain']." then simply type your username. Otherwise,\n".
+             "please type your username in the format username@example.com unless you've been instructed by the \n".
+             "administrator of this application to do otherwise.</p>";
+      }
+      else{
+        echo "<p>Please type your username in the format username@example.com unless you've been instructed by the \n".
+             "administrator of this application to do otherwise.</p>\n";
+      }
+      
+      echo "</div>";
+  }
+
+  echo "<p style=\"clear: left;\">";
   require_once('./include/footer.php');
   exit();
   }
@@ -192,6 +212,7 @@ function cn_login() {
   ?>
   <h1>Login</h1>
   <br />
+  <div style="float: left; width: 28%;">
   <form action="login.php?op=login&amp;action=login&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
   <p><b>Username:</b><br />
   <input name="username" type="text" size="15" /></p>
@@ -199,7 +220,28 @@ function cn_login() {
   <input name="password" type="password" size="15" /></p>  
   <p><input type="submit" value=" Go " /></p>
   </form>
+  </div>
   <?php
+  if($COLLATE['settings']['auth_type'] != 'db'){
+      echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".
+           "<p><b>Note:</b><br />\n".
+           "Your account may use LDAP authentication. In which case, your username must be formatted properly.</p>\n";
+           
+      if(!empty($COLLATE['settings']['domain'])){
+        echo "<p>If your username is in the domain ".$COLLATE['settings']['domain']." then simply type your username. Otherwise,\n".
+             "please type your username in the format username@example.com unless you've been instructed by the \n".
+             "administrator of this application to do otherwise.</p>";
+      }
+      else{
+        echo "<p>Please type your username in the format username@example.com unless you've been instructed by the \n".
+             "administrator of this application to do otherwise.</p>\n";
+      }
+      
+      echo "</div>";
+  }
+
+  echo "<p style=\"clear: left;\">";
+
   require_once('./include/footer.php');
   exit();
   }

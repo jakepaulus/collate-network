@@ -46,7 +46,7 @@ global $COLLATE;
 	elseif($COLLATE['settings']['perms'] == "2"){
 	  $checked2 = "checked=\"checked\"";
 	}
-	elseif($COLLATE['settings']['perms'] == "1"){
+	elseif($COLLATE['settings']['perms'] == "0"){
 	  $checked1 = "checked=\"checked\"";
 	}
 	else{
