@@ -63,8 +63,6 @@ function view_logs() {
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
   $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
   
-  $_SESSION['show'] = $show;
-  
  $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY id DESC";
   
   if(is_numeric($show) && $show <= '250' && $show > '5'){
@@ -72,11 +70,14 @@ function view_logs() {
   }
   elseif($show > '250'){
     echo "<div class=\"tip\"><p>You can only ask for up to 250 results per page.</p></div>";
-	$limit = '250';
+    $limit = '250';
   }
   else{
     $limit = "10";
   }
+  
+  $_SESSION['show'] = $limit;
+  
   $result = mysql_query($sql);
   $totalrows = mysql_num_rows($result);
   $numofpages = ceil($totalrows/$limit);

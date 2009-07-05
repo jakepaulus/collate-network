@@ -437,10 +437,10 @@ function search() {
     $Second = "User";
   }
   
+  require_once('include/header.php');
+  
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
   $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
-  
-  $_SESSION['show'] = $show;
 
   if(is_numeric($show) && $show <= '250' && $show > '5'){
     $limit = $show;
@@ -452,6 +452,8 @@ function search() {
   else{
     $limit = "10";
   }
+  
+  $_SESSION['show'] = $limit;
   
   $result = mysql_query($sql);
   $totalrows = mysql_num_rows($result);
@@ -467,7 +469,6 @@ function search() {
    
   if(!isset($extrasearchdescription)) { $extrasearchdescription = ""; }
   
-  require_once('include/header.php');
   echo "<h1>Search Results</h1><br />\n".
        "<p><b>You searched for:</b><br />";
   if($second == 'failed_scans'){

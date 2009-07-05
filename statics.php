@@ -285,8 +285,6 @@ function list_statics(){
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
   $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
   
-  $_SESSION['show'] = $show;
-  
   $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY `$sort` ASC";
   
   if(is_numeric($show) && $show <= '250' && $show > '5'){
@@ -299,6 +297,9 @@ function list_statics(){
   else{
     $limit = "10";
   }
+  
+  $_SESSION['show'] = $limit;
+  
   $result = mysql_query($sql);
   $totalrows = mysql_num_rows($result);
   $numofpages = ceil($totalrows/$limit);
