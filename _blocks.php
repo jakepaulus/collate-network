@@ -93,11 +93,11 @@ function delete_block(){
   AccessControl($accesslevel, $message);
     
   // First delete all static IPs
-  $sql = "DELETE FROM statics WHERE subnet_id=(SELECT id FROM subnets WHERE block_id='$block_id')";
+  $sql = "DELETE FROM statics WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
   mysql_query($sql);
   
   // Next, remove the DHCP ACLs
-  $sql = "DELETE FROM acl WHERE apply=(SELECT id FROM subnets WHERE block_id='$block_id')";
+  $sql = "DELETE FROM acl WHERE apply IN (SELECT id FROM subnets WHERE block_id='$block_id')";
   mysql_query($sql);
   
   // Next, remove the subnets

@@ -50,7 +50,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.5');
+INSERT INTO `settings` VALUES ('version', '1.6');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -150,7 +150,7 @@ require_once('./include/db_connect.php');
 $sql = "select value from settings where name='version'";
 $result = mysql_query($sql);
 
-if(mysql_num_rows($result) != '0') { // See what version we're on
+if($result != FALSE) { // See what version we're on
   $version = mysql_result($result, 0, 0);
   if($version == '1.0'){
     $results = multiple_query("$upgrade_from_one_dot_zero");
