@@ -1,5 +1,7 @@
 <?php
 session_start();
+// Let the sessions expire when the user closes the browser window or logs out. Hopefully no timeouts
+ini_set("session.gc_maxlifetime", "86400");
 
 //------------- Build CI array var and put version number in it -----------------------------
 
