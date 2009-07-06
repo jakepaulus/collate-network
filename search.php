@@ -636,16 +636,16 @@ function search() {
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
            "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
+
       if($failed_scans == '-1'){
-        $img = './images/skipping.png';
-        $stale_scan_opposite_status='on';
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" onclick=\"return confirm('Are you sure you\'d like to enable stale scan for this IP?')\">".
+             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" /></a></td>";
       }
       else{
-        $img = './images/scanning.png';
-        $stale_scan_opposite_status='off';
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
+             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" /></a></td>";
       }
-      echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=$stale_scan_opposite_status\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
-           "<img src=\"$img\" alt=\"Toggle Scanning\" /></a></td>";
+      
       echo "</tr>\n";
       echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
