@@ -320,7 +320,7 @@ function search() {
     if($sort == 'network' || $sort == 'ip'){ $order = 'start_ip'; }
   }
   else{ // static IP search or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
-    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact')){
+    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact' || $_GET['sort'] == 'failed_scans')){
       $sort = $_GET['sort'];
     }
     else{
@@ -503,7 +503,8 @@ function search() {
 		   <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
 		   <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
 		   <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
-		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />";
+		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />
+       <input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
 		   
   if($page != '1'){
     $previous_page = $page - 1;
@@ -729,7 +730,8 @@ function search() {
 		   <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
 		   <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
 		   <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
-		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />";
+		   <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />
+       <input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
 		   
   if($page != '1'){
     $previous_page = $page - 1;

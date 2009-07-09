@@ -315,7 +315,8 @@ function list_statics(){
   echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
        "<form action=\"statics.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">";
 
-  echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />";
+  echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
+       "<input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
   
   if($page != '1'){
     $previous_page = $page - 1;
@@ -427,7 +428,8 @@ function list_statics(){
   }
   echo "<p>&nbsp;</p>";
   echo "<form action=\"statics.php\" method=\"get\"><table width=\"80%\"><tr><td align=\"left\">\n".
-       "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />";
+       "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
+       "<input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
 	   
   if($page != '1'){
     $previous_page = $page - 1;
