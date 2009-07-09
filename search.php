@@ -57,16 +57,25 @@ function download() {
   
   // -----------------------------------------------Build our sort variable---------------------------------------------
   if($first == '0'){ // subnet search
-    // sensible default sorting
-    if($second == 'network' || $second == 'name' ){
+    // use what they ask for or default to what they searched by
+    // $sort is what the URI uses, $order and $full_order go into the SQL query - $full_order includes ASC or DESC
+    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'network' || $_GET['sort'] == 'name' )){
+      $sort = $_GET['sort'];
+    }
+    else{
       $sort = $second;
     }
-    if($sort == 'network'){ $sort = 'start_ip'; }
+    $order = $sort;
+    if($sort == 'network' || $sort == 'ip'){ $order = 'start_ip'; }
   }
   else{ // static IP search or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
-    if($second == 'ip' || $second == 'name' || $second == 'contact'){
+    if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact')){
+      $sort = $_GET['sort'];
+    }
+    else{
       $sort = $second;
     }
+    $order = $sort;
   }
   //-----------------------------------------------------------------------------------------------------------------------------
   
@@ -115,19 +124,19 @@ function download() {
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
       }
       else{
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
       }
     }
   }
@@ -138,7 +147,7 @@ function download() {
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
         $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
       elseif($second == 'failed_scans'){
         $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE 
@@ -147,19 +156,19 @@ function download() {
       }
       else{
         $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE $second LIKE '%$search%' AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$sort` ASC";
+        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
       }
       elseif($second == 'failed_scans'){
         $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE (failed_scans >= '$search' OR failed_scans = '-1')
               ORDER BY `failed_scans` DESC";
       }
       else{
-        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE $second LIKE '%$search%' ORDER BY `$sort` ASC";
+        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
       }
     }
   }
@@ -170,10 +179,10 @@ function download() {
     if($when == "dates"){
       $extrasearchdescription = "and the event occured between $fromdate and $todate";
       $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' AND ".
-             "occuredat<'$fromdate 00:00:00' AND occuredat>'$todate 23:59:59' ORDER BY id DESC";
+             "occuredat<'$fromdate 00:00:00' AND occuredat>'$todate 23:59:59' ORDER BY `id` DESC";
     }
     else{
-      $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' ORDER BY id DESC";
+      $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs WHERE $second LIKE '%$search%' ORDER BY `id` DESC";
     }
   }
 
@@ -181,7 +190,9 @@ function download() {
   $totalrows = mysql_num_rows($row);
  
   if($totalrows < "1"){
-    echo "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>".
+    require_once('./include/header.php');
+    echo "<h1>Search Results</h1>".
+         "<p><b>You searched for:</b><br />All $first where \"$second\" is like \"$search\" $extrasearchdescription</p>".
          "<hr class=\"head\" />".
          "<p><b>No results were found that matched your search.</b></p>";
     require_once('./include/footer.php');
