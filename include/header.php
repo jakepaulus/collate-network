@@ -9,22 +9,10 @@
     <meta name="generator" content="Jake Paulus" />
     <meta name="description" content="Organize your hardware and software inventory records" />
     <meta name="keywords" content="hardware,software,inventory,users" />
-   
-<?php 
-if(isset($_GET['view'])){
-  $view = $_GET['view'];
-}
-else {
-  $view = "normal";
-}
-  // Make sure we supply the correct css for the view the user is requesting and we don't load those libraries if we don't have to.
-if($view == "printable"){ ?>
-<link rel="stylesheet" type="text/css" href="css/print.css" />
-<?php } else { ?>
-<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
-<script src="javascripts/scriptaculous.shrunk.js" type="text/javascript" charset="ISO-8859-1"></script>
-<script src="javascripts/scriptaculous.extensions.js" type="text/javascript"></script>
-<?php } ?>
+	   
+	<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
+	<script src="javascripts/scriptaculous.shrunk.js" type="text/javascript" charset="ISO-8859-1"></script>
+	<script src="javascripts/scriptaculous.extensions.js" type="text/javascript"></script>
 
 </head>
 <body id="collate-network">
@@ -35,7 +23,7 @@ if($view == "printable"){ ?>
         <a href="index.php">Collate:Network</a>&nbsp;
     </div>
         <div id="content">
-<div class="path">
+<div id="path" class="path">
   <table width="100%">
     <tr><td align="left">
       <?php 
@@ -69,18 +57,8 @@ if($view == "printable"){ ?>
 	else{
 	  echo "</td>";
 	}
-
-     // This little mess here makes sure that the print URL is formed properly.
-    echo "<td align=\"right\">
-	        <a href=\"search.php\">Advanced Search</a> | 
-			<a href=\"http://".$_SERVER['SERVER_NAME'].htmlentities($_SERVER['REQUEST_URI']); 
-    if(stristr($_SERVER['REQUEST_URI'], "?")){ 
-      echo "&amp;"; 
-    } 
-    else {
-      echo "?";
-    }
-    ?>view=printable">Printable</a>&nbsp;</td></tr>
+    echo "<td align=\"right\"><a href=\"search.php\">Advanced Search</a></td></tr>";
+	?>
 </table>
     </div>
 <div id="main">

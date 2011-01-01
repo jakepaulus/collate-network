@@ -46,6 +46,7 @@ function edit_static(){
   $static_id = (empty($_GET['static_id'])) ? '' : clean($_GET['static_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
+  $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($static_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
@@ -101,7 +102,7 @@ function edit_acl(){
 	echo "You must supply a name for each ACL statement.";  
   }
   
-  $sql = "SELECT name FROM subnets WHERE id=(SELECT apply FROM acl WHERE id='$acl_id')";
+  $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
@@ -129,7 +130,7 @@ function ping_host(){
   $ip = escapeshellcmd($_GET['ip']);
   
   // This prevents someone from passing extra parameters to ping that could be dangerous e.g. DoS the server or use the server to DoS a host....
-  if(!ereg("^([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+\.([1-9][0-9]{0,2})+$", $ip)){ return; }
+  if(!preg_match("/^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}$/", $ip)){ return; }
   
   echo "<pre>";
   if (!strstr($_SERVER['DOCUMENT_ROOT'], ":")){ // *nix system
@@ -176,6 +177,7 @@ function edit_guidance(){
   
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
+  $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($subnet_id)){ 
     header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
@@ -249,7 +251,7 @@ function delete_acl(){
 	echo "Please select an ACL Statement to delete.";
   }
   
-  $sql = "SELECT name FROM subnets WHERE id=(SELECT apply FROM acl WHERE id='$acl_id')";
+  $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){

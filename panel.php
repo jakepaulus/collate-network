@@ -9,7 +9,7 @@ function show_panel(){
   $accesslevel = "1";
   $message = "control panel accessed";
   AccessControl($accesslevel, $message); 
-require_once('./include/header.php');
+require_once('include/header.php');
 ?>
 <h1>Control Panel</h1>
 <table width="100%">
@@ -25,7 +25,7 @@ require_once('./include/header.php');
 <tr>
 <td align="center" style="width: 25%"><a href="search.php?op=search&first=1&second=note&search=Added%20by%20discovery%20addon"><img height="48" width="48" alt="Discovered Hosts" src="./images/discovered.png"></a><br /><b>Discovered Hosts</b></td>
 <td align="center" style="width: 25%"><a href="search.php?op=search&first=1&second=failed_scans&search=4"><img height="48" width="48" alt="Discovered Hosts" src="./images/stale.gif"></a><br /><b>Stale Hosts</b></td>
-<?php if(isset($_SESSION['username']) && $_SESSION['auth_type'] != 'ldap'){ ?>
+<?php if(isset($COLLATE['user']['username']) && $COLLATE['settings']['auth_type'] != 'ldap'){ ?>
 <td align="center" style="width: 25%"><a href="./login.php?op=changepasswd"><img height="48" width="48" alt="Change Password" src="./images/password.gif" /></a><br />
 <b>Change Your Password</b></td>
 <?php } ?>
@@ -35,7 +35,7 @@ require_once('./include/header.php');
 <br />
 <br />
 
-<?
+<?php
 }
-require_once('./include/footer.php');
+require_once('include/footer.php');
 ?>

@@ -18,7 +18,7 @@ function connectToDB() {
   $db_pass = "root";
 
   //database
-  $db_name = "collate-network";
+  $db_name = "collate";
   
   ($link = mysql_pconnect("$db_host", "$db_user", "$db_pass")) || die("Couldn't connect to MySQL");
 

@@ -24,6 +24,7 @@ function edit_block(){
   $block_id = (empty($_GET['block_id'])) ? '' : clean($_GET['block_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
+  $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($block_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
@@ -97,7 +98,7 @@ function delete_block(){
   mysql_query($sql);
   
   // Next, remove the DHCP ACLs
-  $sql = "DELETE FROM acl WHERE apply IN (SELECT id FROM subnets WHERE block_id='$block_id')";
+  $sql = "DELETE FROM acl WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
   mysql_query($sql);
   
   // Next, remove the subnets

@@ -123,7 +123,7 @@ function download() {
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
       else{
@@ -133,7 +133,7 @@ function download() {
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
       }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
@@ -146,7 +146,7 @@ function download() {
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
+        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE CAST(ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
       elseif($second == 'failed_scans'){
@@ -161,7 +161,7 @@ function download() {
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
+        $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE CAST(ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
       }
       elseif($second == 'failed_scans'){
         $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE (failed_scans >= '$search' OR failed_scans = '-1')
@@ -285,12 +285,12 @@ function search() {
   $message = "search conducted";
   AccessControl($accesslevel, $message); 
   
-  $first = $first_input = clean($_GET['first']);
-  $second = $second_input = clean($_GET['second']);
-  $search = $search_input = clean($_GET['search']);
-  $fromdate = $fromdate_input = clean($_GET['fromdate']);
-  $todate = $todate_input = clean($_GET['todate']);
-  $when = $when_input = clean($_GET['when']);
+  $first = $first_input = (!isset($_GET['first'])) ? '' : clean($_GET['first']);
+  $second = $second_input = (!isset($_GET['second'])) ? '' : clean($_GET['second']);
+  $search = $search_input = (!isset($_GET['search'])) ? '' : clean($_GET['search']);
+  $fromdate = $fromdate_input = (!isset($_GET['fromdate'])) ? '' : clean($_GET['fromdate']);
+  $todate = $todate_input = (!isset($_GET['todate'])) ? '' : clean($_GET['todate']);
+  $when = $when_input = (!isset($_GET['when'])) ? '' : clean($_GET['when']);
   if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
     $when = "all";
   }
@@ -364,8 +364,8 @@ function search() {
 	  exit();
     }
   }
-  $long_ip = ip2long($ip);
-  $long_mask = ip2long($mask);
+  $long_ip = (isset($ip)) ? ip2long($ip) : '';
+  $long_mask = (isset($mask)) ? ip2long($mask) : '';
   
   if($first == "0") { // Subnet search
     $first = "subnets";
@@ -374,7 +374,7 @@ function search() {
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' AND
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
         }
       else{
@@ -384,7 +384,7 @@ function search() {
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE start_ip & '$long_mask' = '$long_ip' ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
         }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
@@ -403,7 +403,7 @@ function search() {
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' AND
+        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE CAST(ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY $full_order";
       }
       elseif($second == 'failed_scans'){
@@ -418,7 +418,7 @@ function search() {
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE ip & '$long_mask' = '$long_ip' 
+        $sql = "SELECT id, ip, name, contact, note, subnet_id, failed_scans FROM statics WHERE CAST(ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) 
         ORDER BY $full_order";
       }
       elseif($second == 'failed_scans') {
@@ -583,7 +583,7 @@ function search() {
            <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
            <td>";
          
-      if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+      if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
         echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
       }
       echo "</td></tr>\n";
@@ -591,7 +591,7 @@ function search() {
       echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
       echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
       
-      if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+      if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
              
           $javascript .=
            "<script type=\"text/javascript\"><!--\n".
@@ -629,20 +629,35 @@ function search() {
   elseif($first == "static IPs"){
     echo "<table width=\"100%\"><tr>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=ip\">IP Address</a></th>".
+		 "<th>Path</th>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=name\">Name</a></th>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=contact\">Contact</a></th>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=failed_scans\">Failed Scans</a></th>".
          "</tr><tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 
+	$javascript = ''; # this gets appended to in the following while loop
     while(list($static_id,$ip,$name,$contact,$note,$subnet_id,$failed_scans) = mysql_fetch_row($row)){
+	
+		# Build path information for IP - use an array to avoid accessive db calls
+		if(!isset($path[$subnet_id])) {
+			$sql = "SELECT blocks.name, subnets.name, subnets.block_id FROM blocks, subnets 
+					WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
+			$result = mysql_query($sql);
+			if(mysql_num_rows($result) == '1'){
+				list($block_name, $subnet_name, $block_id) = mysql_fetch_row($result);
+				$path[$subnet_id] = "<a href=\"blocks.php\">All</a> / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
+				 <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
+			}
+		}
+	
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
-           "<td>$ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td>$ip</td><td>".$path[$subnet_id]." </td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
            "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
            "<td>$failed_scans</td>".
            "<td>";
        
-      if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+      if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
         echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
       }
       echo "</td></tr>\n";
@@ -661,7 +676,7 @@ function search() {
       echo "</tr>\n";
       echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
-      if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+      if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=	  
              "<script type=\"text/javascript\"><!--\n".
              "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',

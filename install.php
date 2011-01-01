@@ -2,16 +2,16 @@
 $install = 
 "
 CREATE TABLE `acl` (
-  `id` int(9) NOT NULL auto_increment,
+  `id` int(9) UNSIGNED NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
-  `apply` varchar(25) NOT NULL,
+  `subnet_id` int(9) UNSIGNED NOT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `blocks` (
-  `id` int(9) NOT NULL auto_increment,
+  `id` int(9) UNSIGNED NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE `blocks` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `ldap-servers` (
-  `id` tinyint(4) NOT NULL auto_increment,
+  `id` tinyint(4) UNSIGNED NOT NULL auto_increment,
   `domain` varchar(128) NOT NULL,
   `server` varchar(255) NOT NULL,
   PRIMARY KEY  (`id`)
@@ -31,7 +31,7 @@ CREATE TABLE `ldap-servers` (
 
 
 CREATE TABLE `logs` (
-  `id` int(11) NOT NULL auto_increment,
+  `id` int(11) UNSIGNED NOT NULL auto_increment,
   `occuredat` datetime NOT NULL,
   `username` varchar(30) NOT NULL,
   `ipaddress` varchar(15) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.6');
+INSERT INTO `settings` VALUES ('version', '1.7');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -58,12 +58,12 @@ INSERT INTO `settings` VALUES ('auth_type', 'db');
 INSERT INTO `settings` VALUES ('domain', '');
 
 CREATE TABLE `statics` (
-  `id` int(10) NOT NULL auto_increment,
+  `id` int(10) UNSIGNED NOT NULL auto_increment,
   `ip` int(10) NOT NULL,
   `name` varchar(50) NOT NULL,
   `contact` varchar(25) NOT NULL,
   `note` varchar(255) NOT NULL,
-  `subnet_id` int(9) NOT NULL,
+  `subnet_id` int(9) UNSIGNED NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
   `failed_scans` INT( 16 ) NOT NULL DEFAULT  '0',
@@ -72,13 +72,13 @@ CREATE TABLE `statics` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `subnets` (
-  `id` int(9) NOT NULL auto_increment,
+  `id` int(9) UNSIGNED NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
   `mask` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
-  `block_id` tinyint(9) NOT NULL,
+  `block_id` tinyint(9) UNSIGNED NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE `subnets` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `users` (
-  `id` int(9) NOT NULL auto_increment,
+  `id` int(9) UNSIGNED NOT NULL auto_increment,
   `username` varchar(100) NOT NULL,
   `passwd` varchar(40) NOT NULL,
   `tmppasswd` varchar(40) NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.5 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.7 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -117,6 +117,7 @@ INSERT INTO settings (name, value) VALUES ('guidance', '');
 $upgrade_from_one_dot_two = 
 "
 ALTER TABLE statics CHANGE name name varchar( 50 ) NO NULL;
+
 ";
 
 $upgrade_from_one_dot_four = 
@@ -144,6 +145,151 @@ ALTER TABLE users CHANGE username username varchar ( 50 ) NOT NULL;
 UPDATE settings SET value='1.6' WHERE name='version'
 ";
 
+function upgrade_from_one_dot_six () {
+	# Find autoincrement values for each table that uses them
+	$sql = "SELECT LAST_INSERT_ID() from acl";
+	$result = mysql_query($sql);
+	$acl_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from blocks";
+	$result = mysql_query($sql);
+	$blocks_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from `ldap-servers`";
+	$result = mysql_query($sql);
+	$ldap_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from logs";
+	$result = mysql_query($sql);
+	$logs_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from statics";
+	$result = mysql_query($sql);
+	$statics_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from subnets";
+	$result = mysql_query($sql);
+	$subnets_autoincrement = mysql_result($result, 0, 0);
+	
+	$sql = "SELECT LAST_INSERT_ID() from users";
+	$result = mysql_query($sql);
+	$users_autoincrement = mysql_result($result, 0, 0);
+
+	# copy old tables to temporary tables using unsigned INTs, then drop old ones, then rename new to old
+	$data_shuffle =
+		"
+		CREATE TABLE `tmp_acl` (
+		  `id` int(9) UNSIGNED NOT NULL auto_increment,
+		  `name` varchar(25) NOT NULL,
+		  `start_ip` int(10) NOT NULL,
+		  `end_ip` int(10) NOT NULL,
+		  `subnet_id` int(9) UNSIGNED NOT NULL,
+		  PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$acl_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_acl` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), name, start_ip, end_ip, apply FROM acl;
+
+		CREATE TABLE `tmp_blocks` (
+		  `id` int(9) UNSIGNED NOT NULL auto_increment,
+		  `name` varchar(25) NOT NULL,
+		  `start_ip` int(10) NOT NULL,
+		  `end_ip` int(10) NOT NULL,
+		  `note` varchar(255) NOT NULL,
+		  `modified_by` varchar(25) NOT NULL,
+		  `modified_at` datetime NOT NULL,
+		  PRIMARY KEY  (`id`),
+		  UNIQUE KEY `name` (`name`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$blocks_autoincrement DEFAULT CHARSET=latin1;		
+		INSERT INTO `tmp_blocks` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), name, start_ip, end_ip, note, modified_by, modified_at FROM blocks;
+
+		CREATE TABLE `tmp_ldap-servers` (
+		  `id` tinyint(4) UNSIGNED NOT NULL auto_increment,
+		  `domain` varchar(128) NOT NULL,
+		  `server` varchar(255) NOT NULL,
+		  PRIMARY KEY  (`id`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$ldap_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_ldap-servers` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), domain, server FROM `ldap-servers`;
+
+		CREATE TABLE `tmp_logs` (
+		  `id` int(11) UNSIGNED NOT NULL auto_increment,
+		  `occuredat` datetime NOT NULL,
+		  `username` varchar(30) NOT NULL,
+		  `ipaddress` varchar(15) NOT NULL,
+		  `level` varchar(6) NOT NULL,
+		  `message` varchar(255) NOT NULL,
+		  PRIMARY KEY  (`id`),
+		  KEY `username` (`username`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$logs_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_logs` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), occuredat, username, ipaddress, level, message FROM logs;
+
+		CREATE TABLE `tmp_statics` (
+		  `id` int(10) UNSIGNED NOT NULL auto_increment,
+		  `ip` int(10) NOT NULL,
+		  `name` varchar(50) NOT NULL,
+		  `contact` varchar(25) NOT NULL,
+		  `note` varchar(255) NOT NULL,
+		  `subnet_id` int(9) UNSIGNED NOT NULL,
+		  `modified_by` varchar(25) NOT NULL,
+		  `modified_at` datetime NOT NULL,
+		  `failed_scans` INT( 16 ) NOT NULL DEFAULT  '0',
+		  PRIMARY KEY  (`id`),
+		  UNIQUE KEY `ip` (`ip`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$statics_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_statics` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), ip, name, contact, note, CAST((subnet_id & 0xFFFFFFFF) AS UNSIGNED), modified_by, modified_at, failed_scans FROM statics;
+
+		CREATE TABLE `tmp_subnets` (
+		  `id` int(9) UNSIGNED NOT NULL auto_increment,
+		  `name` varchar(25) NOT NULL,
+		  `start_ip` int(10) NOT NULL,
+		  `end_ip` int(10) NOT NULL,
+		  `mask` int(10) NOT NULL,
+		  `note` varchar(255) NOT NULL,
+		  `block_id` tinyint(9) UNSIGNED NOT NULL,
+		  `modified_by` varchar(25) NOT NULL,
+		  `modified_at` datetime NOT NULL,
+		  `guidance` longtext NOT NULL,
+		  PRIMARY KEY  (`id`),
+		  UNIQUE KEY `name` (`name`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$subnets_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_subnets` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), name, start_ip, end_ip, mask, note, CAST((block_id & 0xFFFFFFFF) AS UNSIGNED), modified_by, modified_at, guidance FROM subnets;
+
+		CREATE TABLE `tmp_users` (
+		  `id` int(9) UNSIGNED NOT NULL auto_increment,
+		  `username` varchar(100) NOT NULL,
+		  `passwd` varchar(40) NOT NULL,
+		  `tmppasswd` varchar(40) NOT NULL,
+		  `accesslevel` tinyint(1) NOT NULL default '0',
+		  `phone` varchar(25) NOT NULL,
+		  `email` varchar(50) NOT NULL,
+		  `loginattempts` tinyint(1) NOT NULL,
+		  `passwdexpire` datetime NOT NULL,
+		  `ldapexempt` tinyint(1) NOT NULL default '0',
+		  PRIMARY KEY  (`id`),
+		  UNIQUE KEY `username` (`username`)
+		) ENGINE=MyISAM AUTO_INCREMENT=$users_autoincrement DEFAULT CHARSET=latin1;
+		INSERT INTO `tmp_users` SELECT CAST((id & 0xFFFFFFFF) AS UNSIGNED), username, passwd, tmppasswd, accesslevel, phone, email, loginattempts, passwdexpire, ldapexempt FROM users;
+		
+		DROP TABLE acl;
+		DROP TABLE blocks;
+		DROP TABLE `ldap-servers`;
+		DROP TABLE logs;
+		DROP TABLE statics;
+		DROP TABLE subnets;
+		DROP TABLE users;
+		
+		RENAME TABLE tmp_acl TO acl;
+		RENAME TABLE tmp_blocks TO blocks;
+		RENAME TABLE `tmp_ldap-servers` TO `ldap-servers`;
+		RENAME TABLE tmp_logs TO logs;
+		RENAME TABLE tmp_statics TO statics;
+		RENAME TABLE tmp_subnets TO subnets;
+		RENAME TABLE tmp_users TO users;
+		DELETE FROM statics WHERE subnet_id != ALL (SELECT id from subnets);
+		UPDATE settings SET value='1.7' WHERE name='version'
+		";
+	$results = multiple_query("$data_shuffle");
+
+	return $results;
+}
 
 require_once('./include/db_connect.php');
 
@@ -157,20 +303,27 @@ if($result != FALSE) { // See what version we're on
     $results .= multiple_query("$upgrade_from_one_dot_two");
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
+	$results .= upgrade_from_one_dot_six();
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
+	$results .= upgrade_from_one_dot_six();
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
+	$results .= upgrade_from_one_dot_six();
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
+	$results .= upgrade_from_one_dot_six();
   }
   elseif($version == '1.6'){
+	$results = upgrade_from_one_dot_six();
+  }
+  elseif($version == '1.7'){
     // We're at the current version!
     ?>
       <html>
@@ -179,21 +332,21 @@ if($result != FALSE) { // See what version we're on
       </head>
       <body>
         <h1>You're already up to date</h1>
-        <p>This script will bring your database to version 1.6. You're already running 1.6 so there's nothing to do.
+        <p>This script will bring your database to version 1.7. You're already running 1.7 so there's nothing to do.
             If you think you're seeing this in error please file a bug report.</p>
       </body>
       </html>
     <?php
     exit();
   }
-  $notice = "This application has been successfully upgraded to version 1.6.";
+  $notice = "This application has been successfully upgraded to version 1.7.";
 }
 else{ // We're installing
   $results = multiple_query($install);
   $notice = "This application has been successfully installed.";
 }
 
-
+/*
 $tok = strtok($results, "<br />");
 
 if($tok){ // There were erors.
@@ -211,9 +364,9 @@ if($tok){ // There were erors.
 <?php
 }
 else{ // Everything went well.
-  
+*/
   header("Location: index.php?notice=$notice");
-}
+#}
 
 function multiple_query($sql){
   $tok = strtok($sql, ";");

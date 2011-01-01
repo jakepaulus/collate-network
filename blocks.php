@@ -65,7 +65,6 @@ function add_block(){
 
 } // Ends add_block function
 
-
 function submit_block() {
   $name = clean($_POST['name']);
   $ip = clean($_POST['ip']);
@@ -135,10 +134,10 @@ function submit_block() {
   }
   
   // We need to make sure this new block doesn't overlap an existing block
-  $sql = "SELECT id FROM blocks WHERE (start_ip <= '$long_ip' AND end_ip >= '$long_ip') OR 
-          (start_ip <= '$long_end_ip' AND end_ip >= '$long_end_ip') OR
-		  (start_ip >= '$long_ip' AND end_ip <= '$long_end_ip')";
-  
+  $sql = "SELECT id FROM blocks WHERE (CAST(start_ip AS UNSIGNED) <= CAST('$long_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_ip' AS UNSIGNED)) OR 
+          (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) OR
+		  (CAST(start_ip AS UNSIGNED) >= CAST('$long_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
+
   $search = mysql_query($sql);
   if(mysql_num_rows($search) != '0'){
     $notice = "The IP block you entered overlaps with an existing IP block in the database.";
@@ -160,12 +159,12 @@ function submit_block() {
 
 } // Ends submit_blocks function
 
-
 function list_blocks(){
   require_once('./include/header.php');
   global $COLLATE;
   
-  if ($_GET['sort'] == 'network') { 
+  $sort = (empty($_GET['sort'])) ? "" : $_GET['sort'];
+  if ($sort === 'network') { 
     $sort = 'start_ip';
   }
   else {
@@ -185,7 +184,7 @@ function list_blocks(){
 		 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note` FROM `blocks` ORDER BY `$sort` ASC";
   $results = mysql_query($sql);
-  
+  $javascript = ''; # this gets concatenated to below
   while(list($block_id,$name,$long_start_ip,$long_end_ip,$note) = mysql_fetch_row($results)){
     $start_ip = long2ip($long_start_ip);
 	$end_ip = long2ip($long_end_ip);
@@ -196,7 +195,7 @@ function list_blocks(){
 		 <td>$end_ip</td>
 		 <td>";
 		 
-	if($_SESSION['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+	if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
 	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), new Effect.Fade('block_".$block_id."_row_2'), new Effect.Fade('block_".$block_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
 	}
     echo "</td>
@@ -204,7 +203,7 @@ function list_blocks(){
 	echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
     echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
 	
-	if($_SESSION['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+	if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
 	  $javascript .=
 		   "<script type=\"text/javascript\"><!--\n".
 	       "  new Ajax.InPlaceEditor('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
@@ -239,7 +238,7 @@ function list_blocks(){
   
   echo "</table>";
   
-  echo $javascript;
+  echo (empty($javascript) ? "" : $javascript);
   
 } // Ends list_blocks function
 

@@ -197,7 +197,7 @@ function submit_subnet(){
   }
   
   $long_mask = ip2long($mask);
-  $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
+  $long_ip = $long_ip & $long_mask; // This makes sure they entered the network address and not an IP inside the network
   $long_end_ip = $long_ip | (~$long_mask);
   
   $long_acl_start = ip2long($acl_start);
@@ -218,25 +218,12 @@ function submit_subnet(){
 	exit();
   }
   
-  // We need to make sure the subnet falls entirely within the IP block
-  $sql = "SELECT id FROM blocks where id='$block_id' AND start_ip <= '$long_ip' AND end_ip >= '$long_end_ip'";
-  $search = mysql_query($sql);
-  if(mysql_num_rows($search) != '1'){
-    $notice = "The IP you entered does not match the block you have selected.";
-	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
-	exit();
-	}
-  
   // We need to make sure this new subnet doesn't overlap an existing subnet
-  $sql = "SELECT id FROM subnets WHERE block_id='$block_id' AND ( 
-		(start_ip <= '$long_ip' AND end_ip >= '$long_ip') OR 
-        (start_ip <= '$long_end_ip' AND end_ip >= '$long_end_ip') OR
-		(start_ip >= '$long_ip' AND end_ip <= '$long_end_ip')
-		)";
+  $sql = "SELECT COUNT(*) FROM subnets WHERE CAST('$long_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) OR CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED)";
   
   $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '0'){
-    $notice = "The IP you entered overlaps with an subnet in the database.";
+  if(mysql_result($result, 0 ,0) != '0'){
+    $notice = "The IP you entered overlaps with a subnet in the database.";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -245,22 +232,22 @@ function submit_subnet(){
   $message = "Subnet added: $name";
   AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This goes down here just before we know stuff is actually going to be written.
   
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
 		VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
-		
+  
+	
   mysql_query($sql);
   
   // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
   if(!empty($acl_start)){
-    $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', 
+    $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', 
 	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
 	
     mysql_query($sql);
   }
   // Add static IP for the Default Gateway
   if(!empty($gateway)){
-    $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
     $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
 	       VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', 
 	       (SELECT id FROM subnets WHERE start_ip = '$long_ip'), '$username', now())";
@@ -276,14 +263,15 @@ function submit_subnet(){
 function list_subnets(){
   global $COLLATE;
   require_once('./include/header.php');
- 
+  
   if(!isset($_GET['block_id']) || empty($_GET['block_id'])){
     $notice = "Please select an IP block within which to view subnets.";
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
   $block_id = $_GET['block_id'];
-  if ($_GET['sort'] == 'network') { 
+  $sort = (!isset($_GET['sort'])) ? '' : $_GET['sort'];
+  if ($sort == 'network') { 
     $sort = 'start_ip';
   }
   else {
@@ -317,6 +305,7 @@ function list_subnets(){
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
   $results = mysql_query($sql);  
+  $javascript = ''; # This gets concatenated to below.
   while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($results)){
     $start_ip = long2ip($long_start_ip);
 	$mask = long2ip($long_mask);
@@ -327,7 +316,7 @@ function list_subnets(){
 	$result = mysql_query($sql);
 	$static_count = mysql_result($result, 0, 0);
 	
-	$sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
+	$sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
 	$result = mysql_query($sql);
 	while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
 	  $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
@@ -352,7 +341,7 @@ function list_subnets(){
 		 <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
 		 <td>";
 		 
-	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
 	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
 	}
     echo "</td>
@@ -361,7 +350,7 @@ function list_subnets(){
 	echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
     echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
 	
-	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
 	       
       $javascript .=
 		   "<script type=\"text/javascript\"><!--\n".

@@ -24,7 +24,7 @@ function edit_subnet(){
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
-  $username = (empty($_SESSION['username'])) ? '' : clean($_SESSION['username']);
+  $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($subnet_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
@@ -98,7 +98,7 @@ function delete_subnet(){
   mysql_query($sql);
   
   // Next, remove the acl ACL
-  $sql = "DELETE FROM acl WHERE apply='$subnet_id'";
+  $sql = "DELETE FROM acl WHERE subnet_id='$subnet_id'";
   mysql_query($sql);
   
   // Lastly, remove the subnet

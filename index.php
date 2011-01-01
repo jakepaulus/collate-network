@@ -4,7 +4,7 @@ require_once('./include/header.php');
  
 ?>
 
-  <h1>Welcome <?php if(isset($_SESSION['username'])){ echo $_SESSION['username']; } ?>!</h1>
+  <h1>Welcome <?php if(isset($COLLATE['user']['username'])){ echo $COLLATE['user']['username']; } ?>!</h1>
     <br />
     <h3>About Collate</h3>
       <p> 

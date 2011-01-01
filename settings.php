@@ -55,12 +55,12 @@ global $COLLATE;
 
   ?>
   <ul class="plain">
-    <li><input type="radio" name="perms" <?php echo $checked1; ?> value="0" />Read-Only (Must login to see/do anything)</li>
-	<li><input type="radio" name="perms" <?php echo $checked2; ?> value="2" />Reserve IPs</li>
-    <li><input type="radio" name="perms" <?php echo $checked3; ?> value="3" />Allocate Subnets</li>
-	<li><input type="radio" name="perms" <?php echo $checked4; ?> value="4" />Add IP Blocks</li>
-	<li><input type="radio" name="perms" <?php echo $checked5; ?> value="5" />Admin</li>
-	<li><input type="radio" name="perms" <?php echo $checked0; ?> value="6" />None (Turn off authentication)</li>
+    <li><input type="radio" name="perms" <?php echo (empty($checked1) ? "" : $checked1); ?> value="0" />Read-Only (Must login to see/do anything)</li>
+	<li><input type="radio" name="perms" <?php echo (empty($checked2) ? "" : $checked2); ?> value="2" />Reserve IPs</li>
+    <li><input type="radio" name="perms" <?php echo (empty($checked3) ? "" : $checked3); ?> value="3" />Allocate Subnets</li>
+	<li><input type="radio" name="perms" <?php echo (empty($checked4) ? "" : $checked4); ?> value="4" />Add IP Blocks</li>
+	<li><input type="radio" name="perms" <?php echo (empty($checked5) ? "" : $checked5); ?> value="5" />Admin</li>
+	<li><input type="radio" name="perms" <?php echo (empty($checked0) ? "" : $checked0); ?> value="6" />None (Turn off authentication)</li>
   </ul>
   </div>
   <p>&nbsp;</p>

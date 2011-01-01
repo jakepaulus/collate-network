@@ -88,16 +88,15 @@ function clean($variable){
 
 //------------Logging Function------------------------------------------------------
 function collate_log($accesslevel, $message){
-  $user = $_SESSION['username'];
   $ipaddress = $_SERVER['REMOTE_ADDR'];
   
   if($accesslevel <= "2"){ $level = "low"; }
   if($accesslevel == "3"){ $level = "normal"; }
   if($accesslevel >= "4"){ $level = "high"; }
   
-  if(empty($user)){ $user = "system"; }
+  $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   
-  $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), '$user', '$ipaddress', '$level', '$message')";
+  $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), '$username', '$ipaddress', '$level', '$message')";
   mysql_query($sql);
  
 } // Ends collate_log function

@@ -201,7 +201,7 @@ function cn_login() {
   
   $returnto = (empty($_GET['returnto'])) ? '' : $_GET['returnto'];
     
-  if(isset($_SESSION['username'])) { // The user is already logged in
+  if(isset($COLLATE['user']['username'])) { // The user is already logged in
     $notice = "You are already logged in as ".$COLLATE['user']['username'].".";
 	header("Location: index.php?notice=$notice");
 	exit();

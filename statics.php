@@ -59,7 +59,7 @@ function add_static(){
   $whole_subnet = range($first_usable, $last_usable);
   $ipspace = $whole_subnet;
   
-  $sql = "SELECT start_ip, end_ip FROM acl WHERE apply='ALL' OR apply='$subnet_id'";
+  $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
   $results = mysql_query($sql);
   
   while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
@@ -84,7 +84,8 @@ function add_static(){
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip_addr = (empty($_GET['ip_addr'])) ? '' : $_GET['ip_addr'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
-  $contact = (empty($_GET['contact'])) ? $_SESSION['username'] : $_GET['contact'];
+  $contact = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
+  $contact = (!isset($_GET['contact'])) ? $contact : $_GET['contact'];
   
 
   echo "<h1>Reserve a static IP</h1>\n".
@@ -132,7 +133,7 @@ function add_static(){
   
   echo "<pre><span id=\"guidance\">$help</span></pre>";
   
-  if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+  if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
     echo "<script type=\"text/javascript\"><!--\n".
 	       "  new Ajax.InPlaceEditor('guidance', '_statics.php?op=edit_guidance&subnet_id=$subnet_id',
 		      {highlightcolor: '#a5ddf8', rows: '7', cols: '49',
@@ -186,7 +187,7 @@ function submit_static(){
   $whole_subnet = range($first_usable, $last_usable);
   $ipspace = $whole_subnet;
   
-  $sql = "SELECT start_ip, end_ip FROM acl WHERE apply='ALL' OR apply='$subnet_id'";
+  $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
   $results = mysql_query($sql);
   
   while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
@@ -213,7 +214,8 @@ function submit_static(){
     exit();
   }
   
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
+  
   $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
 		 VALUES('$long_ip_addr', '$name', '$contact', '$note', '$subnet_id', '$username', now())";
 
@@ -230,7 +232,8 @@ function submit_static(){
   $sql = "SELECT ip FROM statics WHERE subnet_id = '$subnet_id' AND note = 'Default Gateway'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) == '1'){
-    $gateway = long2ip(mysql_result($result, '0'));    
+    $gateway = long2ip(mysql_result($result, '0'));
+	$error = ''; #none	
   }
   else{
     $gateway = "*";
@@ -264,14 +267,12 @@ function list_statics(){
   }
    
   $subnet_id = clean($_GET['subnet_id']);
-  if ($_GET['sort'] != 'name' && $_GET['sort'] != 'contact') { 
+  $sort = (!isset($_GET['sort'])) ? '' : $_GET['sort'];
+  if ($sort != 'name' && $sort != 'contact') { 
     $sort = 'ip';
   }
-  else {
-    $sort = $_GET['sort'];
-  }
     
-  $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
+  $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
   $results = mysql_query($sql);
   if(mysql_num_rows($results) != '1') {
     $notice = "You have not selected a valid subnet. Please select the IP Block and Subnet you would like to reserve an IP address from.";
@@ -280,12 +281,14 @@ function list_statics(){
   
   require_once('./include/header.php');
   
-  $subnet_name = mysql_result($results, 0, 0);
+  list($subnet_name, $subnet_number, $subnet_mask) = mysql_fetch_row($results);
+  $subnet_number = long2ip($subnet_number);
+  $subnet_mask = long2ip($subnet_mask);
      
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
   $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
   
-  $sql = "SELECT id, ip, name, contact, note FROM statics WHERE subnet_id='$subnet_id' ORDER BY `$sort` ASC";
+  $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE subnet_id='$subnet_id' ORDER BY `$sort` ASC";
   
   if(is_numeric($show) && $show <= '250' && $show > '5'){
     $limit = $show;
@@ -312,7 +315,7 @@ function list_statics(){
   $row = mysql_query($sql);
   $rows = mysql_num_rows($row);
   
-  echo "<h1>Static IPs in \"$subnet_name\"</h1>\n".
+  echo "<h1>Static IPs in $subnet_name: $subnet_number / $subnet_mask</h1>\n".
        "<form action=\"statics.php\" method=\"get\"><table width=\"100%\"><tr><td align=\"left\">";
 
   echo "<p><input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
@@ -356,69 +359,83 @@ function list_statics(){
 	   "<table width=\"100%\">".
      "<tr><th><a href=\"statics.php?subnet_id=$subnet_id\">IP Address</a></th>".
      "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=name\">Name</a></th>".
-     "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=contact\">Contact</a></th></tr>".
-	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
+     "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=contact\">Contact</a></th>".
+	 "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=failed_scans\">Failed Scans</a></th></tr>".
+	   "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
    
-  while(list($static_id,$ip,$name,$contact,$note) = mysql_fetch_row($row)){
-    $ip = long2ip($ip);
-    echo "<tr id=\"static_".$static_id."_row_1\">
-	     <td>$ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>
-		 <td><span id=\"edit_contact_".$static_id."\">$contact</span></td>
-		 <td>";
-		 
-	if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
-	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
-	}
-    echo "</td>
-		 </tr>\n";
-	echo "<tr id=\"static_".$static_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td></tr>\n";
-    echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
-	
-	if($_SESSION['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
-      $javascript .=	  
-	       "<script type=\"text/javascript\"><!--\n".
-	       "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
-		      {highlightcolor: '#a5ddf8', 
-			   callback:
-			    function(form) {
-			      new Element.update('notice', '');
-                  return Form.serialize(form);
-			    },
-			   onFailure: 
-			    function(transport) {
-                  new Element.update('notice', transport.responseText.stripTags());
-			    }
-			  }
-			  );\n".
-		   "  new Ajax.InPlaceEditor('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
-		      {highlightcolor: '#a5ddf8',  
-			   callback:
-			    function(form) {
-			      new Element.update('notice', '');
-                  return Form.serialize(form);
-			    },
-			   onFailure: 
-			    function(transport) {
-			      new Element.update('notice', transport.responseText.stripTags());
-			    }
-			  }
-			  );\n".
-		    "  new Ajax.InPlaceEditor('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
-		      {highlightcolor: '#a5ddf8',  
-			   callback:
-			    function(form) {
-			      new Element.update('notice', '');
-                  return Form.serialize(form);
-			    },
-			   onFailure: 
-			    function(transport) {
-			      new Element.update('notice', transport.responseText.stripTags());
-			    }
-			  }
-			  );\n".
-		   "--></script>\n";
-	}
-  }
+  $javascript = ''; # this gets concatenated to below 
+  while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
+      $ip = long2ip($ip);
+      echo "<tr id=\"static_".$static_id."_row_1\">".
+           "<td>$ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
+           "<td>$failed_scans</td>".
+           "<td>";
+       
+      if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+      }
+      echo "</td></tr>\n";
+      echo "<tr id=\"static_".$static_id."_row_2\">".
+           "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
+
+      if($failed_scans == '-1'){
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" onclick=\"return confirm('Are you sure you\'d like to enable stale scan for this IP?')\">".
+             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" /></a></td>";
+      }
+      else{
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
+             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" /></a></td>";
+      }
+      
+      echo "</tr>\n";
+      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+    
+      if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+          $javascript .=	  
+             "<script type=\"text/javascript\"><!--\n".
+             "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
+              {highlightcolor: '#a5ddf8', 
+             callback:
+              function(form) {
+                new Element.update('notice', '');
+                      return Form.serialize(form);
+              },
+             onFailure: 
+              function(transport) {
+                      new Element.update('notice', transport.responseText.stripTags());
+              }
+            }
+            );\n".
+           "  new Ajax.InPlaceEditor('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
+              {highlightcolor: '#a5ddf8',  
+             callback:
+              function(form) {
+                new Element.update('notice', '');
+                      return Form.serialize(form);
+              },
+             onFailure: 
+              function(transport) {
+                new Element.update('notice', transport.responseText.stripTags());
+              }
+            }
+            );\n".
+            "  new Ajax.InPlaceEditor('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
+              {highlightcolor: '#a5ddf8',  
+             callback:
+              function(form) {
+                new Element.update('notice', '');
+                      return Form.serialize(form);
+              },
+             onFailure: 
+              function(transport) {
+                new Element.update('notice', transport.responseText.stripTags());
+              }
+            }
+            );\n".
+           "--></script>\n";
+      }
+    }
   echo "</table>";
   
   
@@ -464,12 +481,12 @@ function list_statics(){
   <td><p>Showing <input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" /> results per page 
   <input type=\"submit\" value=\" Go \" /></p></td></tr></table></form>";
   
-  $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE apply='$subnet_id' ORDER BY name ASC";
+  $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id' ORDER BY name ASC";
   $result = mysql_query($sql);
   
   echo "<h1>ACL for \"$subnet_name\"</h1>\n";
   
-  if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+  if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
     echo  "<p style=\"text-align: right;\"><a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">\n".
 	      "<img src=\"./images/add.gif\" alt=\"Add\" /> Add an ACL Statement </a></p>\n";
   }
@@ -491,13 +508,13 @@ function list_statics(){
 		   <td>$acl_end</td>
 		   	<td>";
 		 
-	if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+	if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
 	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete_acl&acl_id=$acl_id', {onSuccess:function(){ new Effect.Fade('acl_".$acl_id."'); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
 	}
     echo "</td>
 		 </tr>\n";
 	
-    if($_SESSION['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+    if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
 	  $javascript .= 
 	       "<script type=\"text/javascript\"><!-- \n".
 	       "  new Ajax.InPlaceEditor('edit_acl_name_".$acl_id."', '_statics.php?op=edit_acl&acl_id=$acl_id&edit=name',
@@ -581,7 +598,7 @@ function submit_acl(){
 	exit();
   }
   
-  $sql = "INSERT INTO acl (name, start_ip, end_ip, apply) VALUES ('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
+  $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES ('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
   
   mysql_query($sql);
   
