@@ -220,7 +220,7 @@ function delete_static(){
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
 
-  if(empty($static_ip) || !ip2long($static_ip)){
+  if(empty($static_ip) || !ip2decimal($static_ip)){
     header("HTTP/1.1 500 Internal Error");
     echo "The static IP you tried to delete is not valid.";
     exit();
@@ -230,7 +230,7 @@ function delete_static(){
   $message = "Static IP deleted: $static_ip";
   AccessControl($accesslevel, $message); 
 
-  $long_ip = ip2long($static_ip);
+  $long_ip = ip2decimal($static_ip);
   
   $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
@@ -286,7 +286,7 @@ function toggle_stalescan(){
     $referer=$referer.'&notice=';
   }
 
-  if(empty($static_ip) || !ip2long($static_ip)){
+  if(empty($static_ip) || !ip2decimal($static_ip)){
     $error="The static IP you tried to modify is not valid.";
     header("Location: $referer"."$error");
     exit();
@@ -296,7 +296,7 @@ function toggle_stalescan(){
   $message = "Stale Scan toggled $toggle for IP: $static_ip";
   AccessControl($accesslevel, $message); 
 
-  $long_ip = ip2long($static_ip);
+  $long_ip = ip2decimal($static_ip);
   if($toggle == 'on'){
     $count='0';
   }

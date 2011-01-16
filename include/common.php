@@ -88,6 +88,7 @@ function clean($variable){
 
 //------------Logging Function------------------------------------------------------
 function collate_log($accesslevel, $message){
+  global $COLLATE;
   $ipaddress = $_SERVER['REMOTE_ADDR'];
   
   if($accesslevel <= "2"){ $level = "low"; }
@@ -100,5 +101,26 @@ function collate_log($accesslevel, $message){
   mysql_query($sql);
  
 } // Ends collate_log function
+
+
+# Really dumb/ugly/embarassing hack to make the integer representation
+# of IP addresses larger than 127.255.255.255 look like signed integers
+# as they would be represented on 32-bit systems...on 64-bit systems.
+# Please don't point and laugh too much at me for this.
+function ip2decimal($ip) {
+        $special_number = '2147483648';
+		if (ip2long($ip) === false){ return false; }
+        $long_ip = ip2long($ip);
+        if ($long_ip == $special_number){
+                $long_ip = -1*$ip;
+        }
+        if($long_ip > $special_number){
+                $difference = $long_ip - $special_number;
+                $long_ip = -$special_number + $difference;
+
+        }
+        return $long_ip;
+
+}
 
 ?>

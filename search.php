@@ -89,13 +89,13 @@ function download() {
         list($ip,$mask) = explode('/', $search);
     }
   
-    if(ip2long($ip) == FALSE){
+    if(ip2decimal($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
       header("Location: search.php?notice=$notice");
       exit();
     }
   
-    $ip = long2ip(ip2long($ip));  
+    $ip = long2ip(ip2decimal($ip));  
     if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
       $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
       header("Location: search.php?notice=$notice");
@@ -105,7 +105,7 @@ function download() {
       $bin = str_pad('', $mask, '1');
       $bin = str_pad($bin, '32', '0');
       $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-      $mask = long2ip(ip2long($mask));
+      $mask = long2ip(ip2decimal($mask));
     }
     elseif(!checkNetmask($mask)){
       $notice = "The mask you have specified is not valid.";
@@ -113,8 +113,8 @@ function download() {
       exit();
     }
   }
-  $long_ip = ip2long($ip);
-  $long_mask = ip2long($mask);
+  $long_ip = ip2decimal($ip);
+  $long_mask = ip2decimal($mask);
   
   if($first == "0") { // Subnet search
     $first = "subnets";
@@ -340,13 +340,13 @@ function search() {
       list($ip,$mask) = explode('/', $search);
 	  }
   
-    if(ip2long($ip) == FALSE){
+    if(ip2decimal($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
       header("Location: search.php?notice=$notice");
       exit();
     }
   
-    $ip = long2ip(ip2long($ip));  
+    $ip = long2ip(ip2decimal($ip));  
     if(!strstr($mask, '.') && ($mask <= '0' || $mask > '32')){
       $notice = "The IP you have specified is not valid. The mask cannot be 0 bits long or longer than 32 bits.";
       header("Location: search.php?notice=$notice");
@@ -356,7 +356,7 @@ function search() {
       $bin = str_pad('', $mask, '1');
       $bin = str_pad($bin, '32', '0');
       $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-      $mask = long2ip(ip2long($mask));
+      $mask = long2ip(ip2decimal($mask));
     }
     elseif(!checkNetmask($mask)){
       $notice = "The mask you have specified is not valid.";
@@ -364,8 +364,8 @@ function search() {
 	  exit();
     }
   }
-  $long_ip = (isset($ip)) ? ip2long($ip) : '';
-  $long_mask = (isset($mask)) ? ip2long($mask) : '';
+  $long_ip = (isset($ip)) ? ip2decimal($ip) : '';
+  $long_mask = (isset($mask)) ? ip2decimal($mask) : '';
   
   if($first == "0") { // Subnet search
     $first = "subnets";
@@ -662,7 +662,7 @@ function search() {
       }
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
-           "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
+           "  <td colspan=\"4\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
 
       if($failed_scans == '-1'){
         echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" onclick=\"return confirm('Are you sure you\'d like to enable stale scan for this IP?')\">".
@@ -848,13 +848,13 @@ function show_form()  {
 } // Ends list_searches function
 
 
-// Netmask Validator // from the comments on php.net/ip2long
+// Netmask Validator // from the comments on php.net/ip2decimal
 function checkNetmask($ip) {
- if (!ip2long($ip)) {
+ if (!ip2decimal($ip)) {
   return false;
- } elseif(strlen(decbin(ip2long($ip))) != 32 && ip2long($ip) != 0) {
+ } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
   return false;
- } elseif(ereg('01',decbin(ip2long($ip))) || !ereg('0',decbin(ip2long($ip)))) {
+ } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
   return false;
  } else {
   return true;

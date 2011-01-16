@@ -95,14 +95,14 @@ function submit_block() {
   if(strstr($ip, '/')){
     list($ip,$mask) = explode('/', $ip);
   
-    if(ip2long($ip) == FALSE){
+    if(ip2decimal($ip) == FALSE){
       $notice = "The IP you have entered is not valid.";
       header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	  exit();
     }
   
-    $ip = long2ip(ip2long($ip));  
-    $long_ip = ip2long($ip);
+    $ip = long2ip(ip2decimal($ip));  
+    $long_ip = ip2decimal($ip);
     if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
       $notice = "The IP block you have specified is not valid. The mask cannot be 0 or 32 bits long.";
       header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
@@ -112,7 +112,7 @@ function submit_block() {
       $bin = str_pad('', $mask, '1');
 	  $bin = str_pad($bin, '32', '0');
 	  $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-      $mask = long2ip(ip2long($mask));
+      $mask = long2ip(ip2decimal($mask));
     }
     elseif(!checkNetmask($mask)){
       $notice = "The mask you have specified is not valid.";
@@ -120,7 +120,7 @@ function submit_block() {
 	  exit();
     }
     
-	$long_mask = ip2long($mask);
+	$long_mask = ip2decimal($mask);
     $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
     $long_end_ip = $long_ip | (~$long_mask);
   }
@@ -129,8 +129,8 @@ function submit_block() {
 	  $notice = "The end IP Address you have supplied is not valid.";
 	  header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	}
-    $long_ip = ip2long($ip);
-    $long_end_ip = ip2long($end_ip);
+    $long_ip = ip2decimal($ip);
+    $long_end_ip = ip2decimal($end_ip);
   }
   
   // We need to make sure this new block doesn't overlap an existing block
@@ -243,13 +243,13 @@ function list_blocks(){
 } // Ends list_blocks function
 
 
-// Netmask Validator // from the comments on php.net/ip2long
+// Netmask Validator // from the comments on php.net/ip2decimal
 function checkNetmask($ip) {
- if (!ip2long($ip)) {
+ if (!ip2decimal($ip)) {
   return false;
- } elseif(strlen(decbin(ip2long($ip))) != 32 && ip2long($ip) != 0) {
+ } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
   return false;
- } elseif(ereg('01',decbin(ip2long($ip))) || !ereg('0',decbin(ip2long($ip)))) {
+ } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
   return false;
  } else {
   return true;

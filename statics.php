@@ -206,7 +206,7 @@ function submit_static(){
 	$ipspace = array_diff($ipspace, $statics);  
   }
   
-  $long_ip_addr = ip2long($ip_addr);	
+  $long_ip_addr = ip2decimal($ip_addr);	
   
   if(array_search($long_ip_addr, $ipspace) == FALSE){
     $notice = "The IP Address supplied is not valid. Please choose another.";
@@ -570,7 +570,7 @@ function submit_acl(){
     exit();
   }
   
-  if(ip2long($acl_start) == FALSE || ip2long($acl_end) == FALSE){
+  if(ip2decimal($acl_start) == FALSE || ip2decimal($acl_end) == FALSE){
 	$notice = "The ACL Range you specified is not valid.";
 	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
 	exit();
@@ -589,8 +589,8 @@ function submit_acl(){
   
   AccessControl('3', "ACL for $subnet_name subnet edited");
   
-  $long_acl_start = ip2long($acl_start);
-  $long_acl_end = ip2long($acl_end);
+  $long_acl_start = ip2decimal($acl_start);
+  $long_acl_end = ip2decimal($acl_end);
   
   if($long_acl_start < $long_start_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start || $long_acl_end > $long_end_ip){
 	$notice = "The ACL Range you specified is not valid.";

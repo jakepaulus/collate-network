@@ -165,14 +165,14 @@ function submit_subnet(){
   
   list($start_ip,$mask) = explode('/', $ip);
   
-  if(ip2long($start_ip) == FALSE){
+  if(ip2decimal($start_ip) == FALSE){
     $notice = "The IP you have entered is not valid.";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
-  $start_ip = long2ip(ip2long($start_ip));  
-  $long_ip = ip2long($start_ip);
+  $start_ip = long2ip(ip2decimal($start_ip));  
+  $long_ip = ip2decimal($start_ip);
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
     $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
@@ -182,7 +182,7 @@ function submit_subnet(){
     $bin = str_pad('', $mask, '1');
 	$bin = str_pad($bin, '32', '0');
 	$mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-    $mask = long2ip(ip2long($mask));
+    $mask = long2ip(ip2decimal($mask));
   }
   elseif(!checkNetmask($mask)){
     $notice = "The mask you have specified is not valid.";
@@ -190,18 +190,18 @@ function submit_subnet(){
 	exit();
   }
   
-  if(!empty($acl_start) && (ip2long($acl_start) == FALSE || ip2long($acl_end) == FALSE)){
+  if(!empty($acl_start) && (ip2decimal($acl_start) == FALSE || ip2decimal($acl_end) == FALSE)){
     $notice = "The ACL Range you specified is not valid.";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
-  $long_mask = ip2long($mask);
+  $long_mask = ip2decimal($mask);
   $long_ip = $long_ip & $long_mask; // This makes sure they entered the network address and not an IP inside the network
   $long_end_ip = $long_ip | (~$long_mask);
   
-  $long_acl_start = ip2long($acl_start);
-  $long_acl_end = ip2long($acl_end);
+  $long_acl_start = ip2decimal($acl_start);
+  $long_acl_end = ip2decimal($acl_end);
   
   if(!empty($acl_start) && ($long_acl_start < $long_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start
     || $long_acl_end > $long_end_ip)){
@@ -210,9 +210,9 @@ function submit_subnet(){
 	exit();
   }
   
-  $long_gateway = ip2long($gateway);
+  $long_gateway = ip2decimal($gateway);
   
-  if(!empty($gateway) && (ip2long($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
+  if(!empty($gateway) && (ip2decimal($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
     $notice = "The Default Gateway you specified is not valid.";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
@@ -391,13 +391,13 @@ function list_subnets(){
 } // Ends list_subnets function
 
     
-// Netmask Validator // from the comments on php.net/ip2long
+// Netmask Validator // from the comments on php.net/ip2decimal
 function checkNetmask($ip) {
- if (!ip2long($ip)) {
+ if (!ip2decimal($ip)) {
   return false;
- } elseif(strlen(decbin(ip2long($ip))) != 32 && ip2long($ip) != 0) {
+ } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
   return false;
- } elseif(ereg('01',decbin(ip2long($ip))) || !ereg('0',decbin(ip2long($ip)))) {
+ } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
   return false;
  } else {
   return true;

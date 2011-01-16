@@ -78,7 +78,7 @@ CREATE TABLE `subnets` (
   `end_ip` int(10) NOT NULL,
   `mask` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
-  `block_id` tinyint(9) UNSIGNED NOT NULL,
+  `block_id` int(9) UNSIGNED NOT NULL,
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.7 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.7.1 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -291,6 +291,13 @@ function upgrade_from_one_dot_six () {
 	return $results;
 }
 
+$upgrade_from_one_dot_seven = 
+"
+ALTER TABLE subnets CHANGE block_id block_id INT( 9 ) UNSIGNED NOT NULL;
+UPDATE settings SET value='1.7.1' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.1!')
+";
+
 require_once('./include/db_connect.php');
 
 $sql = "select value from settings where name='version'";
@@ -304,26 +311,34 @@ if($result != FALSE) { // See what version we're on
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
+	$results .= multiple_query("$upgrade_from_one_dot_seven");
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
+	$results .= multiple_query("$upgrade_from_one_dot_seven");
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
+	$results .= multiple_query("$upgrade_from_one_dot_seven");
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
+	$results .= multiple_query("$upgrade_from_one_dot_seven");
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
+	$results .= multiple_query("$upgrade_from_one_dot_seven");
   }
   elseif($version == '1.7'){
+    $results = multiple_query("$upgrade_from_one_dot_seven");
+  }
+  elseif($version == '1.7.1'){
     // We're at the current version!
     ?>
       <html>
@@ -332,21 +347,21 @@ if($result != FALSE) { // See what version we're on
       </head>
       <body>
         <h1>You're already up to date</h1>
-        <p>This script will bring your database to version 1.7. You're already running 1.7 so there's nothing to do.
+        <p>This script will bring your database to version 1.7.1. You're already running 1.7.1 so there's nothing to do.
             If you think you're seeing this in error please file a bug report.</p>
       </body>
       </html>
     <?php
     exit();
   }
-  $notice = "This application has been successfully upgraded to version 1.7.";
+  $notice = "This application has been successfully upgraded to version 1.7.1.";
 }
 else{ // We're installing
   $results = multiple_query($install);
   $notice = "This application has been successfully installed.";
 }
 
-/*
+
 $tok = strtok($results, "<br />");
 
 if($tok){ // There were erors.
@@ -364,9 +379,9 @@ if($tok){ // There were erors.
 <?php
 }
 else{ // Everything went well.
-*/
+
   header("Location: index.php?notice=$notice");
-#}
+}
 
 function multiple_query($sql){
   $tok = strtok($sql, ";");
