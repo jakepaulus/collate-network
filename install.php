@@ -50,7 +50,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.7');
+INSERT INTO `settings` VALUES ('version', '1.7.2');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -298,6 +298,12 @@ UPDATE settings SET value='1.7.1' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.1!')
 ";
 
+$upgrade_from_one_dot_seven_dot_one = 
+"
+UPDATE settings SET value='1.7.2' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.2!')
+";
+
 require_once('./include/db_connect.php');
 
 $sql = "select value from settings where name='version'";
@@ -312,6 +318,7 @@ if($result != FALSE) { // See what version we're on
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
@@ -319,26 +326,34 @@ if($result != FALSE) { // See what version we're on
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.7'){
     $results = multiple_query("$upgrade_from_one_dot_seven");
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
   }
   elseif($version == '1.7.1'){
+    $results = multiple_query($upgrade_from_one_dot_seven_dot_one);
+  }
+  elseif($version == '1.7.2'){
     // We're at the current version!
     ?>
       <html>
@@ -347,14 +362,14 @@ if($result != FALSE) { // See what version we're on
       </head>
       <body>
         <h1>You're already up to date</h1>
-        <p>This script will bring your database to version 1.7.1. You're already running 1.7.1 so there's nothing to do.
+        <p>This script will bring your database to version 1.7.2. You're already running 1.7.2 so there's nothing to do.
             If you think you're seeing this in error please file a bug report.</p>
       </body>
       </html>
     <?php
     exit();
   }
-  $notice = "This application has been successfully upgraded to version 1.7.1.";
+  $notice = "This application has been successfully upgraded to version 1.7.2.";
 }
 else{ // We're installing
   $results = multiple_query($install);

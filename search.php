@@ -374,20 +374,20 @@ function search() {
     if($when == "dates"){
       $extrasearchdescription = "and the record was last modified between $fromdate and $todate";
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
         }
       else{
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' AND
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE $second LIKE '%$search%' AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
       }
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
         }
       else{
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
       }
     }
   }
@@ -542,15 +542,21 @@ function search() {
   if($first == "subnets"){
     echo "<table width=\"100%\">\n". 
 	     "<tr><th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=name\">Subnet Name</th>".
+		 "<th align=\"left\">Block</th>".
 	     "<th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=network\">Network Address</th>".
 	     "<th align=\"left\">Subnet Mask</th>".
 	     "<th align=\"left\">Statics Used</th></tr>\n".
-	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
+	     "<tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 		 
- 
-    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($row)){
+    $javascript=''; # this gets appended to in the following while loop
+    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = mysql_fetch_row($row)){
       $start_ip = long2ip($long_start_ip);
       $mask = long2ip($long_mask);
+	  if(!isset($block_name[$block_id])){
+	    $sql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
+        $result = mysql_query($sql);
+        $block_name[$block_id] = mysql_result($result, 0, 0);
+      }
       
       $subnet_size = $long_end_ip - $long_start_ip;
       
@@ -560,9 +566,11 @@ function search() {
       
       $sql = "SELECT start_ip, end_ip FROM acl WHERE apply='$subnet_id'";
       $result = mysql_query($sql);
-      while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
-        $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
-      }
+	  if ($result != false) {
+        while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
+          $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
+        }
+	  }
       
       $percent_subnet_used = round('100' * ($static_count / $subnet_size));
       
@@ -579,17 +587,18 @@ function search() {
       $percent_subnet_used = "<b>~$percent_subnet_used%</b>";
       
       echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
+           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td>".$block_name[$block_id]."<td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
            <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
            <td>";
          
       if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
-        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+        echo "<a href=\"subnets.php?op=move&amp;subnet_id=$subnet_id\"><img alt=\"move subnet\" title=\"move subnet\" src=\"images/move_subnet.png\" /></a> &nbsp; ".
+             "<a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"delete subnet\" /></a>";
       }
       echo "</td></tr>\n";
          
-      echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
-      echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+      echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"5\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
+      echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
       
       if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
              
@@ -633,7 +642,7 @@ function search() {
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=name\">Name</a></th>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=contact\">Contact</a></th>".
          "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;show=$limit&amp;sort=failed_scans\">Failed Scans</a></th>".
-         "</tr><tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
+         "</tr><tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 
 	$javascript = ''; # this gets appended to in the following while loop
     while(list($static_id,$ip,$name,$contact,$note,$subnet_id,$failed_scans) = mysql_fetch_row($row)){
@@ -658,23 +667,23 @@ function search() {
            "<td>";
        
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
-        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"delete static ip\" /></a>";
       }
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
            "  <td colspan=\"4\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
 
       if($failed_scans == '-1'){
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" onclick=\"return confirm('Are you sure you\'d like to enable stale scan for this IP?')\">".
-             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" /></a></td>";
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\">".
+             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" title=\"click to enable stale scan\" /></a></td>";
       }
       else{
         echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
-             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" /></a></td>";
+             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" title=\"click to disable stale scan\" /></a></td>";
       }
       
       echo "</tr>\n";
-      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
     
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=	  

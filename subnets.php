@@ -17,6 +17,15 @@ switch($op){
 	submit_subnet();
 	break;
 	
+	case "move";	
+	AccessControl("3", "Move subnet form accessed");
+	move_subnet();
+	break;
+	
+	case "submitmove";
+	submit_move_subnet();
+	break;
+	
 	default:
 	AccessControl("1", "Subnet list viewed");
 	list_subnets();
@@ -79,7 +88,8 @@ function add_subnet (){
 
 	array_push($ipspace, $block_long_start_ip);
 	
-	$sql = "SELECT start_ip, end_ip FROM subnets WHERE block_id = '$block_id' ORDER BY start_ip ASC";
+	// We need to consider that some subnets in the block are not in the IP range the block specifies, so we compare ranges as well as block_id.
+	$sql = "SELECT start_ip, end_ip FROM subnets WHERE block_id = '$block_id' AND CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$block_long_start_ip' & 0xFFFFFFFF) AS UNSIGNED) AND CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$block_long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
 	$subnet_rows = mysql_query($sql);
 	
 	while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
@@ -259,7 +269,6 @@ function submit_subnet(){
   exit();
 } // ends submit_subnet function
 
-
 function list_subnets(){
   global $COLLATE;
   require_once('./include/header.php');
@@ -342,7 +351,8 @@ function list_subnets(){
 		 <td>";
 		 
 	if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
-	  echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+	  echo "<a href=\"subnets.php?op=move&amp;subnet_id=$subnet_id\"><img alt=\"move subnet\" title=\"move subnet\" src=\"images/move_subnet.png\" /></a> &nbsp; ".
+           "<a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"delete subnet\" /></a>";
 	}
     echo "</td>
 		 </tr>\n";
@@ -390,7 +400,56 @@ function list_subnets(){
   
 } // Ends list_subnets function
 
-    
+function move_subnet (){
+  require_once('./include/header.php');
+  
+  if(!isset($_GET['subnet_id'])){
+    $notice = "Please select a subnet to attempt to move.";
+	header("Location: blocks.php?notice=$notice");
+  }
+  
+  $subnet_id = clean($_GET['subnet_id']);
+  
+  $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
+  $subnet_name = mysql_result(mysql_query($sql), 0, 0); 
+
+  echo "<h1>Move $subnet_name to a new block</h1>\n".
+	   "<br />\n".
+	   "<form action=\"subnets.php?op=submitmove\" method=\"post\">\n".
+	   "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
+	   "<p>Select the block you'd like to move this subnet into</p>".
+	   "<select name=\"block_id\">";
+  $sql = "SELECT id, name FROM blocks";
+  $result = mysql_query($sql);
+  while(list($block_id,$block_name) = mysql_fetch_row($result)){
+    echo "<option value=\"$block_id\">$block_name</option\">";
+  }
+  echo "</select><br /><br />".
+       "<p><input type=\"submit\" value=\" Go \" /></p></form>";
+  
+} // Ends move_subnet function
+
+function submit_move_subnet (){
+  if(!isset($_POST['subnet_id']) || !isset($_POST['block_id'])){
+    $notice = "Please select a subnet to attempt to move.";
+	header("Location: blocks.php?notice=$notice");
+  }
+  
+  $subnet_id=clean($_POST['subnet_id']);
+  $block_id=clean($_POST['block_id']);
+  
+  list($subnet_name,$old_block_id)=mysql_fetch_row(mysql_query("SELECT name, block_id FROM subnets WHERE id='$subnet_id'"));
+  $old_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$old_block_id'"), 0, 0);
+  $new_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$block_id'"), 0, 0);
+  AccessControl("3", "Subnet $subnet_name moved from $old_block_name block to $new_block_name block");
+  
+  $sql = "UPDATE subnets set block_id='$block_id' WHERE id='$subnet_id'";
+  $result = mysql_query($sql);
+  
+  $notice = "Subnet $subnet_name moved from $old_block_name block to $new_block_name block";
+  header("Location: subnets.php?block_id=$old_block_id&notice=$notice");
+} // Ends submit_move_subnet function
+
 // Netmask Validator // from the comments on php.net/ip2decimal
 function checkNetmask($ip) {
  if (!ip2decimal($ip)) {

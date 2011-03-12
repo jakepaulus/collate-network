@@ -373,19 +373,19 @@ function list_statics(){
            "<td>";
        
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
-        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+        echo " <a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('static_".$static_id."_row_1'), new Effect.Fade('static_".$static_id."_row_2'), new Effect.Fade('static_".$static_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"delete static ip\" /></a>";
       }
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
            "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
 
       if($failed_scans == '-1'){
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" onclick=\"return confirm('Are you sure you\'d like to enable stale scan for this IP?')\">".
-             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" /></a></td>";
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" \">".
+             "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" title=\"click to enable stale scan\" /></a></td>";
       }
       else{
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
-             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" /></a></td>";
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" \">".
+             "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" title=\"click to disable stale scan\" /></a></td>";
       }
       
       echo "</tr>\n";
