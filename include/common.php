@@ -59,7 +59,7 @@ while ($column = mysql_fetch_assoc($result)) {
     header("Location: login.php?notice=$notice&returnto=$returnto");
     exit();
   }
-  elseif($_SESSION['accesslevel'] >= $accesslevel){
+  elseif($_SESSION['accesslevel'] > $accesslevel){
     if($accesslevel > "1"){
       collate_log($accesslevel, $message);
 	}
