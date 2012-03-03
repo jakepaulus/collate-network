@@ -304,6 +304,14 @@ UPDATE settings SET value='1.7.2' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.2!')
 ";
 
+$upgrade_from_one_dot_seven_dot_two = 
+"
+ALTER TABLE subnets MODIFY name varchar(60);
+ALTER TABLE users ADD last_login_at datetime NOT NULL;
+UPDATE settings SET value='1.7.3' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.2!')
+";
+
 require_once('./include/db_connect.php');
 
 $sql = "select value from settings where name='version'";
@@ -319,6 +327,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
@@ -327,6 +336,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
@@ -334,26 +344,34 @@ if($result != FALSE) { // See what version we're on
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
 	$results .= upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.7'){
     $results = multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.7.1'){
     $results = multiple_query($upgrade_from_one_dot_seven_dot_one);
+	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
   elseif($version == '1.7.2'){
+	$results = multiple_query($upgrade_from_one_dot_seven_dot_two);
+  }
+  elseif($version == '1.7.3){
     // We're at the current version!
     ?>
       <html>

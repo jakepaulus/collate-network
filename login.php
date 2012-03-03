@@ -296,6 +296,8 @@ function cn_login() {
   else{ // Normal successful login.
     $sql = "UPDATE users SET loginattempts='0' WHERE username='$username'";
 	mysql_query($sql);
+    $sql = "UPDATE users SET last_login_at=NOW() WHERE username='$username'";
+      mysql_query($sql);
   }
   
   if($authtype == 'ldap'){
