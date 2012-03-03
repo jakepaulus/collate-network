@@ -31,20 +31,13 @@ function edit_subnet(){
 	echo "Please select a subnet to edit.";
 	exit();
   }
-  elseif($edit == 'name' && strlen($value) < '3'){
+  elseif($edit == 'name' && (strlen($value) < '3' OR strlen($value) > '60')){
     header("HTTP/1.1 500 Internal Error");
-	echo "Subnet names must be three characters or longer.";
+	echo "Subnet names must be between 3 and 60 characters long.";
 	exit();
   }
  
-  $result = mysql_query("SELECT name FROM subnets WHERE name='$value'");
-  
   if($edit == 'name'){
-    if(mysql_num_rows($result) != '0'){
-	  header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	  echo "That name already exists in the database.";
-	  exit;
-	}
 	$result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
 	$name = mysql_result($result, 0, 0);
     AccessControl('3', "subnet #$subnet_id name changed from $name to $value");

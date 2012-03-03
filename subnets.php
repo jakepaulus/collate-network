@@ -158,13 +158,11 @@ function submit_subnet(){
 	exit();
   }
   
-  // Make sure that the subnet name isn't already in use
-  $sql = "SELECT name FROM subnets WHERE name='$name'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '0'){
-    $notice = "The subnet name you have chosen already exists in the database. Please use another name.";
+  if(strlen($name) < '3' OR strlen($name) > '60'){
+    $notice = "The subnet name must be between 3 and 60 characters long.";
+    $guidance = urlencode($guidance);
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
-	exit();
+    exit();
   }
   
   if(!strstr($ip, '/')){
