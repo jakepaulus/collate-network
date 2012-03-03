@@ -15,10 +15,32 @@
 # BUT BE CAREFUL
 $pingcommand = "/bin/ping -c 3 -n -A -w 2";
 $dnscommand = "/usr/bin/dig";
-$dnsserver['0']="10.1.1.1";  // Add additional servers if needed
+$dnsserver['0']="192.168.1.1";  // Add additional servers if needed
 #$dnsserver['1']="172.16.244.14";
 
 #--------------------------------------------------------------------------------
+
+
+# Really dumb/ugly/embarassing hack to make the integer representation
+# of IP addresses larger than 127.255.255.255 look like signed integers
+# as they would be represented on 32-bit systems...on 64-bit systems.
+# Please don't point and laugh too much at me for this.
+function ip2decimal($ip) {
+        $special_number = '2147483648';
+                if (ip2long($ip) === false){ return false; }
+        $long_ip = ip2long($ip);
+        if ($long_ip == $special_number){
+                $long_ip = -1*$ip;
+        }
+        if($long_ip > $special_number){
+                $difference = $long_ip - $special_number;
+                $long_ip = -$special_number + $difference;
+
+        }
+        return $long_ip;
+
+}
+
 
 // We don't want this script to be run from a browser by accident
 if(!empty($_SERVER['REMOTE_ADDR'])){ exit(); }
@@ -69,7 +91,7 @@ while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_r
   $subnet = range($first_usable, $last_usable);
   
   // exclude ACL'd IPs from this array
-  $sql = "SELECT start_ip, end_ip FROM acl where apply = '$subnet_id'";
+  $sql = "SELECT start_ip, end_ip FROM acl where subnet_id = '$subnet_id'";
   $results = mysql_query($sql);
   while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
     $acl = range($start_ip, $end_ip);
@@ -116,7 +138,7 @@ while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_r
         $name='discovered-host';
       }
     
-      $long_ip_addr = ip2long($ip);
+      $long_ip_addr = ip2decimal($ip);
       
       $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
   		 VALUES('$long_ip_addr', '$name', 'Network Admin', 'Added by discovery addon', '$subnet_id', 'system', now())";

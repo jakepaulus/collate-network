@@ -15,7 +15,7 @@ function connectToDB() {
   $db_user = "root";
 
   //database password
-  $db_pass = "root";
+  $db_pass = "";
 
   //database
   $db_name = "collate";
