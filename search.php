@@ -201,16 +201,14 @@ function download() {
   
   ob_start();
 
-  echo "<table width=\"100%\">\n";
+  echo "<table>\n";
   
   if($first == "subnets"){
-    echo "<tr><th align=\"left\">Subnet Name</th>".
-         "<th align=\"left\">Network Address</th>".
-         "<th align=\"left\">Subnet Mask</th>".
-         "<th align=\"left\">Statics Used</th>".
-         "<th align=\"left\">Note</th></tr>\n".
-         "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
-		 
+    echo "<tr><th>Subnet Name</th>".
+         "<th>Network Address</th>".
+         "<th>Subnet Mask</th>".
+         "<th>Statics Used</th>".
+         "<th>Note</th></tr>\n";
  
     while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($row)){
       $start_ip = long2ip($long_start_ip);
@@ -230,15 +228,14 @@ function download() {
       
       $percent_subnet_used = round('100' * ($static_count / $subnet_size));
     
-      echo "<tr\">".
+      echo "<tr>".
            "<td><b>$name</b></td><td>$start_ip</td>".
            "<td>$mask</td><td>$percent_subnet_used</td>".
            "<td>$note</td></tr>";
     }
   }
   elseif($first == "static IPs"){
-    echo "<tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Note</th><th>Failed Scans</th></tr>".
-	       "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
+    echo "<tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Note</th><th>Failed Scans</th></tr>";
   
     while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
       $ip = long2ip($ip);
@@ -258,13 +255,12 @@ function download() {
   $fileout = ob_get_contents();
   ob_end_clean();
 
-  $size = strlen(pack("A", $fileout));
-  $size = ceil($size/8);
+  $size = strlen($fileout);
   header("Cache-Control: "); //keeps ie happy
   header("Pragma: "); //keeps ie happy
-  header("Content-type: application/ms-excel"); // content type
+  header("Content-type: text/xml"); // conent type
   header("Content-Length: $size");
-  header("Content-Disposition: attachment; filename=\"search.xls\"");
+  header("Content-Disposition: attachment; filename=\"search_result.xml\"");
   
   echo $fileout;
 }
@@ -847,7 +843,7 @@ function show_form()  {
   </div>
   <br />
   <br />
-  <input type="checkbox" name="export" /> Export Results as a Microsoft Excel compatible spreadsheet<br />
+  <input type="checkbox" name="export" /> Export Results as XML (Compatable with most spreadsheet applications.)<br />
   <br />
   <input type="submit" value=" Go " /></p>
   </form>
