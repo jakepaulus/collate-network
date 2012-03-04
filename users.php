@@ -38,16 +38,16 @@ function list_users(){
   global $COLLATE;
   require_once('./include/header.php');
   
-  $sql = "SELECT username, phone, email FROM users ORDER BY username"; 
+  $sql = "SELECT username, phone, email, last_login_at FROM users ORDER BY username"; 
   $result = mysql_query($sql);
     
   echo "<h1>All Users</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"users.php?op=add\"><img src=\"images/add.gif\" alt=\"Add\" /> Add a User </a></p>".
-       "<table width=\"100%\"><tr><th>Username</th><th>Telephone Number</th><th>Email Address</th><th>Actions</th></tr>".
-	   "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
+       "<table width=\"100%\"><tr><th>Username</th><th>Telephone Number</th><th>Email Address</th><th>Last Login</th><th>Actions</th></tr>".
+	   "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
 	   
-  while(list($username,$phone,$email) = mysql_fetch_row($result)){
-    echo "<tr><td>$username</td><td>$phone</td><td>$email</td>
+  while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
+    echo "<tr><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
 	     <td><a href=\"users.php?op=delete&amp;username=$username\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
 		 &nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/edit.gif\" alt=\"edit\" /></a></td></tr>".
 	     "<tr><td colspan=\"4\"><hr class=\"division\" /></td></tr>";
