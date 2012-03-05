@@ -16,7 +16,7 @@ CREATE TABLE `blocks` (
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
+  `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
@@ -33,7 +33,7 @@ CREATE TABLE `ldap-servers` (
 CREATE TABLE `logs` (
   `id` int(11) UNSIGNED NOT NULL auto_increment,
   `occuredat` datetime NOT NULL,
-  `username` varchar(30) NOT NULL,
+  `username` varchar(100) NOT NULL,
   `ipaddress` varchar(15) NOT NULL,
   `level` varchar(6) NOT NULL,
   `message` varchar(255) NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE `statics` (
   `contact` varchar(25) NOT NULL,
   `note` varchar(255) NOT NULL,
   `subnet_id` int(9) UNSIGNED NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
+  `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
   `failed_scans` INT( 16 ) NOT NULL DEFAULT  '0',
   PRIMARY KEY  (`id`),
@@ -79,7 +79,7 @@ CREATE TABLE `subnets` (
   `mask` int(10) NOT NULL,
   `note` varchar(255) NOT NULL,
   `block_id` int(9) UNSIGNED NOT NULL,
-  `modified_by` varchar(25) NOT NULL,
+  `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
   PRIMARY KEY  (`id`)
@@ -309,6 +309,10 @@ $upgrade_from_one_dot_seven_dot_two =
 ALTER TABLE subnets MODIFY name varchar(60);
 ALTER TABLE users ADD last_login_at datetime NOT NULL;
 ALTER TABLE `subnets` DROP index `name`;
+ALTER TABLE `blocks` MODIFY modified_by varchar(100);
+ALTER TABLE `logs` MODIFY username varchar(100);
+ALTER TABLE `statics` MODIFY modified_by varchar(100);
+ALTER TABLE `subnets` MODIFY modified_by varchar(100);
 UPDATE settings SET value='2.0' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.0!')
 ";
