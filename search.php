@@ -674,7 +674,7 @@ function search() {
              "<img src=\"./images/skipping.png\" alt=\"Toggle Scanning\" title=\"click to enable stale scan\" /></a></td>";
       }
       else{
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" onclick=\"return confirm('Are you sure you\'d like to disable stale scan for this IP?')\">".
+        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\">".
              "<img src=\"./images/scanning.png\" alt=\"Toggle Scanning\" title=\"click to disable stale scan\" /></a></td>";
       }
       

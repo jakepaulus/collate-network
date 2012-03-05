@@ -73,7 +73,7 @@ CREATE TABLE `statics` (
 
 CREATE TABLE `subnets` (
   `id` int(9) UNSIGNED NOT NULL auto_increment,
-  `name` varchar(25) NOT NULL,
+  `name` varchar(60) NOT NULL,
   `start_ip` int(10) NOT NULL,
   `end_ip` int(10) NOT NULL,
   `mask` int(10) NOT NULL,
@@ -82,8 +82,7 @@ CREATE TABLE `subnets` (
   `modified_by` varchar(25) NOT NULL,
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `name` (`name`)
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `users` (
@@ -97,11 +96,12 @@ CREATE TABLE `users` (
   `loginattempts` tinyint(1) NOT NULL,
   `passwdexpire` datetime NOT NULL,
   `ldapexempt` tinyint(1) NOT NULL default '0',
+  `last_login_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 1.7.1 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.0 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -308,8 +308,9 @@ $upgrade_from_one_dot_seven_dot_two =
 "
 ALTER TABLE subnets MODIFY name varchar(60);
 ALTER TABLE users ADD last_login_at datetime NOT NULL;
-UPDATE settings SET value='1.7.3' WHERE name='version';
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 1.7.2!')
+ALTER TABLE `subnets` DROP index `name`;
+UPDATE settings SET value='2.0' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.0!')
 ";
 
 require_once('./include/db_connect.php');
@@ -371,7 +372,7 @@ if($result != FALSE) { // See what version we're on
   elseif($version == '1.7.2'){
 	$results = multiple_query($upgrade_from_one_dot_seven_dot_two);
   }
-  elseif($version == '1.7.3){
+  elseif($version == '2.0'){
     // We're at the current version!
     ?>
       <html>

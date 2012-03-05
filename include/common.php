@@ -16,6 +16,9 @@ else{
 }
 
 
+// ---------- Default show -----------------------------------------------------------------------
+$_SESSION['show'] = (!isset($_SESSION['show'])) ? '10' : $_SESSION['show'];
+
 
 //---------- Populate $COLLATE['settings'] with settings from db ----------------------------------
 
@@ -50,7 +53,7 @@ while ($column = mysql_fetch_assoc($result)) {
  function AccessControl($accesslevel, $message) {
    global $COLLATE;
    
-  if($COLLATE['settings']['perms'] >= $accesslevel) {
+  if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring loggin or logging
     return;
   }
   elseif(!isset($_SESSION['username'])) { // the user isn't logged in.
@@ -59,7 +62,7 @@ while ($column = mysql_fetch_assoc($result)) {
     header("Location: login.php?notice=$notice&returnto=$returnto");
     exit();
   }
-  elseif($_SESSION['accesslevel'] > $accesslevel){
+  elseif($_SESSION['accesslevel'] >= $accesslevel){
     if($accesslevel > "1"){
       collate_log($accesslevel, $message);
 	}

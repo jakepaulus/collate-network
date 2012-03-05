@@ -42,27 +42,38 @@ function list_users(){
   $result = mysql_query($sql);
     
   echo "<h1>All Users</h1>\n".
-       "<p style=\"text-align: right;\"><a href=\"users.php?op=add\"><img src=\"images/add.gif\" alt=\"Add\" /> Add a User </a></p>".
-       "<table width=\"100%\"><tr><th>Username</th><th>Telephone Number</th><th>Email Address</th><th>Last Login</th><th>Actions</th></tr>".
-	   "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
-	   
-  while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
-    echo "<tr><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
-	     <td><a href=\"users.php?op=delete&amp;username=$username\"><img src=\"./images/remove.gif\" alt=\"X\" /></a> &nbsp;
-		 &nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/edit.gif\" alt=\"edit\" /></a></td></tr>".
-	     "<tr><td colspan=\"4\"><hr class=\"division\" /></td></tr>";
+       "<p style=\"text-align: right;\"><a href=\"users.php?op=add\"><img src=\"images/add.gif\" alt=\"Add\" /> Add a User </a></p>";
+
+  if (mysql_num_rows($result) == '0'){
+    echo "<br /><p>No users have been added yed.</p>";
   }
-  
-  echo "</table>";
+  else {  
+	   
+    echo "<table width=\"100%\"><tr><th>Username</th><th>Telephone Number</th><th>Email Address</th><th>Last Login</th><th>Actions</th></tr>".
+	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
+	     
+    while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
+      echo "<tr><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
+	       <td>";
+	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] == '5') {
+	    echo "<a href=\"users.php?op=delete&amp;username=$username\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"Delete user\" /></a> &nbsp".
+	  	     "&nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/modify.gif\" alt=\"edit\" title=\"Edit user\" /></a>";
+	  }
+	  echo "</td></tr>".
+	       "<tr><td colspan=\"4\"><hr class=\"division\" /></td></tr>";
+    }
+    
+    echo "</table>";
+  }
 
 } // Ends list_users function
 
 function delete_user() {
   global $COLLATE;
   $username = clean($_GET['username']);
-
+  $confirm = (empty($_GET['confirm'])) ? '' : $_GET['confirm'];
   
-  if($_GET['confirm'] != "yes") { // draw the confirmation page or error
+  if($confirm != "yes") { // draw the confirmation page or error
     $sql = "SELECT username FROM users WHERE username='$username'";
     $row = mysql_query($sql);
     if(mysql_num_rows($row) == '1') {
@@ -120,6 +131,7 @@ function add_user(){
 	$email = (empty($_GET['email'])) ? '' : $_GET['email'];
 	$ldapexempt = (empty($_GET['ldapexempt'])) ? '0' : $_GET['ldapexempt'];
 	$accesslevel = '0';
+	$loginattempts = '';
   }
   
   require_once('./include/header.php');
@@ -144,9 +156,9 @@ function add_user(){
     echo "    <p>Username:<br />\n".
          "    <input name=\"username\" type=\"text\" value=\"$username\" /></p>\n";
   }
-  echo "    <p>Telephone Number:<br />\n".
+  echo "    <p>Telephone Number: (one form of contact required)<br />\n".
        "    <input name=\"phone\" type=\"text\" value=\"$phone\" /></p> \n".
-       "    <p>Email Address: (optional)<br />\n".
+       "    <p>Email Address: (one form of contact required)<br />\n".
        "    <input name=\"email\" type=\"text\" value=\"$email\" /></p>\n";
       
   echo "<p>User's Permissions:<br />\n";
@@ -158,6 +170,12 @@ function add_user(){
   $show3 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
   $show4 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
   $show5 = "onclick=\"new Effect.Fade('extraforms', {duration: 0.2})\"";
+  $checked0='';
+  $checked1='';
+  $checked2='';
+  $checked3='';
+  $checked4='';
+  $checked5='';
 
   if($COLLATE['settings']['perms'] <= "1"){ 
     $show1 = $show; 
@@ -206,6 +224,9 @@ function add_user(){
   
   if(empty($passwd) && empty($tmppasswd)){
     $hidden = "style=\"display: none;\"";
+  }
+  else {
+    $hidden = '';
   }
   
   echo "<input type=\"radio\" name=\"perms\" $hide $checked0 value=\"0\" /> None<br />\n".
@@ -261,8 +282,8 @@ function submit_user(){
 	exit();
   } 
   
-  if(strlen($phone) < "2") {
-    $notice = "You must include a contact number for the user.";
+  if(strlen($phone) < "2" && strlen($email) < '4') {
+    $notice = "You must include a contact method for the user.";
     header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
 	exit();
   }

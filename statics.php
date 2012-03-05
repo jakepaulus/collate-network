@@ -237,7 +237,7 @@ function submit_static(){
   }
   else{
     $gateway = "*";
-    $error = "<p><b>*</b>This field relies on a static IP having the note \"Default Gateway\" being reserved. ".
+    $error = "<p><b>*</b>This field relies on a single static IP having the note \"Default Gateway\" being reserved. ".
 	         "This could not be found for this subnet. Please have your administrator correct ".
 			 "this in order to see this information properly.</p><br />";
   }
