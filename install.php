@@ -50,7 +50,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '1.7.2');
+INSERT INTO `settings` VALUES ('version', '2.0');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
