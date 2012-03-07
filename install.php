@@ -385,14 +385,14 @@ if($result != FALSE) { // See what version we're on
       </head>
       <body>
         <h1>You're already up to date</h1>
-        <p>This script will bring your database to version 1.7.2. You're already running 1.7.2 so there's nothing to do.
+        <p>This script will bring your database to version 2.0. You're already running 2.0 so there's nothing to do.
             If you think you're seeing this in error please file a bug report.</p>
       </body>
       </html>
     <?php
     exit();
   }
-  $notice = "This application has been successfully upgraded to version 1.7.2.";
+  $notice = "This application has been successfully upgraded to version 2.0.";
 }
 else{ // We're installing
   $results = multiple_query($install);
