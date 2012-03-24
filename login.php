@@ -53,6 +53,11 @@ function change_password(){
   <p><input type="submit" value=" Go " /></p>
   </form>
   </div>
+  <script type="text/javascript">
+  window.onload = function() {
+    setTimeout("document.forms[0].passwd.focus()",1);
+  }
+  </script>
   <?php
   if($COLLATE['settings']['auth_type'] != 'db'){
       echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".
@@ -221,6 +226,11 @@ function cn_login() {
   <p><input type="submit" value=" Go " /></p>
   </form>
   </div>
+  <script type="text/javascript">
+	  window.onload = function() {
+		setTimeout("document.forms[0].username.focus()",1);
+	  }
+  </script>
   <?php
   if($COLLATE['settings']['auth_type'] != 'db'){
       echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".

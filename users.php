@@ -60,7 +60,7 @@ function list_users(){
 	  	     "&nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/modify.gif\" alt=\"edit\" title=\"Edit user\" /></a>";
 	  }
 	  echo "</td></tr>".
-	       "<tr><td colspan=\"4\"><hr class=\"division\" /></td></tr>";
+	       "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>";
     }
     
     echo "</table>";
