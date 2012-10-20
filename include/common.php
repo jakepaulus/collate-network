@@ -137,15 +137,20 @@ function subnet2cidr($ip,$mask){
 	return "$ip/$mask";
 }
 
-// Netmask Validator // from the comments on php.net/ip2decimal
+// Netmask Validator // modified from the version in the comments on php.net/ip2long
 function checkNetmask($ip) {
  if (!ip2decimal($ip)) {
   return false;
- } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
+ }
+ $binip=decbin(ip2decimal($ip));
+ 
+ if(strlen($binip) != 32 && ip2decimal($ip) != 0) {
   return false;
- } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
+ }
+ elseif(preg_match("/01/", "$binip") || !preg_match("/0/", "$binip")) {
   return false;
- } else {
+ }
+ else {
   return true;
  }
 }
