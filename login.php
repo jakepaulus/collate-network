@@ -18,8 +18,6 @@ switch($op) {
 }
 
 function change_password(){
-  session_destroy();
-  session_start();
   global $COLLATE;
   
   if(isset($_GET['returnto'])){
@@ -42,10 +40,6 @@ function change_password(){
   <br />
   <div style="float: left; width: 28%;">
   <form action="login.php?op=changepasswd&amp;action=change&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
-  <p><b>Username:</b><br />
-  <input name="username" type="text" size="15" /></p>
-  <p><b>Current Password:</b><br />
-  <input name="passwd" type="password" size="15" /></p>
   <p><b>New Password:</b><br />
   <input name="password" type="password" size="15" /></p>
   <p><b>Confirm Password:</b><br />
@@ -81,9 +75,8 @@ function change_password(){
   require_once('./include/footer.php');
   exit();
   }
-  
-  $username = $_POST['username'];
-  $passwd = $_POST['passwd'];
+
+  $username = $COLLATE['user']['username'];
   $password = $_POST['password'];
   $confirm = $_POST['confirm'];
   
@@ -101,8 +94,8 @@ function change_password(){
 	header("Location: login.php?op=changepasswd&notice=$notice&returnto=$returnto");
 	exit();
   }
-  
-  $auth = auth($username, $passwd);
+ 
+  $auth = auth($username, $password);
   
   if($auth == 'ldap'){
     $notice = "Your administrator has configured your account for LDAP authentication. You cannot change your password using the Change Password form. Please contact your administrator if you need assistance changing your password.";
@@ -113,25 +106,7 @@ function change_password(){
   
   $password = sha1(clean($password));
   
-  if($auth == FALSE){
-    $level = "5";
-	$message = "authentication failed: $username";
-	collate_log($level, $message);
-    $notice = "The username and/or password you have entered are invalid. Please note ".
-              "that failed login attempts are logged.";
-    $returnto = urlencode($returnto);
-	header("Location: login.php?op=changepasswd&notice=$notice&returnto=$returnto");
-	exit();
-  
-  }elseif($auth == "locked"){
-    $level = "5";
-	$message = "user account locked: $username";
-	collate_log($level, $message);
-    $notice = "This username has been locked because there have been too many failed attempts to login. You must contact your administrator to have a new temporary password set.";
-	header("Location: login.php?notice=$notice");
-	exit();
-  
-  }elseif($password == $auth['passwd']){
+  if($auth != FALSE){
     $notice = "You have not supplied a new password. Please try again.";
     $returnto = urlencode($returnto);
 	header("Location: login.php?op=changepasswd&notice=$notice&returnto=$returnto");
@@ -150,14 +125,9 @@ function change_password(){
   mysql_query($sql);
   
   $level = "5";
-  $message = "password changed: $username";
+  $message = "Password changed: $username";
   collate_log($level, $message);
   
-  // Password Change Successful:
-  $_SESSION['username'] = $username;
-  $_SESSION['accesslevel'] = $auth['accesslevel'];
-  session_write_close();
-
   $notice = "You have successfully changed your password.";
   if(stristr($returnto, "?") == TRUE){ 
       $sep= "&"; 
@@ -213,47 +183,47 @@ function cn_login() {
   }
   
   if($action != "login") {
-  require_once('./include/header.php');
-  ?>
-  <h1>Login</h1>
-  <br />
-  <div style="float: left; width: 28%;">
-  <form action="login.php?op=login&amp;action=login&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
-  <p><b>Username:</b><br />
-  <input name="username" type="text" size="15" /></p>
-  <p><b>Password:</b><br />
-  <input name="password" type="password" size="15" /></p>  
-  <p><input type="submit" value=" Go " /></p>
-  </form>
-  </div>
-  <script type="text/javascript">
-	  window.onload = function() {
-		setTimeout("document.forms[0].username.focus()",1);
-	  }
-  </script>
-  <?php
-  if($COLLATE['settings']['auth_type'] != 'db'){
-      echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".
-           "<p><b>Note:</b><br />\n".
-           "Your account may use LDAP authentication. In which case, your username must be formatted properly.</p>\n";
-           
-      if(!empty($COLLATE['settings']['domain'])){
-        echo "<p>If your username is in the domain ".$COLLATE['settings']['domain']." then simply type your username. Otherwise,\n".
-             "please type your username in the format username@example.com unless you've been instructed by the \n".
-             "administrator of this application to do otherwise.</p>";
-      }
-      else{
-        echo "<p>Please type your username in the format username@example.com unless you've been instructed by the \n".
-             "administrator of this application to do otherwise.</p>\n";
-      }
-      
-      echo "</div>";
-  }
-
-  echo "<p style=\"clear: left;\">";
-
-  require_once('./include/footer.php');
-  exit();
+    require_once('./include/header.php');
+    ?>
+    <h1>Login</h1>
+    <br />
+    <div style="float: left; width: 28%;">
+    <form action="login.php?op=login&amp;action=login&amp;returnto=<?php echo urlencode($returnto); ?>" method="post">
+    <p><b>Username:</b><br />
+    <input name="username" type="text" size="15" /></p>
+    <p><b>Password:</b><br />
+    <input name="password" type="password" size="15" /></p>  
+    <p><input type="submit" value=" Go " /></p>
+    </form>
+    </div>
+    <script type="text/javascript">
+	    window.onload = function() {
+	  	setTimeout("document.forms[0].username.focus()",1);
+	    }
+    </script>
+    <?php
+    if($COLLATE['settings']['auth_type'] != 'db'){
+        echo "<div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n".
+             "<p><b>Note:</b><br />\n".
+             "Your account may use LDAP authentication. In which case, your username must be formatted properly.</p>\n";
+             
+        if(!empty($COLLATE['settings']['domain'])){
+          echo "<p>If your username is in the domain ".$COLLATE['settings']['domain']." then simply type your username. Otherwise,\n".
+               "please type your username in the format username@example.com unless you've been instructed by the \n".
+               "administrator of this application to do otherwise.</p>";
+        }
+        else{
+          echo "<p>Please type your username in the format username@example.com unless you've been instructed by the \n".
+               "administrator of this application to do otherwise.</p>\n";
+        }
+        
+        echo "</div>";
+    }
+    
+    echo "<p style=\"clear: left;\">";
+    
+    require_once('./include/footer.php');
+    exit();
   }
   
   $username = clean($_POST['username']);
@@ -296,6 +266,8 @@ function cn_login() {
 
   // If they have gotten this far, they entered a correct pair of username and password.
   $now = date('Y-m-d H:i:s');
+  $_SESSION['username'] = $username;
+  $_SESSION['accesslevel'] = $auth['accesslevel'];
   
   if($auth['passwdexpire'] < $now && $auth['passwdexpire'] != '0000-00-00 00:00:00' || isset($auth['tmppasswd'])){
     $returnto = urlencode($returnto);
@@ -313,11 +285,7 @@ function cn_login() {
   if($authtype == 'ldap'){
     $_SESSION['auth_type'] = 'ldap';
   }
- 
-  $_SESSION['username'] = $username;
-  $_SESSION['accesslevel'] = $auth['accesslevel'];
-  session_write_close();
-
+  
   $notice = "You have successfully been logged in.";
   if(stristr($returnto, "?") == TRUE){ 
       $sep= "&"; 
