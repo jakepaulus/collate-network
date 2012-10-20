@@ -2,7 +2,7 @@
 
 <?php
 #--------------------------------------------------------------------------------
-# stale-scan.php written by Jake Paulus for Collate:Network
+# discovery.php written by Jake Paulus for Collate:Network
 # http://collate.info/ 
 # 
 # Please refer to the documentation for this script in the docs directory or
@@ -60,7 +60,7 @@ if(isset($_ARG['h']) || isset($_ARG['help'])){
        "This script takes three options: \r\n".
 	   " -h (or --help): Outputs this message \r\n".
 	   " -v (or --verbose): Outputs detail about the progress of the script \r\n".
-     " -n (or --numeric): Skip name resolution when adding hosts \r\n".
+       " -n (or --numeric): Skip name resolution when adding hosts \r\n".
 	   "\r\n".
 	   "Please read the documenation for this script at http://code.google.com/p/collate-network/w/list before running \r\n".
        "this on a schedule. \r\n".
@@ -161,6 +161,61 @@ if($verbose == 'on'){
        "$pingedhosts IP addresses were scanned. $newhosts new host(s) were discovered.\r\n".
 	     "\r\n";
 }
+// Now go back and check existing IPs that don't have a name.
+$namesupdated='0';
+if(!isset($_ARG['n']) && !isset($_ARG['numeric'])){
+  if($verbose == 'on'){
+    echo "\r\n".
+	     "Checking for missing names for previously discovered hosts.\r\n".
+		 "\r\n";
+  }
+  $sql = "SELECT ip FROM statics WHERE name = '' OR name='discovered-host'";
+  $result = mysql_query($sql);
+  $hoststoresolve=mysql_num_rows($result);
+  if( $hoststoresolve < '1'){ break; }
+  
+  while(list($long_ip) = mysql_fetch_row($result)){
+    $ip = long2ip($long_ip);
+    
+    // Do dns lookups
+    foreach ($dnsserver as &$server){
+      //exec ( string $command [, array &$output [, int &$return_var ]] )
+      exec ("$dnscommand @$server -x $ip +short", $name, $return);
+      $name = (empty($name['0'])) ? '' : $name['0'];
+      if(!empty($name)){ // a server responded
+	    $long_ip_addr = ip2decimal($ip);
+        
+        $sql = "UPDATE statics set name='$name', modified_by='system', modified_at=now() WHERE ip='$long_ip_addr'";
+      	mysql_query($sql);
+        
+        // Log what we've added to the DB
+        $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), 'system', '', 'normal', 'Static IP name updated by discovery addon: $ip ($name)')";
+        mysql_query($sql);
+		
+		$namesupdated++;
+		if($verbose=='on'){
+		  echo '!';
+	    }
+        break;
+      }
+      elseif($name == ';; connection timed out; no servers could be reach'){
+        echo "invalid DNS server configured at the top of this script";
+        exit(2);
+      }
+	  elseif($verbose=='on'){
+	    echo '.';
+	  }
+    }
+	# DNS queries are fast, and we don't want to help DoS some poor server
+	usleep('500000');
+  }
+  if($verbose == 'on'){
+    echo "\r\n".
+       "$hoststoresolve IP addresses were re-checked for updated names. $namesupdated previously unknown names were updated.\r\n".
+	     "\r\n";
+}
+}
+
 
 $sql = "REPLACE INTO settings (name, value) VALUES ('last_discovery_at', NOW())";
 mysql_query($sql);
