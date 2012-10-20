@@ -55,7 +55,7 @@ function list_users(){
     while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
       echo "<tr><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
 	       <td>";
-	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] == '5') {
+	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
 	    echo "<a href=\"users.php?op=delete&amp;username=$username\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"Delete user\" /></a> &nbsp".
 	  	     "&nbsp;<a href=\"users.php?op=edit&amp;username=$username\"><img src=\"./images/modify.gif\" alt=\"edit\" title=\"Edit user\" /></a>";
 	  }
@@ -108,7 +108,7 @@ function add_user(){
   $username = (empty($_GET['username'])) ? '' : $_GET['username'];
   
   if($op == 'edit'){
-    AccessControl('5', "User edit form accessed");
+    AccessControl('5', null);
     $post_to = "users.php?op=submit&amp;action=edit";
 	if(empty($username)){
 	  $notice = "Please select a user to edit.";
@@ -271,11 +271,7 @@ function submit_user(){
     $ldapexempt = FALSE;
   }
   $action = clean($_GET['action']);
-    
-  $accesslevel = "3";
-  $message = "new user add attempted: $username";
-  AccessControl($accesslevel, $message); 
-  
+
   if (strlen($username) < "4" ){ 
     $notice = "The username must be four characters or longer."; 
     header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
@@ -317,16 +313,17 @@ function submit_user(){
   if($action == "add"){
     $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt) 
            VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$loginattempts', '$ldapexempt')";
+	$message = "User added: $username";
   }
   elseif($action == "edit" && empty($tmppassword)){
     $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email', loginattempts='$loginattempts', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
-    $message = "User Updated: $username";
+    $message = "User updated: $username";
   }
   elseif($action == "edit"){
     $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone', email='$email', loginattempts='0', loginattempts='$loginattempts', ldapexempt='$ldapexempt' WHERE username='$username'";
 	$accesslevel = "5";
-    $message = "User Updated: $username";
+    $message = "User updated: $username";
   }
   else{
     $notice = "An error has occured. Please try again.";
@@ -334,7 +331,7 @@ function submit_user(){
 	exit();
   }
   
-  AccessControl($accesslevel, $message); // We only want to generate logs if something is actually happening...not each time the user is tossed back to the user add form.
+  AccessControl('5', $message); // We only want to generate logs if something is actually happening...not each time the user is tossed back to the user add form.
   
   mysql_query($sql);
   
