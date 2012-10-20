@@ -80,7 +80,13 @@ function add_subnet (){
 	"  to <input type=\"text\" name=\"acl_end\" value=\"$acl_end\" size=\"15\" />\n".
 	"  </p>\n".
 	"  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-	" </div>";
+    "  <p>IP Guidance: (Optional)". 
+	"  <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	"  <br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\">$guidance</textarea></p>\n".
+	"  <input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
+	"  <input type=\"submit\" value=\" Go \" /></p>\n".
+	"  </div>\n".
+	" </form>";
 	
 	
 	// Here we'll figure out what available space is left in the IP Block and list it out for the user
@@ -102,13 +108,15 @@ function add_subnet (){
 	}
 	array_push($ipspace, $block_long_end_ip);
 	$ipspace = array_reverse($ipspace);
+	
+	$ipspace_count = count($ipspace);
+	
     echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
-	     "<h3>Available IP Space in \"$block_name\" block:</h3><br />\n";
-		 
-
-    $ipspace_count = count($ipspace);	 
-
-    echo "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+	     "<div id=\"blockspace\">\n".
+		 "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
+		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">Show search instead</a></p>\n".
+	     "<h3>Available IP Space in \"$block_name\":</h3><br />\n".
+		 "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
 
     while(!empty($ipspace)){
 	  $long_start = array_pop($ipspace);
@@ -131,17 +139,17 @@ function add_subnet (){
 	    echo "<tr><td>$start</td><td>$end</td></tr>";
 	  }
 	}
- 
-	echo "</table>";
-	
-	echo "</div>\n".
-	     "<p style=\"clear: left;\">\n".
-		 "<p>IP Guidance: (Optional) 
-		 <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-		 "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"45\">$guidance</textarea></p>\n".
-		 "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
-		 "<input type=\"submit\" value=\" Go \" /></p>\n".
-	     "</form>\n";
+	echo "</table></div>";
+
+
+	echo "<div id=\"spacesearch\" style=\"display: none;\">\n".
+	     "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
+		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">Show available IP space in this block instead</a></p>\n".
+		 "<h3>Search for available IP Space</h3><br />\n".
+		 "Subnet: <input id=\"subnetsearch\" type=\"text\"><br />".
+		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> Go </button></div>";
+
+	echo "</div><p style=\"clear: left;\">\n"; 
 	
 } // Ends add_subnet function
 
