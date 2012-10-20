@@ -36,17 +36,17 @@ function edit_subnet(){
 	echo "Subnet names must be between 3 and 60 characters long.";
 	exit();
   }
- 
+  
+  $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
+  list($name,$subnet,$mask) = mysql_fetch_row($result);
+  $cidr=subnet2cidr($subnet,$mask);
+	
   if($edit == 'name'){
-	$result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
-	$name = mysql_result($result, 0, 0);
-    AccessControl('3', "subnet #$subnet_id name changed from $name to $value");
+    AccessControl('3', "Subnet $name ($cidr) name changed to $value");
 	$sql = "UPDATE subnets SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   elseif($edit == 'note'){
-    $result = mysql_query("SELECT name FROM subnets WHERE id='$subnet_id'");
-    $name = mysql_result($result, 0, 0);
-    AccessControl('3', "subnet #$subnet_id ($name) note edited");
+    AccessControl('3', "Subnet $name ($cidr) note edited");
 	$sql = "UPDATE subnets SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   else{
@@ -71,8 +71,7 @@ function delete_subnet(){
 	exit();
   }
   
-  $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
+  $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
 	
   if(mysql_num_rows($result) != '1'){
     header("HTTP/1.1 500 Internal Error");
@@ -80,10 +79,11 @@ function delete_subnet(){
 	exit();
   }
   
-  $name = mysql_result($result, 0, 0);
+  list($name,$subnet,$mask) = mysql_fetch_row($result);
+  $cidr=subnet2cidr($subnet,$mask);
   
   $accesslevel = "3";
-  $message = "Subnet #$subnet_id ($name) has been deleted";
+  $message = "Subnet $name ($cidr) has been deleted";
   AccessControl($accesslevel, $message); 
   
   // First delete all static IPs
@@ -98,7 +98,7 @@ function delete_subnet(){
   $sql = "DELETE FROM subnets WHERE id='$subnet_id'";
   mysql_query($sql);
   
-  echo "The subnet $name has been deleted";
+  echo "The subnet $name ($cidr) has been deleted";
   
 } // Ends delete_subnet function
 

@@ -91,6 +91,8 @@ function clean($variable){
 
 //------------Logging Function------------------------------------------------------
 function collate_log($accesslevel, $message){
+  if ($message == null){ return; }
+  
   global $COLLATE;
   $ipaddress = $_SERVER['REMOTE_ADDR'];
   
@@ -124,6 +126,28 @@ function ip2decimal($ip) {
         }
         return $long_ip;
 
+}
+
+# this function takes a subnet number and mask in decimal and returns
+# a subnet number and mask in cidr notation. E.g.: 
+# $ip = 167772160 and $mask = -256 is returned as "10.0.0.0/24"
+function subnet2cidr($ip,$mask){
+	$ip=long2ip($ip);
+	$mask=substr_count(decbin($mask), '1');
+	return "$ip/$mask";
+}
+
+// Netmask Validator // from the comments on php.net/ip2decimal
+function checkNetmask($ip) {
+ if (!ip2decimal($ip)) {
+  return false;
+ } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
+  return false;
+ } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
+  return false;
+ } else {
+  return true;
+ }
 }
 
 ?>

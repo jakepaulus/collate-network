@@ -6,12 +6,12 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op) {
   case "modify";
-  AccessControl('5', "settings form submitted"); 
+  AccessControl('5', "Settings form submitted"); 
   process();
   break;
   
   default:
-  AccessControl('5', "settings form accessed");
+  AccessControl('5', null);
   require_once('./include/header.php');
   form();
 }

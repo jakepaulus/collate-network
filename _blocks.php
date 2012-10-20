@@ -47,13 +47,13 @@ function edit_block(){
 	}
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
-    AccessControl('4', "Block #$block_id name changed from $name to $value");
+    AccessControl('4', "Block $name has been updated to $value");
 	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   elseif($edit == 'note'){
     $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
     $name = mysql_result($result, 0);
-    AccessControl('4', "Block #$block_id ($name) note edited");
+    AccessControl('4', "Block $name note edited");
 	$sql = "UPDATE blocks SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   else{
@@ -90,7 +90,7 @@ function delete_block(){
   $name = mysql_result($result, 0, 0);
   
   $accesslevel = "4";
-  $message = "IP Block #$block_id ($name) deleted!";
+  $message = "Block $name has been deleted!";
   AccessControl($accesslevel, $message);
     
   // First delete all static IPs

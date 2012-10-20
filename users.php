@@ -9,7 +9,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
 	case "add";
-	AccessControl("5", "New User form accessed");
+	AccessControl("5", null);
 	add_user();
 	break;
 		
@@ -26,7 +26,7 @@ switch($op){
 	break;
 		
 	default:
-	AccessControl("1", "User list viewed");
+	AccessControl("1", null);
 	list_users();
 	break;
 	

@@ -9,7 +9,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
 	case "add";
-	AccessControl("3", "Subnet add form accessed");
+	AccessControl("3", null);
 	add_subnet();
 	break;
 	
@@ -18,7 +18,7 @@ switch($op){
 	break;
 	
 	case "modify";	
-	AccessControl("3", "Move subnet form accessed");
+	AccessControl("3", null);
 	modify_subnet();
 	break;
 	
@@ -27,12 +27,12 @@ switch($op){
 	break;
 
 	case "resize";
-	AccessControl("3", "Subnet modification form accessed");
+	AccessControl("3", null);
 	resize_subnet();
 	break;
 	
 	default:
-	AccessControl("1", "Subnet list viewed");
+	AccessControl("1", null);
 	list_subnets();
 	break;
 }
@@ -241,8 +241,9 @@ function submit_subnet(){
 	exit();
   }
   
+  $cidr=subnet2cidr($long_ip,$long_mask);
   $accesslevel = "3";
-  $message = "Subnet added: $name";
+  $message = "Subnet $name ($cidr) has been created";
   AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This goes down here just before we know stuff is actually going to be written.
   
   $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
@@ -454,16 +455,17 @@ function submit_move_subnet (){
   $subnet_id=clean($_POST['subnet_id']);
   $block_id=clean($_POST['block_id']);
   
-  $result = mysql_query("SELECT name, block_id FROM subnets WHERE id='$subnet_id'");
+  $result = mysql_query("SELECT name,start_ip, mask, block_id FROM subnets WHERE id='$subnet_id'");
   if(mysql_num_rows($result) != '1') {
     $notice = "The subnet you tried to modify is not valid.";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
-  list($subnet_name,$old_block_id)=mysql_fetch_row($result);
+  list($subnet_name,$ip,$mask,$old_block_id)=mysql_fetch_row($result);
   $old_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$old_block_id'"), 0, 0);
   $new_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$block_id'"), 0, 0);
-  AccessControl("3", "Subnet $subnet_name moved from $old_block_name block to $new_block_name block");
+  $cidr=subnet2cidr($ip,$mask);
+  AccessControl("3", "Subnet $subnet_name ($cidr) moved from $old_block_name block to $new_block_name block");
   
   $sql = "UPDATE subnets set block_id='$block_id' WHERE id='$subnet_id'";
   $result = mysql_query($sql);
@@ -487,6 +489,8 @@ function resize_subnet() {
   }
 
   list($original_subnet_name,$original_long_start_ip,$original_long_end_ip,$original_long_mask,$original_block_id) = mysql_fetch_row($result);
+  
+  $original_cidr=subnet2cidr($original_long_start_ip,$original_long_mask);
 
   if(!strstr($new_subnet, '/')){
     $notice = "You must supply the number of mask bits or a mask.";
@@ -531,13 +535,17 @@ function resize_subnet() {
   $new_long_mask = ip2decimal($new_mask);
   $new_long_end_ip = $new_long_start_ip | (~$new_long_mask);
   $new_end_ip = long2ip($new_long_end_ip);
+  
+  $new_cidr=subnet2cidr($new_long_start_ip, $new_long_mask);
  
   if($confirm != 'true'){
     require_once('./include/header.php');
   }
+  else {
+    AccessControl('3', "Subnet $original_subnet_name resized from $original_cidr to $new_cidr");
+  }
   
   # is new subnet larger or smaller?
-  # yeah - i'm doing string operations on numeric values - i don't like php's type handling either
   $original_binary_mask = sprintf("%032b", $original_long_mask);
   $new_binary_mask = sprintf("%032b", $new_long_mask);
   if (substr_count($original_binary_mask, '1') < substr_count($new_binary_mask, '1')){
@@ -708,19 +716,4 @@ function resize_subnet() {
 	exit();
   }
 } // Ends resize_subnet()
-
-
-// Netmask Validator // from the comments on php.net/ip2decimal
-function checkNetmask($ip) {
- if (!ip2decimal($ip)) {
-  return false;
- } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
-  return false;
- } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
-  return false;
- } else {
-  return true;
- }
-}
-
 ?>

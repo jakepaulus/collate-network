@@ -241,19 +241,4 @@ function list_blocks(){
   echo (empty($javascript) ? "" : $javascript);
   
 } // Ends list_blocks function
-
-
-// Netmask Validator // from the comments on php.net/ip2decimal
-function checkNetmask($ip) {
- if (!ip2decimal($ip)) {
-  return false;
- } elseif(strlen(decbin(ip2decimal($ip))) != 32 && ip2decimal($ip) != 0) {
-  return false;
- } elseif(ereg('01',decbin(ip2decimal($ip))) || !ereg('0',decbin(ip2decimal($ip)))) {
-  return false;
- } else {
-  return true;
- }
-}
-
 ?>
