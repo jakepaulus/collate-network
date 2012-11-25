@@ -128,7 +128,7 @@ global $COLLATE;
 	$sql = "select id,domain, server from `ldap-servers` order by domain ASC";
 	$result = mysql_query($sql);
 	if(mysql_num_rows($result) == '0'){
-	  echo $COLLATE['langauages']['selected']['noserversdefined'];
+	  echo $COLLATE['languages']['selected']['noserversdefined'];
 	}
 	else{
 	    echo "<table width=\"90%\">";
