@@ -40,11 +40,13 @@ switch($op){
 require_once('./include/footer.php');
 
 function add_subnet (){
+  global $COLLATE;
   require_once('./include/header.php');
   
   if(!isset($_GET['block_id'])){
-    $notice = "Please select an IP block to allocate a subnet from.";
+    $notice = "invalidrequest";
 	header("Location: blocks.php?notice=$notice");
+	exit();
   }
   
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
@@ -57,36 +59,37 @@ function add_subnet (){
   $guidance = (empty($_GET['guidance'])) ? '' : $_GET['guidance'];
   $block_id = $_GET['block_id'];
 
-  echo "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">Enter a unique name for the subnet here. The name should be 
-	descriptive of what the subnet will be used for. The name should be short and should not contain spaces.<br /><br/></div>\n".
-	"<div id=\"iptip\" style=\"display: none;\" class=\"tip\">Enter a subnet in CIDR notation such as 
-	\"192.168.1.0/24\" or using a subnet mask such as in \"192.168.1.0/255.255.255.0.\"<br /><br /></div>\n".
-	"<div id=\"guidance\" style=\"display: none;\" class=\"tip\">You may type a message that will be viewable to any user 
-	adding a static IP in this subnet. The message should help the user understand what IP to use for the type of device they
-	wish to reserve an IP address for. Some formatting will be maintained, HTML is not allowed.<br /><br /></div>\n".
-	"<h1>Allocate a Subnet</h1>\n".
-	"<br />\n".
-	"<form action=\"subnets.php?op=submit\" method=\"post\">\n".
-	"<div style=\"float: left; width: 45%; \">\n".
-	"  <p>Name:<br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
-	"    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	"  </p>\n".
-	"  <p>Subnet:<br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
-	"    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	"  </p>\n".
-	"  <p>Default Gateway:<br /><input type=\"text\" value=\"$gateway\" name=\"gateway\" /></p>\n".
-	"  <p>ACL Name:<br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" />\n".
-	"  <p>ACL Range:<br /><input type=\"text\" name=\"acl_start\" value=\"$acl_start\" size=\"15\" />\n".
-	"  to <input type=\"text\" name=\"acl_end\" value=\"$acl_end\" size=\"15\" />\n".
-	"  </p>\n".
-	"  <p>Note: (Optional)<br /><input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
-    "  <p>IP Guidance: (Optional)". 
-	"  <a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	"  <br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\">$guidance</textarea></p>\n".
-	"  <input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
-	"  <input type=\"submit\" value=\" Go \" /></p>\n".
-	"  </div>\n".
-	" </form>";
+  echo "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">".
+       $COLLATE['languages']['selected']['subnetname-tip']."<br /><br/></div>\n".
+	   "<div id=\"iptip\" style=\"display: none;\" class=\"tip\">".
+	   $COLLATE['languages']['selected']['subnetaddress-tip']."\"<br /><br /></div>\n".
+	   "<div id=\"guidance\" style=\"display: none;\" class=\"tip\">".
+	   $COLLATE['languages']['selected']['guidance-tip']."<br /><br /></div>\n".
+	   "<h1>".$COLLATE['languages']['selected']['AllocateaSubnet']."</h1>\n".
+	   "<br />\n".
+	   "<form action=\"subnets.php?op=submit\" method=\"post\">\n".
+	   "<div style=\"float: left; width: 45%; \">\n".
+	   "<p><b>".$COLLATE['languages']['selected']['Name'].":</b><br />\n".
+	   "<input type=\"text\" name=\"name\" value=\"$name\" />\n".
+	   "<a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "</p>\n".
+	   "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
+	   "<a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "</p>\n".
+	   "<p><b>".$COLLATE['languages']['selected']['Gateway'].":</b><br /><input type=\"text\" value=\"$gateway\" name=\"gateway\" /></p>\n".
+	   "<p><b>".$COLLATE['languages']['selected']['ACLName'].":</b><br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" />\n".
+	   "<p><b>".$COLLATE['languages']['selected']['ACLRange'].":</b><br /><input type=\"text\" name=\"acl_start\" value=\"$acl_start\" size=\"15\" />\n".
+	   "- <input type=\"text\" name=\"acl_end\" value=\"$acl_end\" size=\"15\" />\n".
+	   "</p>\n".
+	   "<p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional']."<br />\n".
+	   "<input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
+       "<p><b>".$COLLATE['languages']['selected']['IPGuidance'].":</b> ".$COLLATE['languages']['selected']['Optional']. 
+	   "<a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\">$guidance</textarea></p>\n".
+	   "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
+	   "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
+	   "</div>\n".
+	   "</form>";
 	
 	
 	// Here we'll figure out what available space is left in the IP Block and list it out for the user
@@ -111,12 +114,16 @@ function add_subnet (){
 	
 	$ipspace_count = count($ipspace);
 	
+	$availableipspaceinblock = str_replace("%block_name%", "$block_name", $COLLATE['languages']['selected']['AvailableIPinBlock']);
+	
     echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
 	     "<div id=\"blockspace\">\n".
 		 "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">Show search instead</a></p>\n".
-	     "<h3>Available IP Space in \"$block_name\":</h3><br />\n".
-		 "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">".
+		 $COLLATE['languages']['selected']['Showsearchinstead']."</a></p>\n".
+	     "<h3>$availableipspaceinblock:</h3><br />\n".
+		 "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+		 "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
 
     while(!empty($ipspace)){
 	  $long_start = array_pop($ipspace);
@@ -144,13 +151,15 @@ function add_subnet (){
 
 	echo "<div id=\"spacesearch\" style=\"display: none;\">\n".
 	     "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">Show available IP space in this block instead</a></p>\n".
-		 "<h3>Search for available IP Space</h3><br />\n".
-		 "Subnet: <input id=\"subnetsearch\" type=\"text\"><br />".
-		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> Go </button></div>";
+		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
+		 "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
+		 "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\"><br />".
+		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> ".
+		 $COLLATE['languages']['selected']['Go']." </button></p></div>";
 
-	echo "</div><p style=\"clear: left;\">\n"; 
-	
+	echo "</div><p style=\"clear: left;\">\n";
+	require_once("include/footer.php");
+	exit();
 } // Ends add_subnet function
 
 function submit_subnet(){
@@ -165,21 +174,21 @@ function submit_subnet(){
   $guidance = nl2br(clean($_POST['guidance']));
 
   if(empty($name) || empty($ip)){
-    $notice = "Please verify that required fields have been completed.";
+    $notice = "blankfield-notice";
 	$guidance = urlencode($guidance);
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(strlen($name) < '3' OR strlen($name) > '60'){
-    $notice = "The subnet name must be between 3 and 60 characters long.";
+    $notice = "shortsubnetname";
     $guidance = urlencode($guidance);
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
     exit();
   }
   
   if(!strstr($ip, '/')){
-    $notice = "You must supply the number of mask bits or a mask.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -187,7 +196,7 @@ function submit_subnet(){
   list($start_ip,$mask) = explode('/', $ip);
   
   if(ip2decimal($start_ip) == FALSE){
-    $notice = "The IP you have entered is not valid.";
+    $notice = "invalidip";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -195,7 +204,7 @@ function submit_subnet(){
   $start_ip = long2ip(ip2decimal($start_ip));  
   $long_ip = ip2decimal($start_ip);
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-    $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -206,13 +215,13 @@ function submit_subnet(){
     $mask = long2ip(ip2decimal($mask));
   }
   elseif(!checkNetmask($mask)){
-    $notice = "The mask you have specified is not valid.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
   
   if(!empty($acl_start) && (ip2decimal($acl_start) == FALSE || ip2decimal($acl_end) == FALSE)){
-    $notice = "The ACL Range you specified is not valid.";
+    $notice = "invalidacl-notice";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -226,7 +235,7 @@ function submit_subnet(){
   
   if(!empty($acl_start) && ($long_acl_start < $long_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start
     || $long_acl_end > $long_end_ip)){
-	 $notice = "The ACL Range you specified is not valid.";
+	 $notice = "invalidacl-notice";
 	 header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -234,7 +243,7 @@ function submit_subnet(){
   $long_gateway = ip2decimal($gateway);
   
   if(!empty($gateway) && (ip2decimal($gateway) == FALSE || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
-    $notice = "The Default Gateway you specified is not valid.";
+    $notice = "invalidgateway-notice";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -244,7 +253,7 @@ function submit_subnet(){
   
   $result = mysql_query($sql);
   if(mysql_result($result, 0 ,0) != '0'){
-    $notice = "The IP you entered overlaps with a subnet in the database.";
+    $notice = "subnetoverlap-notice";
 	header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
 	exit();
   }
@@ -276,17 +285,16 @@ function submit_subnet(){
     mysql_query($sql);
   }
   
-  $notice = "The subnet you entered has been added.";
+  $notice = "subnetadded-notice";
   header("Location: subnets.php?block_id=$block_id&notice=$notice");
   exit();
 } // ends submit_subnet function
 
 function list_subnets(){
-  global $COLLATE;
-  require_once('./include/header.php');
+  global $COLLATE;  
   
   if(!isset($_GET['block_id']) || empty($_GET['block_id'])){
-    $notice = "Please select an IP block within which to view subnets.";
+    $notice = "invalidrequest";
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
@@ -302,16 +310,18 @@ function list_subnets(){
   $sql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '1'){
-    $notice = "The subnet you selected is not valid. Please select an IP block within which to view subnets.";
+    $notice = "invalidrequest";
 	header("Location: blocks.php?notice=$notice");
 	exit();
   }
+  require_once('./include/header.php');
   $block_name = mysql_result($result, 0, 0);
   
-  
-  echo "<h1>\"$block_name\" Subnets</h1>\n".
+  $blocknamesubnets = str_replace("%block_name%", $block_name, $COLLATE['languages']['selected']['BlockSubnets']);
+  echo "<h1>$blocknamesubnets</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"subnets.php?op=add&amp;block_id=$block_id\">
-	   <img src=\"./images/add.gif\" alt=\"Add\" /> Allocate a Subnet </a></p>";
+	   <img src=\"./images/add.gif\" alt=\"\" /> ".
+	   $COLLATE['languages']['selected']['AllocateaSubnet']." </a></p>";
 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` 
 	  WHERE `block_id` = '$block_id' ORDER BY `$sort` ASC";
@@ -319,10 +329,12 @@ function list_subnets(){
     
    
   echo "<table width=\"100%\">\n". 
-	     "<tr><th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=name\">Subnet Name</a></th>".
-	     "<th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=network\">Network Address</a></th>".
-	     "<th align=\"left\">Subnet Mask</th>".
-		 "<th align=\"left\">Statics Used</th></tr>\n".
+	     "<tr><th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=name\">".
+		 $COLLATE['languages']['selected']['SubnetName']."</a></th>".
+	     "<th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=network\">".
+		 $COLLATE['languages']['selected']['NetworkAddress']."</a></th>".
+	     "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
+		 "<th align=\"left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th></tr>\n".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
   $results = mysql_query($sql);  
@@ -332,39 +344,29 @@ function list_subnets(){
 	$mask = long2ip($long_mask);
 	
 	$subnet_size = $long_end_ip - $long_start_ip;
-	
-	$sql = "SELECT COUNT(*) FROM statics WHERE subnet_id='$subnet_id'";
-	$result = mysql_query($sql);
-	$static_count = mysql_result($result, 0, 0);
-	
-	$sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
-	$result = mysql_query($sql);
-	while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
-	  $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
-	}
-	
-	$percent_subnet_used = round('100' * ($static_count / $subnet_size));
-	
-	if($percent_subnet_used > '90'){
-	  $font_color = 'red';
-	}
-	elseif($percent_subnet_used > '70'){
-	  $font_color = 'orange';
-	}
-	else{
-	  $font_color = 'green';
-	}
-	
-	$percent_subnet_used = "<b>~$percent_subnet_used%</b>";
+	$in_color=true;
+	$percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
 	
     echo "<tr id=\"subnet_".$subnet_id."_row_1\">
 	     <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
-		 <td>$mask</td><td style=\"color: $font_color;\">$percent_subnet_used</td>
+		 <td>$mask</td>$percent_subnet_used
 		 <td>";
 		 
 	if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
-	  echo "<a href=\"subnets.php?op=modify&amp;subnet_id=$subnet_id\"><img alt=\"modify subnet\" title=\"modify subnet\" src=\"images/modify.gif\" /></a> &nbsp; ".
-           "<a href=\"#\" onclick=\"if (confirm('Are you sure you want to delete this object?')) { new Element.update('notice', ''); new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ new Effect.Parallel( [new Effect.Fade('subnet_".$subnet_id."_row_1'), new Effect.Fade('subnet_".$subnet_id."_row_2'), new Effect.Fade('subnet_".$subnet_id."_row_3')]); }}); };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"delete subnet\" /></a>";
+	  echo "<a href=\"subnets.php?op=modify&amp;subnet_id=$subnet_id\"><img alt=\"modify subnet\" title=\"".
+		   $COLLATE['languages']['selected']['modifysubnet']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
+           "<a href=\"#\" onclick=\"
+		   if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
+		     new Element.update('notice', ''); 
+			 new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ 
+			   new Effect.Parallel( [
+			     new Effect.Fade('subnet_".$subnet_id."_row_1'), 
+				 new Effect.Fade('subnet_".$subnet_id."_row_2'), 
+				 new Effect.Fade('subnet_".$subnet_id."_row_3')
+			   ]); 
+			 }}); 
+		   };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
+		   $COLLATE['languages']['selected']['deletesubnet']."\" /></a>";
 	}
     echo "</td>
 		 </tr>\n";
@@ -377,7 +379,9 @@ function list_subnets(){
       $javascript .=
 		   "<script type=\"text/javascript\"><!--\n".
 	       "  new Ajax.InPlaceEditor('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
-		      {highlightcolor: '#a5ddf8', 
+		      {
+			   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+			   highlightcolor: '#a5ddf8', 
 			   callback:
 			    function(form) {
 			      new Element.update('notice', '');
@@ -390,7 +394,9 @@ function list_subnets(){
 			  }
 			  );\n".
 		   "  new Ajax.InPlaceEditor('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
-		      {highlightcolor: '#a5ddf8',  
+		      {
+			   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+			   highlightcolor: '#a5ddf8',  
 			   callback:
 			    function(form) {
 			      new Element.update('notice', '');
@@ -409,30 +415,36 @@ function list_subnets(){
   echo "</table>";
   
   echo $javascript;
+  require_once("include/footer.php");
+  exit();
   
 } // Ends list_subnets function
 
 function modify_subnet (){
-  require_once('./include/header.php');
-  
-  if(!isset($_GET['subnet_id'])){
-    $notice = "Please select a subnet to attempt to modify.";
+  global $COLLATE;
+  $subnet_id = (isset($_GET['subnet_id'])) ? clean($_GET['subnet_id']) : "";
+  if(empty($subnet_id)){
+    $notice = "invalidrequest";
 	header("Location: blocks.php?notice=$notice");
+	exit();
   }
-  
-  $subnet_id = clean($_GET['subnet_id']);
+  require_once('./include/header.php');  
   
   $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
   list($subnet_name,$long_start_ip,$long_mask) = mysql_fetch_row(mysql_query($sql)); 
   $start_ip = long2ip($long_start_ip);
   $mask = long2ip($long_mask);
 
-  echo "<h1>Modify the $subnet_name subnet: $start_ip/$mask </h1><br />\n";
+  $modifythesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['ModifySubnet']);
+  $modifythesubnet = str_replace("%start_ip%", $start_ip, $modifythesubnet);
+  $modifythesubnet = str_replace("%mask%", $mask, $modifythesubnet);
+  echo "<h1>$modifythesubnet</h1><br />\n";
 
-  echo "<h3>Move $subnet_name to a new block</h3><hr />\n".
+  $movesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['Movesubnet']);
+  echo "<h3>$movesubnet</h3><hr />\n".
 	   "<form action=\"subnets.php?op=submitmove\" method=\"post\">\n".
 	   "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
-	   "<p>Select the block you'd like to move this subnet into</p>".
+	   "<p>".$COLLATE['languages']['selected']['selectblock']."</p>".
 	   "<select name=\"block_id\">";
   $sql = "SELECT id, name FROM blocks";
   $result = mysql_query($sql);
@@ -440,22 +452,22 @@ function modify_subnet (){
     echo "<option value=\"$block_id\">$block_name</option\">";
   }
   echo "</select><br /><br />".
-       "<p><input type=\"submit\" value=\" Go \" /></p></form><br /><br />";
+       "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p></form><br /><br />";
 
-  echo "<h3>Resize $subnet_name</h3><hr />";
+  $resizesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['Resizesubnet']);
+  echo "<h3>$resizesubnet</h3><hr />";
   echo "<form action=\"subnets.php?op=resize\" method=\"post\">\n".
        "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />\n".
-       "<p>Please specify the new subnet in the form \"Network/Mask\" or \"Network/Mask bits\"</p>\n".
+       "<p>".$COLLATE['languages']['selected']['subnetaddress-tip']."</p>\n".
        "<p><input type=\"text\" name=\"new_subnet\" /></p>\n".
-       "<p>You will be prompted on the next page with more information about how this will\n".
-       "affect other subnets and static IP reservations.</p>\n".
-       "<p><input type=\"submit\" value=\" Go \" /></p></form><br />";
+       "<p>".$COLLATE['languages']['selected']['furtherpromptsahead']."</p>\n".
+       "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p></form><br />";
   
 } // Ends move_subnet function
 
 function submit_move_subnet (){
   if(!isset($_POST['subnet_id']) || !isset($_POST['block_id'])){
-    $notice = "Please select a subnet to attempt to move.";
+    $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
@@ -465,7 +477,7 @@ function submit_move_subnet (){
   
   $result = mysql_query("SELECT name,start_ip, mask, block_id FROM subnets WHERE id='$subnet_id'");
   if(mysql_num_rows($result) != '1') {
-    $notice = "The subnet you tried to modify is not valid.";
+    $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
@@ -478,8 +490,9 @@ function submit_move_subnet (){
   $sql = "UPDATE subnets set block_id='$block_id' WHERE id='$subnet_id'";
   $result = mysql_query($sql);
   
-  $notice = "Subnet $subnet_name moved from $old_block_name block to $new_block_name block";
+  $notice = "subnetmoved-notice";
   header("Location: subnets.php?block_id=$old_block_id&notice=$notice");
+  exit();
 } // Ends submit_move_subnet function
 
 function resize_subnet() {
@@ -491,7 +504,7 @@ function resize_subnet() {
   $sql = "SELECT name, start_ip, end_ip, mask, block_id FROM subnets WHERE id='$subnet_id'";
   $result = mysql_query($sql);
   if ( mysql_num_rows($result) != '1' ){
-    $notice = "Please choose a valid subnet to attempt to modify.";
+    $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
@@ -501,7 +514,7 @@ function resize_subnet() {
   $original_cidr=subnet2cidr($original_long_start_ip,$original_long_mask);
 
   if(!strstr($new_subnet, '/')){
-    $notice = "You must supply the number of mask bits or a mask.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
@@ -509,14 +522,14 @@ function resize_subnet() {
   list($new_start_ip,$new_mask) = explode('/', $new_subnet);
   
   if(ip2decimal($new_start_ip) == FALSE){
-    $notice = "The IP you have entered is not valid.";
+    $notice = "invalidip";
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
   
   $new_long_ip = ip2decimal($new_start_ip);
   if(!strstr($new_mask, '.') && ($new_mask <= '0' || $new_mask >= '32')){
-    $notice = "The IP you have specified is not valid. The mask cannot be 0 or 32 bits long.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
@@ -527,13 +540,13 @@ function resize_subnet() {
     $new_mask = long2ip(ip2decimal($new_mask));
   }
   elseif(!checkNetmask($new_mask)){
-    $notice = "The mask you have specified is not valid.";
+    $notice = "invalidmask";
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
 
   if ($original_long_mask == ip2decimal($new_mask)){
-    $notice = "Modifying just the subnet number is not supported. This form only allows you to shrink, grow, or merge subnets.";
+    $notice = "invalidrequest";
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
@@ -560,8 +573,7 @@ function resize_subnet() {
     # if smaller:
     #  * validate new network falls within the old one
     if ($new_long_start_ip & $original_long_mask != $original_long_start_ip) {
-      $notice = "The new subnet you specified is smaller than the old one, but not part of the old one. ".
-                "Please choose a proper subnet to shrink this one to.";
+      $notice = "invalidshrink-notice";
       header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
       exit();
     }
@@ -581,10 +593,15 @@ function resize_subnet() {
 	
     $result = mysql_query($sql);
     $totalrows = mysql_num_rows($result);
-    
+	if($confirm != 'true'){
+      $staticstobedeleted = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['staticstodelete']);
+      echo "<h1>$staticstobedeleted:</h1><br />\n";
+	}
+	
     if ($totalrows != '0' && $confirm != 'true'){
-      echo "<h1>Static IPs in $original_subnet_name that will be deleted:</h1><br />\n".
-           "<table width=\"100%\"><tr><th>IP Address</th><th>Name</th><th>Contact</th><th>Failed Scans</th></tr>".
+	  echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
+		   "</th><th>".$COLLATE['languages']['selected']['Name']."</th><th>".
+		   $COLLATE['languages']['selected']['Contact']."</th><th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>".
   	   "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
       while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($result)){
           $ip = long2ip($ip);
@@ -595,8 +612,7 @@ function resize_subnet() {
       echo "</table><br /><br />";
     }
     elseif($confirm != 'true'){
-      echo "<h1>Static IPs in $original_subnet_name that will be deleted:</h1><br />\n".
-	       "<p>No static IP address reservations will be purged by this subnet shrink.</p><br /><br />";
+      echo "<p>".$COLLATE['languages']['selected']['nostaticsdeleted']."</p><br /><br />";
     }  
 
     #  * show how ACLs would be adjusted
@@ -605,18 +621,20 @@ function resize_subnet() {
            "CAST(start_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED) ".
            "OR CAST(end_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED))";
     $result = mysql_query($sql);
-    if (mysql_num_rows($result) == '0'){
-      if($confirm != 'true'){ 
-	    echo "<h1>ACLs in $original_subnet_name will be modified as follows:</h1><br />\n".
-		     "<p>No ACL entries would be affected.</p><br /><br />"; 
-	  }
+	if($confirm != 'true'){
+      $aclstobechanged = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['aclstobechanged']);
+      echo "<h1>$aclstobechanged:</h1><br />\n";
+	}
+    if (mysql_num_rows($result) == '0' && $confirm != 'true'){
+      echo "<p>".$COLLATE['languages']['selected']['noaclschanged']."</p><br /><br />"; 
     }
-    else {
+    elseif ($confirm != 'true'){
       if($confirm != 'true'){ 
-	    echo "<h1>ACLs in $original_subnet_name will be modified as follows:</h1><br />\n".
-           "<table width=\"100%\">\n".
-           "<tr><th>Name</th><th>Starting IP Address</th><th>Ending IP Address</th><th>Modification</th></tr>\n".
-           "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
+	    echo "<table width=\"100%\">\n".
+             "<tr><th>".$COLLATE['languages']['selected']['Name']."
+			 </th><th>".$COLLATE['languages']['selected']['StartingIP']."</th><th>".
+			 $COLLATE['languages']['selected']['EndIP']."</th><th>".$COLLATE['languages']['selected']['Modification']."</th></tr>\n".
+             "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
       }
 		   
       while(list($acl_id,$acl_name,$acl_long_start_ip,$acl_long_end_ip) = mysql_fetch_row($result)){
@@ -628,7 +646,7 @@ function resize_subnet() {
         }
         else {
           $new_acl_start_ip = $new_start_ip;
-          $note = "<b>Starting IP modified</b>";
+          $note = "<b>".$COLLATE['languages']['selected']['StartingIPmodified']."</b>";
 		  $sql = "UPDATE acl SET start_ip='$new_long_start_ip' WHERE id='$acl_id'";
         }
 
@@ -637,14 +655,14 @@ function resize_subnet() {
         }
         else {
           $new_acl_end_ip = $new_end_ip;
-          $note = "<b>Ending IP modified</b>";
+          $note = "<b>".$COLLATE['languages']['selected']['EndIPmodified']."</b>";
 		  $sql = "UPDATE acl SET end_ip='$new_long_end_ip' WHERE id='$acl_id'";
         }
 
         if (($new_acl_start_ip == $new_start_ip) && ($new_acl_end_ip == $new_end_ip)){
           $new_acl_start_ip = long2ip($acl_long_start_ip);
           $new_acl_end_ip = long2ip($acl_long_end_ip);
-          $note = "<b>TO BE DELETED</b>";
+          $note = "<b>".$COLLATE['languages']['selected']['ToBeDeleted']."</b>";
 		  $sql = "DELETE FROM acl WHERE id='$acl_id'";
         }
 		if ($confirm != 'true') {
@@ -660,7 +678,7 @@ function resize_subnet() {
   else{
     # if larger:
 	if(($original_long_start_ip & $new_long_mask) != $new_long_start_ip) {
-      $notice = "The subnet you're expanding must be included in the new, larger subnet specified.";
+      $notice = "invalidgrow-notice";
 	  header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
 	  exit();
     }
@@ -668,17 +686,21 @@ function resize_subnet() {
     $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` WHERE ". 
          "CAST(start_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) = CAST('$new_long_start_ip' AS UNSIGNED) ORDER BY `start_ip` ASC";
     $results = mysql_query($sql);
+	
+	$subnetstomerge = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['subnetstomerge']);
+	if($confirm != 'true'){
+	  echo "<h1>$subnetstomerge:</h1><br />\n";
+	}
+	
     if(mysql_num_rows($results) < '1' && $confirm != 'true'){
-      echo "<h1>Subnets that must be merged to cleanly expand $original_subnet_name based on your input:</h1><br />\n".
-	       "<p>No reserved subnets are overlapped by growing this subnet.</p>";
+      echo "<p>".$COLLATE['languages']['selected']['nosubnetsoverlap']."</p>";
     }
     else{
 	  if($confirm != 'true'){
-      echo "<h1>Subnets that must be merged to cleanly expand $original_subnet_name based on your input:</h1><br />\n".
-           "<table width=\"100%\">".
-           "<tr><th align=\"left\">Subnet Name</th>".
-	       "<th align=\"left\">Network Address</th>".
-	       "<th align=\"left\">Subnet Mask</th>".
+      echo "<table width=\"100%\">".
+           "<tr><th align=\"left\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
+	       "<th align=\"left\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
+	       "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
 	       "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
       }		   
        
@@ -708,18 +730,19 @@ function resize_subnet() {
   }
   
   if ($confirm != 'true') {
-    echo "<br /><br /><h3>Would you like  to proceed?</h3><hr /><br />\n".
+    echo "<br /><br /><h3>".$COLLATE['languages']['selected']['confirmproceed']."</h3><hr /><br />\n".
          "<form action=\"subnets.php?op=resize\" method=\"post\">\n".
 	     "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
 	     "<input type=\"hidden\" name=\"confirm\" value=\"true\" />".
 	     "<input type=\"hidden\" name=\"new_subnet\" value=\"$new_subnet\" />".
-	     "<p><input type=\"submit\" value=\" Go \" /> | <a href=\"subnets.php?block_id=$original_block_id\">Cancel</a></p>".
+	     "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go'].
+		 " \" /> | <a href=\"subnets.php?block_id=$original_block_id\">".$COLLATE['languages']['selected']['Cancel']."</a></p>".
 	     "</form>";
   }
   else {
     $sql = "UPDATE subnets set start_ip='$new_long_start_ip', end_ip='$new_long_end_ip', mask='$new_long_mask' WHERE id='$subnet_id'";
 	$result = mysql_query($sql);
-	$notice = "The subnet has been resized.";
+	$notice = "resized-notice";
 	header("Location: subnets.php?block_id=$original_block_id&notice=$notice");
 	exit();
   }

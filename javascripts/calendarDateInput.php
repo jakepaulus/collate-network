@@ -2,6 +2,10 @@
  Fool-Proof Date Input Script with DHTML Calendar
  by Jason Moon - calendar@moonscript.com
  ************************************************/
+ 
+<?php
+  include "../include/common.php";
+?>
 
 // Customizable variables
 var DefaultDateFormat = 'MM/DD/YYYY'; // If no date format is supplied, this will be used instead
@@ -13,8 +17,8 @@ var FontFamily = 'Tahoma';
 var CellWidth = 18;
 var CellHeight = 16;
 var ImageURL = 'images/calendar.jpg';
-var NextURL = 'images/next.gif';
-var PrevURL = 'images/prev.gif';
+var NextURL = 'images/next.png';
+var PrevURL = 'images/prev.png';
 var CalBGColor = 'white';
 var TopRowBGColor = 'buttonface';
 var DayBGColor = 'lightgrey';
@@ -22,9 +26,28 @@ var DayBGColor = 'lightgrey';
 // Global variables
 var ZCounter = 100;
 var Today = new Date();
-var WeekDays = new Array('S','M','T','W','T','F','S');
+var WeekDays = new Array(
+  '<?php echo $COLLATE['languages']['selected']['Sunday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Monday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Tuesday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Wednesday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Thursday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Friday-initial']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['Saturday-initial']; ?>');
 var MonthDays = new Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
-var MonthNames = new Array('January','February','March','April','May','June','July','August','September','October','November','December');
+var MonthNames = new Array(
+  '<?php echo $COLLATE['languages']['selected']['January']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['February']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['March']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['April']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['May']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['June']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['July']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['August']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['September']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['October']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['November']; ?>',
+  '<?php echo $COLLATE['languages']['selected']['December']; ?>');
 
 // Write out the stylesheet definition for the calendar
 with (document) {

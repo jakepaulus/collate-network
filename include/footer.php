@@ -3,11 +3,12 @@
      <?php require_once('./include/nav.php'); ?>
 
     <div id="footer">
-        <p>
-	Collate:Network &copy; 2007 - 2012 by its <a href="http://collate.info/">developers</a><br />
-	This software is licensed under the terms of  <a href="license.txt">The MIT License</a><br />
-	Version: <?php echo $COLLATE['settings']['version']; ?>
-        </p>
+      <p>
+	    <?php 
+		$footertext = str_replace("%version_number%", $COLLATE['settings']['version'], $COLLATE['languages']['selected']['footertext']);
+        echo $footertext;
+		?>
+      </p>
     </div>
 
 </div>

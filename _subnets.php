@@ -21,10 +21,7 @@ switch($op){
 
 
 function edit_subnet(){
-
   global $COLLATE;
-
-// EditInPlace POSTS form value as: $_POST['value']
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
@@ -33,12 +30,12 @@ function edit_subnet(){
   
   if(empty($subnet_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
-	echo "Please select a subnet to edit.";
+	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   elseif($edit == 'name' && (strlen($value) < '3' OR strlen($value) > '60')){
     header("HTTP/1.1 500 Internal Error");
-	echo "Subnet names must be between 3 and 60 characters long.";
+	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
   
@@ -55,7 +52,9 @@ function edit_subnet(){
 	$sql = "UPDATE subnets SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   else{
-    return;
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['shortsubnetname'];
+	exit();
   }
  
   mysql_query($sql);
@@ -65,14 +64,13 @@ function edit_subnet(){
 
 
 function delete_subnet(){
-
   global $COLLATE;
 
-  $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
+  $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   
   if(empty($subnet_id)){
     header("HTTP/1.1 500 Internal Error");
-    echo "Please select a subnet to delete.";
+	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
   
@@ -80,7 +78,7 @@ function delete_subnet(){
 	
   if(mysql_num_rows($result) != '1'){
     header("HTTP/1.1 500 Internal Error");
-	echo "That subnet was not found. Please try again.";
+	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
   
@@ -103,37 +101,49 @@ function delete_subnet(){
   $sql = "DELETE FROM subnets WHERE id='$subnet_id'";
   mysql_query($sql);
   
-  echo "The subnet $name ($cidr) has been deleted";
+  $message = str_replace("%name%", "$name", $COLLATE['languages']['selected']['subnetdeleted']);
+  $message = str_replace("%cidr%", "$cidr", $message);
+  
+  echo $message;
+  exit();
   
 } // Ends delete_subnet function
 
 function search_subnets(){
+  global $COLLATE;
   
-  $search = (empty($_GET['search'])) ? '' : $_GET['search'];
+  $search = (empty($_GET['search'])) ? '' : clean($_GET['search']);
+  if(empty($search)) { exit(); }
   
-  echo "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-		 "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">Show available IP space in this block instead</a></p>\n".
-		 "<h3>Search for available IP Space</h3><br />\n".
-		 "Subnet: <input id=\"subnetsearch\" type=\"text\" value=\"$search\"><br />".
-		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> Go </button><br />";
+  echo "<p><a href=\"#\" onclick=\"
+         new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); 
+		 new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })
+		 \">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
+		 "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
+		 "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\" value=\"$search\"><br />".
+		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> ".
+		 $COLLATE['languages']['selected']['Go']." </button></p>";
 
-  echo "<h4>Results:</h4>";
+  echo "<h4>".$COLLATE['languages']['selected']['Results'].":</h4>";
   
   if(!strstr($search, '/')){
-    echo "The search term must be in the format of 192.168.0.0/16 or 192.168.0.0/255.255.0.0";
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['IPSearchFormat'];
     exit();
   }
   
   list($ip,$mask) = explode('/', $search);
   
   if(ip2decimal($ip) == FALSE){
-    echo "The subnet number in your search is not valid.";
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['IPSearchFormat'];
     exit();
   }
   
   $ip = long2ip(ip2decimal($ip));  
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-    echo "The subnet you have specified is not valid. The mask cannot be 0 or 32 bits long.";
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['IPSearchFormat'];
     exit();
   }
   elseif(!strstr($mask, '.')){
@@ -143,7 +153,8 @@ function search_subnets(){
     $mask = long2ip(ip2decimal($mask));
   }
   elseif(!checkNetmask($mask)){
-    echo "The mask you have specified is not valid.";
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['invalidmask'];
     exit();
   }
 	
@@ -166,7 +177,8 @@ function search_subnets(){
   
   $ipspace_count = count($ipspace);
   
-  echo "<table width=\"100%\"><tr><th>Starting IP</th><th>Ending IP</th></tr>";
+  echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+       "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
      
   while(!empty($ipspace)){
     $long_start = array_pop($ipspace);
@@ -190,6 +202,7 @@ function search_subnets(){
     }
   }
   echo "</table>";
+  exit();
 }
 
 ?>

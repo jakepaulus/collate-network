@@ -27,13 +27,13 @@ function edit_block(){
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($block_id) || empty($edit)){ 
-    header("HTTP/1.1 500 Internal Error");
-	echo "Please select a block to edit.";
+    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+	echo $COLLATE['languages']['selected']['selectblock'];
 	exit();
   }
   elseif($edit == 'name' && strlen($value) < '3'){
     header("HTTP/1.1 500 Internal Error");
-	echo "Block names must be three characters or longer.";
+	echo $COLLATE['languages']['selected']['shortblock'];
 	exit();
   }
   
@@ -41,8 +41,8 @@ function edit_block(){
   
   if($edit == 'name'){
     if(mysql_num_rows($result) != '0'){
-	  header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	  echo "That name already exists in the database.";
+	  header("HTTP/1.1 500 Internal Error"); 
+	  echo $COLLATE['languages']['selected']['blocknameconflict'];
 	  exit;
 	}
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
@@ -70,11 +70,11 @@ function delete_block(){
 
   global $COLLATE;
   
-  $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
+  $block_id = (empty($_GET['block_id'])) ? '' : clean($_GET['block_id']);
   
   if(empty($block_id)){
     header("HTTP/1.1 500 Internal Error");
-    echo "Please select a block in order to delete it.";
+    echo $COLLATE['languages']['selected']['selectblock'];
 	exit();
   }
   
@@ -83,15 +83,13 @@ function delete_block(){
 	
   if(mysql_num_rows($result) != '1'){
     header("HTTP/1.1 500 Internal Error");
-	echo "That block was not found. Please try again.";
+	echo $COLLATE['languages']['selected']['selectblock'];
 	exit();
   }
   
   $name = mysql_result($result, 0, 0);
-  
-  $accesslevel = "4";
-  $message = "Block $name has been deleted!";
-  AccessControl($accesslevel, $message);
+
+  AccessControl("4", "Block $name has been deleted!");
     
   // First delete all static IPs
   $sql = "DELETE FROM statics WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
@@ -109,7 +107,8 @@ function delete_block(){
   $sql = "DELETE FROM blocks WHERE id='$block_id'";
   mysql_query($sql);
   
-  echo "The $name block has been deleted";
+  $message=str_replace("%name%", "$name", $COLLATE['languages']['selected']['blockdeleted']);
+  echo $message;
   
 } // Ends delete_block function
 

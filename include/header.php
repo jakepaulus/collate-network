@@ -6,13 +6,51 @@
     
     <meta http-equiv="content-type" content="application/xhtml+xml; charset=iso-8859-1" />
     
-    <meta name="generator" content="Jake Paulus" />
-    <meta name="description" content="Organize your hardware and software inventory records" />
-    <meta name="keywords" content="hardware,software,inventory,users" />
-	   
 	<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
 	<script src="javascripts/scriptaculous.shrunk.js" type="text/javascript" charset="ISO-8859-1"></script>
-	<script src="javascripts/scriptaculous.extensions.js" type="text/javascript"></script>
+	<script type="text/javascript"><!--
+	/*
+     * InPlaceEditor extension that adds a 'click to edit' text when the field is 
+     * empty. Taken from http://wiki.script.aculo.us/scriptaculous/show/Ajax.InPlaceEditor
+     */
+    Ajax.InPlaceEditor.prototype.__initialize = Ajax.InPlaceEditor.prototype.initialize;
+    Ajax.InPlaceEditor.prototype.__getText = Ajax.InPlaceEditor.prototype.getText;
+    Ajax.InPlaceEditor.prototype.__onComplete = Ajax.InPlaceEditor.prototype.onComplete;
+    Ajax.InPlaceEditor.prototype = Object.extend(Ajax.InPlaceEditor.prototype, {
+    
+        initialize: function(element, url, options){
+            this.__initialize(element,url,options)
+            this.setOptions(options);
+            this._checkEmpty();
+        },
+    
+        setOptions: function(options){
+            this.options = Object.extend(Object.extend(this.options,{
+                emptyText: '<?php echo $COLLATE['languages']['selected']['clicktoedit']; ?>',
+                emptyClassName: 'inplaceeditor-empty'
+            }),options||{});
+        },
+    
+        _checkEmpty: function(){
+            if( this.element.innerHTML.length == 0 ){
+                this.element.appendChild(
+                    Builder.node('span',{className:this.options.emptyClassName},this.options.emptyText));
+            }
+        },
+    
+        getText: function(){
+            document.getElementsByClassName(this.options.emptyClassName,this.element).each(function(child){
+                this.element.removeChild(child);
+            }.bind(this));
+            return this.__getText();
+        },
+    
+        onComplete: function(transport){
+            this._checkEmpty();
+            this.__onComplete(transport);
+        }
+    });
+	--></script>
 
 </head>
 <body id="collate-network">
@@ -57,7 +95,7 @@
 	else{
 	  echo "</td>";
 	}
-    echo "<td align=\"right\"><a href=\"search.php\">Advanced Search</a></td></tr>";
+    echo "<td align=\"right\"><a href=\"search.php\">".$COLLATE['languages']['selected']['AdvancedSearch']."</a></td></tr>";
 	?>
 </table>
     </div>
@@ -65,7 +103,9 @@
 <div id="notice" class="tip">
 <?php
   if(isset($_GET['notice'])){
-    echo "<p>".$_GET['notice']."</p>";
+    if(isset($COLLATE['languages']['selected'][$_GET['notice']])){
+	  echo "<p>".$COLLATE['languages']['selected'][$_GET['notice']]."</p>";
+	}
   }
 ?>
 </div>

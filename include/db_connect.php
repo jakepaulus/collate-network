@@ -18,7 +18,7 @@ function connectToDB() {
   $db_pass = "";
 
   //database
-  $db_name = "collate";
+  $db_name = "ipam-latest";
   
   ($link = mysql_pconnect("$db_host", "$db_user", "$db_pass")) || die("Couldn't connect to MySQL");
 

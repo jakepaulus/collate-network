@@ -38,10 +38,7 @@ switch($op){
 }
 
 function edit_static(){
-
   global $COLLATE;
-
-// EditInPlace POSTS form value as: $_POST['value']
 
   $static_id = (empty($_GET['static_id'])) ? '' : clean($_GET['static_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
@@ -50,12 +47,12 @@ function edit_static(){
   
   if(empty($static_id) || empty($edit)){ 
     header("HTTP/1.1 500 Internal Error");
-	echo "Please select a static reservation to edit.";
+	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   elseif(($edit == 'name' || $edit == 'contact') && strlen($value) < '3'){
     header("HTTP/1.1 500 Internal Error");
-	echo "This field is required and must be three characters or longer.";
+	echo $COLLATE['languages']['selected']['inputtooshort'];
 	exit();
   }
  
@@ -76,90 +73,94 @@ function edit_static(){
 	$sql = "UPDATE statics SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   else{
-    return;
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
   }
  
-  mysql_query($sql);
-  
+  mysql_query($sql);  
   echo $value;
+  exit();
 } // Ends edit_static function
 
 
 function edit_acl(){
-
   global $COLLATE;
   
-// EditInPlace POSTS form value as: $_POST['value']
-
   $acl_id = (empty($_GET['acl_id'])) ? '' : clean($_GET['acl_id']);
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   
-  if(empty($acl_id) || empty($edit)){ return; }
+  if(empty($acl_id) || empty($edit) || $edit != 'name'){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
   
   if(empty($value)){
-    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	echo "You must supply a name for each ACL statement.";  
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['inputtooshort'];
+	exit();
   }
   
   $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	echo "An error has occured. Please contact your administrator if the problem persists.";  
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
   }
   
   $subnet_name = mysql_result($result, 0, 0);
   
-  if($edit == 'name'){
-    AccessControl('3', "ACL statement name updated in $subnet_name subnet");
-	$sql = "UPDATE acl SET name='$value' where id='$acl_id'";
-  }
-  else{
-    return;
-  }
+  AccessControl('3', "ACL statement name updated in $subnet_name subnet");
+  $sql = "UPDATE acl SET name='$value' where id='$acl_id'";
   
-  mysql_query($sql);
-  
+  mysql_query($sql);  
   echo $value; 
+  exit();
 } // Ends edit_acl function
 
 
 function ping_host(){
-  $ip = escapeshellcmd($_GET['ip']);
+  $ip = (empty($_GET['ip'])) ? "" : escapeshellcmd($_GET['ip']);
+  if(empty($ip)){ exit(); }
   
-  // This prevents someone from passing extra parameters to ping that could be dangerous e.g. DoS the server or use the server to DoS a host....
-  if(!preg_match("/^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}$/", $ip)){ return; }
+  if(!ip2decimal($ip)){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
   
   echo "<pre>";
   if (!strstr($_SERVER['DOCUMENT_ROOT'], ":")){ // *nix system
-    system ("ping -c 4 -n $ip");
+    system ("ping -A -c 3 -n -W 1 $ip");
   }
-  else{ // Windows Server
-    system("ping -n 4 -w 100 $ip");
+  else{ // Windows system
+    system("ping -n 3 -w 500 $ip");
   }
   echo "</pre>";
+  exit();
 } // Ends ping_host function
 
 
 function ip_guidance(){
-
   global $COLLATE;
   
-  $subnet_id = $_GET['subnet_id'];
+  $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   
-  if(!is_numeric($subnet_id)){ return; }
+  if(!is_numeric($subnet_id)){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
   
   $sql = "SELECT guidance FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  list($guidance) = mysql_fetch_row($result);
+  $result = mysql_query($sql);  
+  $guidance = mysql_result($result, 0);
 
-  if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
-    $help =  '';
-  }
-  elseif(!empty($guidance)){
+  if(!empty($guidance)){
 	$help = $guidance;
   }
   else{ 
@@ -167,33 +168,30 @@ function ip_guidance(){
   }
   
   echo "<pre><span id=\"guidance\">$help</span></pre>";
-  
+  exit();
 } // Ends ip_guidance function  
 
 
 function edit_guidance(){
-
   global $COLLATE;
   
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
-  if(empty($subnet_id)){ 
-    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	echo "An error has occured. Please contact your administrator if the problem persists.";  
+  if(empty($subnet_id) || !is_numeric($subnet_id)){ 
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit(); 
   }
-  
-  if(empty($value)){
-    $value = NULL;
-  }
-  
+    
   $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	echo "An error has occured. Please contact your administrator if the problem persists.";  
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
   }
   
   $name = mysql_result($result, 0, 0);
@@ -204,26 +202,25 @@ function edit_guidance(){
   
   mysql_query($sql);
   
-  if($value == NULL){
+  if(empty($value)){
 	$value = $COLLATE['settings']['guidance'];
   }
   
   echo $value;
-  exit;
+  exit();
 
 } // End edit_guidance function
 
 
 function delete_static(){
-  
   global $COLLATE;
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
 
   if(empty($static_ip) || !ip2decimal($static_ip)){
     header("HTTP/1.1 500 Internal Error");
-    echo "The static IP you tried to delete is not valid.";
-    exit();
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
   }
   
   $accesslevel = "2";
@@ -235,28 +232,30 @@ function delete_static(){
   $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
     
-  echo "The static IP has been successfully deleted.";  
+  echo $COLLATE['languages']['selected']['staticdeleted'];
+  exit();  
   
 } // Ends delete_static function
 
 
 function delete_acl(){
-
   global $COLLATE;
   
   $acl_id = (empty($_GET['acl_id'])) ? '' : clean($_GET['acl_id']);
   
   if(empty($acl_id)){
     header("HTTP/1.1 500 Internal Error");
-	echo "Please select an ACL Statement to delete.";
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
   }
   
   $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
-	echo "An error has occured. Please contact your administrator if the problem persists.";  
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit(); 
   }
   
   $subnet_name = mysql_result($result, 0, 0);
@@ -267,28 +266,30 @@ function delete_acl(){
   
   mysql_query($sql);
   
-  echo "The ACL Statement you selected has been deleted.";
+  echo $COLLATE['languages']['selected']['acldeleted'];
 
 } // Ends delete_acl function
 
 
 function toggle_stalescan(){
-  
   global $COLLATE;
   
   $static_ip = (empty($_GET['static_ip'])) ? '' : clean($_GET['static_ip']);
   $toggle = (empty($_GET['toggle'])) ? '' : clean($_GET['toggle']);
-  $referer = $_SERVER['HTTP_REFERER'];
+  $referer = (empty($_SERVER['HTTP_REFERER'])) ? '' : $_SERVER['HTTP_REFERER'];
   if(empty($referer)){
     $referer='./search.php?notice=';
   }
   else{
+    if(preg_match('/notice/', $referer)){
+	  $referer=preg_replace("/&notice=.*/", "", $referer);
+	}
     $referer=$referer.'&notice=';
   }
 
   if(empty($static_ip) || !ip2decimal($static_ip)){
-    $error="The static IP you tried to modify is not valid.";
-    header("Location: $referer"."$error");
+    $notice='invalidrequest';
+    header("Location: $referer"."$notice");
     exit();
   }
   
@@ -299,20 +300,21 @@ function toggle_stalescan(){
   $long_ip = ip2decimal($static_ip);
   if($toggle == 'on'){
     $count='0';
+	$notice='staletoggleon-notice';
   }
   elseif($toggle == 'off'){
     $count='-1';
+	$notice='staletoggleoff-notice';
   }
   else{
-    $error="You tried to toggle failed scanning to an invalid status.";
-    header("Location: $referer"."$error");
+    $notice=$COLLATE['languages']['selected']['invalidrequest'];
+    header("Location: $referer"."$notice");
     exit();
   }
   
   $sql = "UPDATE statics SET failed_scans='$count' WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
-    
-  $notice="Stale Scan has been turned $toggle for the IP $static_ip";
+
   header("Location: $referer"."$notice");
   exit();
   

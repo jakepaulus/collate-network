@@ -1,4 +1,6 @@
 <?php
+
+require_once('./include/db_connect.php');
 $install = 
 "
 CREATE TABLE `acl` (
@@ -56,6 +58,7 @@ INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
 INSERT INTO `settings` VALUES ('auth_type', 'db');
 INSERT INTO `settings` VALUES ('domain', '');
+INSERT INTO `settings` VALUES ('language', 'en');
 
 CREATE TABLE `statics` (
   `id` int(10) UNSIGNED NOT NULL auto_increment,
@@ -97,6 +100,7 @@ CREATE TABLE `users` (
   `passwdexpire` datetime NOT NULL,
   `ldapexempt` tinyint(1) NOT NULL default '0',
   `last_login_at` datetime NOT NULL,
+  `language` VARCHAR(2) NOT NULL default 'en',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -317,7 +321,13 @@ UPDATE settings SET value='2.0' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.0!')
 ";
 
-require_once('./include/db_connect.php');
+$upgrade_from_two_dot_zero =
+"
+INSERT INTO `settings` VALUES ('language', 'en');
+ALTER TABLE  `users` ADD  `language` VARCHAR(2) NOT NULL default 'en';
+UPDATE settings SET value='2.1' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.1!')
+";
 
 $sql = "select value from settings where name='version'";
 $result = mysql_query($sql);
@@ -333,6 +343,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
@@ -342,6 +353,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
@@ -350,6 +362,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
@@ -357,67 +370,69 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
 	$results .= multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.7'){
     $results = multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.7.1'){
     $results = multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '1.7.2'){
 	$results = multiple_query($upgrade_from_one_dot_seven_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_zero);
   }
   elseif($version == '2.0'){
+    $results = multiple_query($upgrade_from_two_dot_zero);
+  }
+  elseif($version == '2.1'){
     // We're at the current version!
-    ?>
-      <html>
-      <head>
-        <title>Error!</title>
-      </head>
-      <body>
-        <h1>You're already up to date</h1>
-        <p>This script will bring your database to version 2.0. You're already running 2.0 so there's nothing to do.
-            If you think you're seeing this in error please file a bug report.</p>
-      </body>
-      </html>
-    <?php
+    echo '<html>';
+	echo "<head>
+           <title>Error!</title>
+         </head>
+         <body>
+           <h1>You're already up to date</h1>
+           <p>You're already running the latest version of Collate:Network this script is able to upgrade you to. To see if a newer version is availabe, 
+  		 please visit <a href=\"http://collate.info\">Collate.info</a></p>
+         </body>";
+	echo '</html>';
     exit();
   }
-  $notice = "This application has been successfully upgraded to version 2.0.";
+  $notice = "upgradesuccess-notice";
 }
 else{ // We're installing
   $results = multiple_query($install);
-  $notice = "This application has been successfully installed.";
+  $notice = "installsuccess-notice";
 }
-
 
 $tok = strtok($results, "<br />");
 
 if($tok){ // There were erors.
-?>
-  <html>
-  <head>
-    <title>Error!</title>
-  </head>
-  <body>
-  <h1>An error has occured.</h1>
-  <p>Below you will find the mysql erros that prevented this application from installing properly.</p>
-  <?php echo $results; ?>
-  </body>
-  </html>
-<?php
+  echo "<html>";
+  echo "<head>
+        <title>Error!</title>
+       </head>
+       <body>
+        <h1>An error has occured.</h1>
+        <p>Below you will find the mysql erros that prevented this application from installing properly.</p>
+       </body>";
+  echo $results;
+  echo "</html>";
 }
 else{ // Everything went well.
-
   header("Location: index.php?notice=$notice");
 }
 

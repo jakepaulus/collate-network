@@ -3,13 +3,16 @@ session_start();
 // Let the sessions expire when the user closes the browser window or logs out. Hopefully no timeouts
 ini_set("session.gc_maxlifetime", "86400");
 
-//------------- Build CI array var and put version number in it -----------------------------
+
+//------------- Build COLLATE array ------------------------------------------------------------
 
 $COLLATE = array();
 
 if(isset($_SESSION['accesslevel'])){
   $COLLATE['user']['accesslevel'] = $_SESSION['accesslevel'];
   $COLLATE['user']['username'] = $_SESSION['username'];
+  $COLLATE['user']['language'] = $_SESSION['language'];
+  $COLLATE['user']['ldapexempt'] = $_SESSION['ldapexempt'];
 }
 else{
   $COLLATE['user']['accesslevel'] = "0";
@@ -21,9 +24,7 @@ $_SESSION['show'] = (!isset($_SESSION['show'])) ? '10' : $_SESSION['show'];
 
 
 //---------- Populate $COLLATE['settings'] with settings from db ----------------------------------
-
-// First get CI settings to see if we even need to check user's permissions
-require_once('./include/db_connect.php'); 
+require_once dirname(__FILE__).'/db_connect.php'; 
 
 $sql = "SELECT name, value FROM settings";
 $result = mysql_query($sql);
@@ -33,6 +34,20 @@ while ($column = mysql_fetch_assoc($result)) {
   $COLLATE['settings'][$column['name']] = $column['value'];
 }  
 
+
+//------------- Set the language ------------------------------------------------------------
+
+$COLLATE['languages'] = array();
+
+if(isset($COLLATE['user']['language'])){
+  require_once dirname(__FILE__)."/../languages/".$COLLATE['user']['language'].".php";
+  $COLLATE["languages"]["selected"] = $languages[$COLLATE['user']['language']];
+  
+}
+else{
+  require_once dirname(__FILE__)."/../languages/".$COLLATE['settings']['language'].".php";
+  $COLLATE["languages"]["selected"] = $languages[$COLLATE['settings']['language']];
+}
 
 // --------------- Prevent Unwanted Access ---------------------------------------------------
 
@@ -58,7 +73,7 @@ while ($column = mysql_fetch_assoc($result)) {
   }
   elseif(!isset($_SESSION['username'])) { // the user isn't logged in.
     $returnto = urlencode($_SERVER['REQUEST_URI']); // return the user to where they came from with this var
-    $notice = "The administrator of this application requires you to login to use this feature.";
+    $notice = "login-notice";
     header("Location: login.php?notice=$notice&returnto=$returnto");
     exit();
   }
@@ -69,7 +84,7 @@ while ($column = mysql_fetch_assoc($result)) {
     return; // Access is allowed
   }
   // if we've gotten this far in the function, we've not met any condition to allow access so access is denied.
-  $notice = "You do not have sufficient access to use this resource. Please contact your administrator if you believe you have reached this page in error.";
+  $notice = "perms-notice";
   header("Location: index.php?notice=$notice");
   exit();  
   
@@ -92,7 +107,7 @@ function clean($variable){
 //------------Logging Function------------------------------------------------------
 function collate_log($accesslevel, $message){
   if ($message == null){ return; }
-  
+    
   global $COLLATE;
   $ipaddress = $_SERVER['REMOTE_ADDR'];
   
@@ -153,6 +168,121 @@ function checkNetmask($ip) {
  else {
   return true;
  }
+}
+
+function pageselector($sql,$hiddenformvars){
+  global $COLLATE;
+     
+  #Note: If you have no hidden variables to pass to the page select form
+  #such as is done on the search page, just pass an empty string
+  
+  $result = mysql_query($sql);
+  $totalrows = mysql_num_rows($result);
+  
+  $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
+  $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
+  
+  $url = preg_replace("/page[^i]\w++&*|show[^i]\w++&*/","",$_SERVER['REQUEST_URI']);
+  if(!strstr($url, "?")){ #script name with no GET variables passed
+    $url .= '?';
+  }
+  elseif(!preg_match("/\?$|&$/", $url)){ #maintain GET variables
+    $url .= '&';
+  }
+  
+  if(is_numeric($show) && $show <= '250' && $show > '5'){
+    $limit = $show;
+  }
+  elseif($show > '250'){
+    echo "<div class=\"tip\"><p>".$COLLATE['languages']['selected']['listlimitnote']."</p></div>";
+    $limit = '250';
+  }
+  else{
+    $limit = "10";
+  }
+  
+  $_SESSION['show'] = $limit;
+  
+  
+  $numofpages = ceil($totalrows/$limit);
+  if($page > $numofpages){
+    $page = $numofpages;
+  }
+  if($page == '0'){ $page = '1';} // Keeps errors from occuring in the following SQL query if no rows have been added yet.
+  $lowerlimit = $page * $limit - $limit;
+  $sql .= " LIMIT $lowerlimit, $limit";
+  
+  echo "<form action=\"".$_SERVER['SCRIPT_NAME']."\" method=\"get\"><p>\n $hiddenformvars";
+  
+  if($page != '1'){
+    $previous_page = $page - 1;
+	echo "<a href=\"{$url}page=$previous_page&amp;show=$limit\">
+	      <img src=\"images/prev.png\" alt=\" &gt;- \" /></a> ";
+  }
+  
+  echo $COLLATE['languages']['selected']['Page']."<select onchange=\"this.form.submit();\" name=\"page\">";
+  
+  $listed_page = '1';
+  while($listed_page <= $numofpages){
+    if($listed_page == $page){
+	  echo "<option value=\"$listed_page\" selected=\"selected\"> $listed_page </option>";
+	}
+	else{
+	  echo "<option value=\"$listed_page\"> $listed_page </option>";
+	}
+	$listed_page++;
+  }
+  $outofpages = str_replace("%numofpages%", "$numofpages", $COLLATE['languages']['selected']['outofpages']);
+  echo "</select> $outofpages";
+  
+  if($page != $numofpages){
+    $next_page = $page + 1;
+    echo " <a href=\"{$url}page=$next_page&amp;show=$limit\"><img src=\"images/next.png\" alt=\" &lt;- \" /></a>";
+	
+  }
+  $showcount = str_replace("%count%", "<input name=\"show\" type=\"text\" size=\"3\" value=\"$limit\" />", $COLLATE['languages']['selected']['showcount']);
+  echo " &nbsp; $showcount <input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p></form>\n";
+  return $sql;
+}
+
+function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
+  $sql = "SELECT COUNT(*) FROM statics WHERE subnet_id='$subnet_id'";
+  $result = mysql_query($sql);
+  $static_count = mysql_result($result, 0, 0);
+  
+  $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
+  $result = mysql_query($sql);
+  if ($result != false) {
+    while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
+      $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
+    }
+  }
+  
+  if ($subnet_size == '0'){
+    $percent_subnet_used = '100'; // short cut to bypass cases where a whole subnet
+                                  // is ACL'd out for DHCP resulting in a subnet_size of 0
+  }
+  else {
+    $percent_subnet_used = round('100' * ($static_count / $subnet_size));
+  }
+  
+  if($percent_subnet_used > '90'){
+    $font_color = 'red';
+  }
+  elseif($percent_subnet_used > '70'){
+    $font_color = 'orange';
+  }
+  else{
+    $font_color = 'green';
+  }
+  
+  if($in_color){
+    $percent_subnet_used = "<td style=\"color: $font_color;\"><b>~$percent_subnet_used%</b></td>";
+  }
+  else{
+    $percent_subnet_used = "<td>$percent_subnet_used%</td>";
+  }
+  return $percent_subnet_used;
 }
 
 ?>
