@@ -118,7 +118,7 @@ global $COLLATE;
 	    new Element.update('authenticationnotice', '');
 	    new Ajax.Updater({ success: 'ldap_servers', failure: 'authenticationnotice' }, '_settings.php?op=addldapserver', {onSuccess:function(){
 		  new Ajax.Request('_settings.php?op=addldapserver&javascript=true', {evalJS: 'force'});
-		}});"
+		}}); return false;"
 	    <img src="./images/add.gif" alt="" /> <?php echo $COLLATE['languages']['selected']['AddLDAPServer']; ?> </a></td>
 	</tr>
 	</table>
@@ -140,7 +140,7 @@ global $COLLATE;
         new Ajax.Updater('authenticationnotice', '_settings.php?op=delete_ldap_server&ldap_server_id=$id', {onSuccess:function(){ 
           new Effect.Fade('ldap_server_".$id."') 
         }}); 
-      };\"
+      }; return false;\"
       ><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
       
       $javascript .=	  
@@ -187,7 +187,7 @@ global $COLLATE;
 	</div>
 	<br />
 	<p><b><?php echo $COLLATE['languages']['selected']['DefaultDomainName']; ?></b>
-	<a href="#" onclick="new Effect.toggle($('defaultdomaintip'),'appear');"><img src="images/help.gif" alt="[?]" /></a><br />
+	<a href="#" onclick="new Effect.toggle($('defaultdomaintip'),'appear'); return false;"><img src="images/help.gif" alt="[?]" /></a><br />
 	<div style="margin-left: 25px;">
 	  <span id="defaultdomain"><?php echo $COLLATE['settings']['domain']; ?></span>
 	</div>
@@ -226,7 +226,7 @@ global $COLLATE;
 	<option value="120" <?php if ($COLLATE['settings']['accountexpire'] == "120") { echo "selected=\"selected\""; } ?>> 120 </option>
 	<option value="180" <?php if ($COLLATE['settings']['accountexpire'] == "180") { echo "selected=\"selected\""; } ?>> 180 </option>
 	</select>
-    <a href="#" onclick="new Effect.toggle($('passwdexpiretip'),'appear');"><img src="images/help.gif" alt="[?]" /></a></p>
+    <a href="#" onclick="new Effect.toggle($('passwdexpiretip'),'appear'); return false;"><img src="images/help.gif" alt="[?]" /></a></p>
     <div style="display: none;" class="tip" id="passwdexpiretip">
 	  <p><?php echo $COLLATE['languages']['selected']['passwdexpiretip']; ?></p>
 	</div>
@@ -240,7 +240,7 @@ global $COLLATE;
 	<option value="9" <?php if($COLLATE['settings']['passwdlength'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
 	<option value="10" <?php if($COLLATE['settings']['passwdlength'] == "10") { echo "selected=\"selected\""; } ?>> 10 </option>
 	</select>
-    <a href="#" onclick="new Effect.toggle($('passwdlengthtip'),'appear');"><img src="images/help.gif" alt="[?]" /></a></p>
+    <a href="#" onclick="new Effect.toggle($('passwdlengthtip'),'appear'); return false;"><img src="images/help.gif" alt="[?]" /></a></p>
     <div style="display: none;" class="tip" id="passwdlengthtip">
 	  <p><?php echo $COLLATE['languages']['selected']['passwdlengthtip']; ?></p>
 	</div>
@@ -258,11 +258,94 @@ global $COLLATE;
 	<option value="8" <?php if($COLLATE['settings']['loginattempts'] == "8") { echo "selected=\"selected\""; } ?>> 8 </option>
 	<option value="9" <?php if($COLLATE['settings']['loginattempts'] == "9") { echo "selected=\"selected\""; } ?>> 9 </option>
 	</select>
-    <a href="#" onclick="new Effect.toggle($('maxlogintip'),'appear');"><img src="images/help.gif" alt="[?]" /></a></p>
+    <a href="#" onclick="new Effect.toggle($('maxlogintip'),'appear'); return false;"><img src="images/help.gif" alt="[?]" /></a></p>
 	<div style="display: none;" class="tip" id="maxlogintip">
 	  <p><?php echo $COLLATE['languages']['selected']['maxlogintip']; ?></p>
 	</div>
   </div>
+  <br /><br />
+  <h3><?php echo $COLLATE['languages']['selected']['APIKeys']; ?></h3>
+  <hr />
+  <div id="apinotice" class="tip"></div>
+  <div style="margin-left: 20px;">
+	<table width="90%">
+	<tr>
+	  <th width="30%"><?php echo $COLLATE['languages']['selected']['APIKeyDescript']; ?></th>
+	  <th width="15%"><?php echo $COLLATE['languages']['selected']['Status']; ?></th>
+	  <th width="30%"><?php echo $COLLATE['languages']['selected']['APIKey']; ?></th>
+	  <td width="25%"><a href="#" onclick="
+	    new Element.update('apinotice', '');
+	    new Ajax.Updater({ success: 'api_keys', failure: 'apinotice' }, '_settings.php?op=addapikey', {onSuccess:function(){
+		  new Ajax.Request('_settings.php?op=addapikey&javascript=true', {evalJS: 'force'});
+		}}); return false;"
+	    <img src="./images/add.gif" alt="" /> <?php echo $COLLATE['languages']['selected']['AddAPIKey']; ?> </a></td>
+	</tr>
+	</table>
+    <div id="api_keys">
+	
+	<?php
+	$sql = "select description,active,apikey from `api-keys` order by description ASC";
+	$result = mysql_query($sql);
+	if(mysql_num_rows($result) == '0'){
+	  echo $COLLATE['languages']['selected']['nokeysdefined'];
+	}
+	else{
+	    echo "<table width=\"90%\">";
+	$javascript='';
+	while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
+	  if($apikeystatus == '0'){
+		$activechecked="selected=\"selected\"";
+		$revokedchecked="";
+	  }
+	  else{
+		$activechecked="";
+		$revokedchecked="selected=\"selected\"";
+	  }
+	  echo "<tr id=\"api_key_$apikey\">".
+	       "<td width=\"30%\"><span id=\"edit_key_$apikey\">$apidescription</span></td>".
+		   "<td width=\"15%\"><select name=\"status\" onchange=\"
+		    new Ajax.Updater('apinotice', '_settings.php?op=changeapikeystatus&apikey=$apikey&status=' + this.value); return false;\">".
+		   "  <option value=\"active\" $activechecked>".$COLLATE['languages']['selected']['Active']."</option>".
+		   "  <option value=\"revoked\" $revokedchecked>".$COLLATE['languages']['selected']['Revoked']."</option></select></td>".
+		   "<td width=\"30%\">$apikey</td>".
+		   "<td width=\"25%\"><a href=\"#\" onclick=\"
+      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
+        new Element.update('apinotice', ''); 
+        new Ajax.Updater('apinotice', '_settings.php?op=delete_api_key&apikey=$apikey', {onSuccess:function(){ 
+          new Effect.Fade('api_key_$apikey') 
+        }}); 
+      }; return false;\"
+      ><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
+      
+      $javascript .=	  
+
+         "  new Ajax.InPlaceEditor('edit_key_$apikey', '_settings.php?op=editapidescript&apikey=$apikey',
+              {
+			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+			    highlightcolor: '#a5ddf8', 
+                callback:
+                  function(form) {
+                    new Element.update('apinotice', '');
+                    return Form.serialize(form);
+                  },
+                onFailure: 
+                  function(transport) {
+                    new Element.update('apinotice', transport.responseText.stripTags());
+                  }
+              }
+            );\n";    
+	  }
+    echo "</table>";
+    echo "<script type=\"text/javascript\"><!--\n";
+    echo $javascript;
+    echo "--></script>\n";
+	}
+	
+	?>
+    </div>
+  </div>
+  <br /><br />
+	
   <h3><?php echo $COLLATE['languages']['selected']['UserGuidance']; ?></h3>
   <hr />
   <div id="guidancenotice" class="tip"></div>

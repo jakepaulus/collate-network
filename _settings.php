@@ -55,6 +55,22 @@ switch($op){
 	edit_dns();
 	break;
 	
+	case "addapikey";
+	add_api_key();
+	break;
+	
+	case "delete_api_key";
+	delete_api_key();
+	break;
+	
+	case "editapidescript";
+	edit_api_key_description();
+	break;
+	
+	case "changeapikeystatus";
+	change_api_key_status();
+	break;
+	
 	default:
 	exit();
 }
@@ -168,7 +184,7 @@ function add_ldap_server(){
                new Ajax.Updater('authenticationnotice', '_settings.php?op=delete_ldap_server&ldap_server_id=$id', {onSuccess:function(){ 
                  new Effect.Fade('ldap_server_".$id."') 
                }}); 
-             };\"
+             }; return false;\"
               ><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
 	  }
 	  else {
@@ -413,5 +429,179 @@ function edit_dns(){
   exit();
 }
 
+function add_api_key(){
+  global $COLLATE;
+  
+  # We either output the HTML table or the javascript for in place editing depending on this GET variable
+  $outputjavascript = (isset($_GET['javascript']) && $_GET['javascript'] == 'true') ? true : false;
+  
+  
+  if(!$outputjavascript) {
+    $keygenerated = false;
+	$tries='0';
+	while($keygenerated === false && $tries < '3'){
+	  $newapikey = substr(str_shuffle('abcefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'), '0', '21');
+      $sql = "INSERT INTO `api-keys` (description, apikey) VALUES ('example description', '$newapikey')";
+      $result = mysql_query($sql);
+	  if(mysql_affected_rows() == '1'){ // This should fail and allow retries if we somehow generate a duplicate key
+	    $keygenerated = true;
+	  }
+	  $tries++;
+	}
+	collate_log('5', "Settings Updated: A new API key has been generated!");
+  }
+  $sql = "select description,active,apikey from `api-keys` order by description ASC";
+  $result = mysql_query($sql);
+  if(!$outputjavascript){	
+	if(mysql_num_rows($result) == '0'){
+	  echo $COLLATE['languages']['selected']['nokeysdefined'];
+	}
+	else{
+	    echo "<table width=\"90%\">";
+    }
+  }
+  $javascript='';
+  while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
+	if(!$outputjavascript){
+	  if($apikeystatus == '0'){
+		$activechecked="selected=\"selected\"";
+		$revokedchecked="";
+	  }
+	  else{
+		$activechecked="";
+		$revokedchecked="selected=\"selected\"";
+	  }
+	  echo "<tr id=\"api_key_$apikey\">".
+	       "<td width=\"30%\"><span id=\"edit_key_$apikey\">$apidescription</span></td>".
+		   "<td width=\"15%\"><select name=\"status\" onchange=\"
+		    new Ajax.Updater('apinotice', '_settings.php?op=changeapikeystatus&apikey=$apikey&status=' + this.value); return false;\">".
+		   "  <option value=\"active\" $activechecked>".$COLLATE['languages']['selected']['Active']."</option>".
+		   "  <option value=\"revoked\" $revokedchecked>".$COLLATE['languages']['selected']['Revoked']."</option></select></td>".
+		   "<td width=\"30%\">$apikey</td>".
+		   "<td width=\"25%\"><a href=\"#\" onclick=\"
+      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
+        new Element.update('apinotice', ''); 
+        new Ajax.Updater('apinotice', '_settings.php?op=delete_api_key&apikey=$apikey', {onSuccess:function(){ 
+          new Effect.Fade('api_key_$apikey') 
+        }}); 
+      }; return false;\"
+      ><img src=\"./images/remove.gif\" alt=\"X\" /></a></td></tr>\n";
+    }
+    else {	
+      $javascript .=	  
 
+         "  new Ajax.InPlaceEditor('edit_key_$apikey', '_settings.php?op=editapidescript&apikey=$apikey',
+              {
+			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+			    highlightcolor: '#a5ddf8', 
+                callback:
+                  function(form) {
+                    new Element.update('apinotice', '');
+                    return Form.serialize(form);
+                  },
+                onFailure: 
+                  function(transport) {
+                    new Element.update('apinotice', transport.responseText.stripTags());
+                  }
+              }
+            );\n";
+    }			
+  }
+  if(!$outputjavascript){ 
+    echo "</table>";
+       exit();
+  }
+  else {
+    header("Content-type: text/javascript");
+    echo $javascript;
+       exit();
+  }
+  exit();
+}
+
+function delete_api_key(){
+  global $COLLATE;
+  
+  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
+  
+  if(empty($apikey)){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
+  
+  $sql = "SELECT description from `api-keys` WHERE apikey='$apikey'";
+  $result = mysql_query($sql);
+	
+  if(mysql_num_rows($result) != '1'){
+    header("HTTP/1.1 500 Internal Error");
+	echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
+  
+  $keydescription = mysql_result($result, 0);
+
+  $sql = "DELETE FROM `api-keys` WHERE apikey='$apikey' LIMIT 1";
+  mysql_query($sql);
+  
+  echo $COLLATE['languages']['selected']['APIkeydeleted'];
+  collate_log('5', "Settings Updated: API key with description \"$keydescription\" deleted!");
+  exit();
+  
+} // Ends delete_block function
+
+function edit_api_key_description(){
+  global $COLLATE;
+  
+  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
+  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  
+  if(empty($apikey) || empty($value)){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
+  
+  $sql = "select description from `api-keys` where apikey='$apikey'";
+  $result = mysql_query($sql);
+  $old_description = mysql_result($result, 0);
+      
+  $sql = "update `api-keys` set description='$value' where apikey='$apikey'";
+  $result = mysql_query($sql);
+  echo $value;
+  collate_log('5', "Settings Updated: API key description changed from \"$old_description\" to \"$value\"");
+  exit();  
+}
+
+function change_api_key_status(){
+  global $COLLATE;
+  
+  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
+  $status = (empty($_GET['status'])) ? '' : clean($_GET['status']);
+  
+  if(empty($apikey) || empty($status) || !preg_match("/active|revoked/", $status)){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected']['invalidrequest'];
+	exit();
+  }
+  
+  $status = ($status == 'active') ? '0' : '1';
+  $status_action = ($status == '0') ? "activated" : "revoked";
+  $message = ($status == '0') ? $COLLATE['languages']['selected']['keyactivated'] : $COLLATE['languages']['selected']['keyrevoked'];
+  
+  $sql = "select active, description from `api-keys` where apikey='$apikey'";
+  $result = mysql_query($sql);
+  list($old_status,$description) = mysql_fetch_row($result);
+  
+  if($status === $old_status){ exit(); }
+  
+  $sql = "update `api-keys` set active='$status' where apikey='$apikey'";
+  mysql_query($sql);
+  
+  collate_log('5', "Settings Updated: API key with description \"$description\" has been $status_action");
+  echo $message;
+  exit();
+  
+  
+}
 ?>

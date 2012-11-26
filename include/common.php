@@ -98,6 +98,7 @@ function clean($variable){
   $invalid['1'] = '\\"'; // removes single quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
   $invalid['2'] = '\''; // removes double quotes
   $invalid['3'] = '\\\''; // removes double quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
+  $invalid['4'] = ';'; // simicolons are used as the separator for API calls, so we don't allow them in the data.
 
   $variable = str_replace($invalid, '', $variable);
   $variable = strip_tags(trim($variable)); 

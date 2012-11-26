@@ -229,6 +229,9 @@ $languages["en"] = array(
   "oneldapserver"    => "You can only add one ldap server at a time",
   "invaliddomain"    => "Invalid domain",
   "defineldap"       => "Please define an ldap server for that domain first.",
+  "APIkeydeleted"    => "The API key has been deleted.",
+  "keyactivated"     => "The API key has been activated.",
+  "keyrevoked"       => "The API key has been revoked.", 
   
   
 // settings.php
@@ -261,6 +264,15 @@ $languages["en"] = array(
   "DefaultIPGuidance" => "<b>Default IP Usage Guidance</b> (Optional)",
   "DNSGuidance"       => "<b>DNS Servers</b> (Optional)",
   "noserversdefined"  => "There are no servers defined yet.",
+  "APIKeyDescript"    => "API Key Description",
+  "Status"            => "Status",
+  "APIKeys"           => "API Keys",
+  "APIKey"            => "API Key",
+  "AddAPIKey"         => "Generate an API Key",
+  "nokeysdefined"     => "No API keys have been generated yet.",
+  "Active"            => "Active",
+  "Revoked"           => "Revoked",
+  
   
 // _users.php
   "userdeleted" => "%username% has been removed from the database.",

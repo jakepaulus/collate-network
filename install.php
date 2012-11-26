@@ -12,6 +12,13 @@ CREATE TABLE `acl` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE `api-keys` (
+ `apikey` varchar(21) NOT NULL,
+ `description` varchar(60) NOT NULL,
+ `active` tinyint(1) NOT NULL DEFAULT '0',
+ PRIMARY KEY (`key`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 CREATE TABLE `blocks` (
   `id` int(9) UNSIGNED NOT NULL auto_increment,
   `name` varchar(25) NOT NULL,
@@ -326,7 +333,13 @@ $upgrade_from_two_dot_zero =
 INSERT INTO `settings` VALUES ('language', 'en');
 ALTER TABLE  `users` ADD  `language` VARCHAR(2) NOT NULL default 'en';
 UPDATE settings SET value='2.1' WHERE name='version';
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.1!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.1!');
+CREATE TABLE `api-keys` (
+ `apikey` varchar(21) NOT NULL,
+ `description` varchar(60) NOT NULL,
+ `active` tinyint(1) NOT NULL DEFAULT '0',
+ PRIMARY KEY (`key`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
 ";
 
 $sql = "select value from settings where name='version'";

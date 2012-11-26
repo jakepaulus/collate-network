@@ -11,7 +11,7 @@
 $languages["xx"] = array(
 
   "isocode"      => "xx",
-  "languagename" => "Example", # The name should be the native language name.
+  "languagename" => "#######", # The name should be the native language name.
   
   # The first letter of each day of the week
   "Sunday-initial"    => "#",
@@ -228,6 +228,9 @@ $languages["xx"] = array(
   "oneldapserver"    => "### ### #### ### ### #### ###### ## # ####",
   "invaliddomain"    => "####### ######",
   "defineldap"       => "###### ###### ## #### ###### ### #### ###### #####.",
+  "APIkeydeleted"    => "### ### ### ### #### #######.",
+  "keyactivated"     => "### ### ### ### #### #########.",
+  "keyrevoked"       => "### ### ### ### #### #######.", 
   
   
 // settings.php
@@ -260,6 +263,15 @@ $languages["xx"] = array(
   "DefaultIPGuidance" => "<b>####### ## ##### ########</b> (########)",
   "DNSGuidance"       => "<b>### #######</b> (########)",
   "noserversdefined"  => "##### ### ## ####### ####### ###.",
+  "APIKeyDescript"    => "### ### ###########",
+  "Status"            => "######",
+  "APIKeys"           => "### ####",
+  "APIKey"            => "### ###",
+  "AddAPIKey"         => "######## ## ### ###",
+  "nokeysdefined"     => "## ### #### #### #### ######### ###.",
+  "Active"            => "######",
+  "Revoked"           => "#######",
+  
   
 // _users.php
   "userdeleted" => "%username% ### #### ####### #### ### ########.",
