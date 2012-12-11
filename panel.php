@@ -51,6 +51,18 @@ function show_panel(){
     <a href="./settings.php"><img height="48" width="48" alt="Settings" src="./images/settings.gif" /></a>
 	<br /><b><?php echo $COLLATE['languages']['selected']['Settings']; ?></b>
   </td>
+  <?php if(!isset($COLLATE['user']['username']) || 
+           (isset($COLLATE['user']['ldapexempt']) && (($COLLATE['settings']['auth_type'] != 'ldap' || $COLLATE['user']['ldapexempt'] === true)))){ 
+   // If the change password icon is hidden, we want the bulk import icon to be on the second row, not the third unless the user is logged out
+  ?>
+</tr>
+<tr><td colspan="4"><br /></td></tr>
+<tr>
+  <?php } ?>
+  <td align="center" style="width: 25%">
+    <a href="./command.php"><img height="48" width="48" alt="" src="./images/bulkimport.png" /></a>
+	<br /><b><?php echo $COLLATE['languages']['selected']['BulkImport']; ?></b>
+  </td>
 </tr>
 </table>
 <br />

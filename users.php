@@ -83,10 +83,10 @@ function add_user_form(){
   global $COLLATE;
   global $op;
   
-  $username = (empty($_GET['username'])) ? '' : $_GET['username'];  
-  $phone = (empty($_GET['phone'])) ? '' : $_GET['phone'];
-  $email = (empty($_GET['email'])) ? '' : $_GET['email'];
-  $ldapexempt = (empty($_GET['ldapexempt'])) ? '0' : $_GET['ldapexempt'];
+  $username = (isset($_GET['username'])) ? $_GET['username'] : '';
+  $phone = (isset($_GET['phone'])) ? $_GET['phone'] : '';
+  $email = (isset($_GET['email'])) ? $_GET['email'] : '';
+  $ldapexempt = (isset($_GET['ldapexempt'])) ? $_GET['ldapexempt'] : '0';
   $accesslevel = '0';
   $loginattempts = '';
   $language = $COLLATE['languages']['selected']['isocode'];
@@ -149,8 +149,7 @@ function edit_user_form(){
   global $COLLATE;
   global $op;
   
-  $username = (empty($_GET['username'])) ? '' : $_GET['username'];
-  
+  $username = (isset($_GET['username'])) ? $_GET['username'] : '';  
   if(empty($username)){
     $notice = 'invalidrequest';
     header("Location: users.php?notice=$notice");
@@ -297,29 +296,41 @@ function edit_user_form(){
 
 function submit_user(){
   global $COLLATE;
-  $username = clean($_POST['username']);
+  include 'include/validation_functions.php';
+  
+  $username = (isset($_POST['username'])) ? $_POST['username'] : '';
   $tmppasswd = sha1(clean($_POST['tmppasswd']));
-  $phone = clean($_POST['phone']);
-  $email = clean($_POST['email']);
-  $language = clean($_POST['languages']);
-  $perms = clean($_POST['perms']);
-  $locked = (empty($_POST['locked'])) ? 'off' : 'on';
+  $phone = (isset($_POST['phone'])) ? $_POST['phone'] : '';
+  $email = (isset($_POST['email'])) ? $_POST['email'] : '';
+  $language = (isset($_POST['languages'])) ? $_POST['languages'] : '';
+  $perms = (isset($_POST['perms']) && preg_match("/^[012345]{1}$/", $_POST['perms'])) $_POST['perms'] : '';
+  $locked = (isset($_POST['locked'])) ? 'on' : 'off';
   $loginattempts = ($locked == 'on') ? '9' : '0';
-  $ldapexempt = (empty($_POST['ldapexempt'])) ? '0' : clean($_POST['ldapexempt']);
-  if($ldapexempt == "on"){ 
-    $ldapexempt = TRUE;
-  }
-  else{
-    $ldapexempt = FALSE;
-  }
+  $ldapexempt = (isset($_POST['ldapexempt']) && $_POST['ldapexempt' == "on") ? true : false;
 
-  if (strlen($username) < "4" ){ 
-    $notice = "shortusername-notice"; 
+  
+  $return = validate_text($username,'username');
+  if ($return['0'] === false){ 
+    $notice = $return['error']; 
     header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
 	exit();
-  } 
+  }
   
-  if(strlen($phone) < "2" && strlen($email) < '4') {
+  $return = validate_text($phone,'phone');
+  if ($return['0'] === false){ 
+    $notice = $return['error']; 
+    header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
+	exit();
+  }
+  
+  $return = validate_text($email,'email');
+  if ($return['0'] === false){ 
+    $notice = $return['error']; 
+    header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
+	exit();
+  }
+  
+  if(empty($email) && empty($phone)) {
     $notice = "onecontact";
     header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
 	exit();

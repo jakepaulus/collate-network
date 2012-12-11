@@ -36,7 +36,6 @@ while ($column = mysql_fetch_assoc($result)) {
 
 
 //------------- Set the language ------------------------------------------------------------
-
 $COLLATE['languages'] = array();
 
 if(isset($COLLATE['user']['language'])){
@@ -49,24 +48,21 @@ else{
   $COLLATE["languages"]["selected"] = $languages[$COLLATE['settings']['language']];
 }
 
-// --------------- Prevent Unwanted Access ---------------------------------------------------
-
-/**
- * The goal of this section is to compare $_SESSION['accesslevel'] with the $accesslevel
- * parameter and allow or deny access. Each function has a hard-coded value 
- * to check for to allow the function to run. When AccessControl has determined the
- * user has enough access for the function, it will stop further checks.
- * 
- * Access Level 0 = Access denied completely: User can see index.php and login.php (this is the default for a new user)
- * Access Level 1 = Read-Only access, no changes can be made
- * Access Level 2 = Can make changes to statics table
- * Access Level 3 = Can make changes to subnets table + level 2
- * Access Level 4 = Can make changes to blocks table + level 3
- * Access Level 5 = Full control of the application including setting changes, user's access level modifications, and user password resets.
- */
-
- function AccessControl($accesslevel, $message) {
-   global $COLLATE;
+function AccessControl($accesslevel, $message) {
+  /**
+   * The goal of this section is to compare $_SESSION['accesslevel'] with the $accesslevel
+   * parameter and allow or deny access. Each function has a hard-coded value 
+   * to check for to allow the function to run. When AccessControl has determined the
+   * user has enough access for the function, it will stop further checks.
+   * 
+   * Access Level 0 = Access denied completely: User can see index.php and login.php (this is the default for a new user)
+   * Access Level 1 = Read-Only access, no changes can be made
+   * Access Level 2 = Can make changes to statics table
+   * Access Level 3 = Can make changes to subnets table + level 2
+   * Access Level 4 = Can make changes to blocks table + level 3
+   * Access Level 5 = Full control of the application including setting changes, user's access level modifications, and user password resets.
+   */
+  global $COLLATE;
    
   if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring loggin or logging
     return;
@@ -90,22 +86,6 @@ else{
   
 } // Ends AccessControl function
 
-
-function clean($variable){ 
-
-  $invalid = array();
-  $invalid['0'] = '"'; // removes single quotes
-  $invalid['1'] = '\\"'; // removes single quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
-  $invalid['2'] = '\''; // removes double quotes
-  $invalid['3'] = '\\\''; // removes double quotes (escaped quotes would leave slashes, which look ugly where they dont belong)
-  $invalid['4'] = ';'; // simicolons are used as the separator for API calls, so we don't allow them in the data.
-
-  $variable = str_replace($invalid, '', $variable);
-  $variable = strip_tags(trim($variable)); 
-  return $variable;
-}
-
-//------------Logging Function------------------------------------------------------
 function collate_log($accesslevel, $message){
   if ($message == null){ return; }
     
@@ -123,52 +103,31 @@ function collate_log($accesslevel, $message){
  
 } // Ends collate_log function
 
-
-# Really dumb/ugly/embarassing hack to make the integer representation
-# of IP addresses larger than 127.255.255.255 look like signed integers
-# as they would be represented on 32-bit systems...on 64-bit systems.
-# Please don't point and laugh too much at me for this.
 function ip2decimal($ip) {
-        $special_number = '2147483648';
-		if (ip2long($ip) === false){ return false; }
-        $long_ip = ip2long($ip);
-        if ($long_ip == $special_number){
-                $long_ip = -1*$ip;
-        }
-        if($long_ip > $special_number){
-                $difference = $long_ip - $special_number;
-                $long_ip = -$special_number + $difference;
-
-        }
-        return $long_ip;
-
+  # Really dumb/ugly/embarassing hack to make the integer representation
+  # of IP addresses larger than 127.255.255.255 look like signed integers
+  # as they would be represented on 32-bit systems...on 64-bit systems.
+  # Please don't point and laugh too much at me for this.
+  $special_number = '2147483648';
+  if (ip2long($ip) === false){ return false; }
+  $long_ip = ip2long($ip);
+  if ($long_ip == $special_number){
+    $long_ip = -1*$ip;
+  }
+  if($long_ip > $special_number){
+    $difference = $long_ip - $special_number;
+    $long_ip = -$special_number + $difference;
+  }
+  return $long_ip;  
 }
 
-# this function takes a subnet number and mask in decimal and returns
-# a subnet number and mask in cidr notation. E.g.: 
-# $ip = 167772160 and $mask = -256 is returned as "10.0.0.0/24"
 function subnet2cidr($ip,$mask){
-	$ip=long2ip($ip);
-	$mask=substr_count(decbin($mask), '1');
-	return "$ip/$mask";
-}
-
-// Netmask Validator // modified from the version in the comments on php.net/ip2long
-function checkNetmask($ip) {
- if (!ip2decimal($ip)) {
-  return false;
- }
- $binip=decbin(ip2decimal($ip));
- 
- if(strlen($binip) != 32 && ip2decimal($ip) != 0) {
-  return false;
- }
- elseif(preg_match("/01/", "$binip") || !preg_match("/0/", "$binip")) {
-  return false;
- }
- else {
-  return true;
- }
+  # this function takes a subnet number and mask in decimal and returns
+  # a subnet number and mask in cidr notation. E.g.: 
+  # $ip = 167772160 and $mask = -256 is returned as "10.0.0.0/24"
+  $ip=long2ip($ip);
+  $mask=substr_count(decbin($mask), '1');
+  return "$ip/$mask";
 }
 
 function pageselector($sql,$hiddenformvars){
@@ -286,4 +245,50 @@ function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
   return $percent_subnet_used;
 }
 
+function find_free_statics($subnet_id){
+  # This function returns an array containing all free IP addresses in a subnet
+  # after excluding ACL'd ranges and already used addresses
+  $sql = "SELECT name, start_ip, end_ip, mask FROM subnets WHERE id='$subnet_id'";
+  $results = mysql_query($sql);
+  $return = array();
+  
+  if(mysql_num_rows($results) != '1'){
+    $return['0'] = false;
+	$return['1'] = "subnet not found";
+	return $return;
+  }
+  
+  list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip,$long_mask) = mysql_fetch_row($results);
+  $first_usable = $long_subnet_start_ip;
+  $last_usable = $long_subnet_end_ip - '1';
+  $whole_subnet = range($first_usable, $last_usable);
+  $ipspace = $whole_subnet;
+  
+  $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
+  $results = mysql_query($sql);
+  
+  while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
+    $acl = range($start_ip, $end_ip);
+    $ipspace = array_diff($ipspace, $acl);
+  }
+  
+  $sql = "SELECT ip FROM statics WHERE subnet_id='$subnet_id'";
+  $results = mysql_query($sql);
+  
+  if(mysql_num_rows($results) > '0'){
+    $statics = array();
+    while($static_ip = mysql_fetch_row($results)){
+      array_push($statics, $static_ip['0']); 
+    }
+    $ipspace = array_diff($ipspace, $statics);  
+  }
+  $ipspace = array_reverse($ipspace);
+  array_pop($ipspace); # remove the network address from the array
+  $return['0'] = true;
+  $return['ipspace'] = $ipspace;
+  $return['subnet_name'] = $subnet_name;
+  $return['long_start_ip'] = $long_subnet_start_ip;
+  $return['long_mask'] = $long_mask;
+  return $return;
+}
 ?>

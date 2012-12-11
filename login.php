@@ -19,6 +19,7 @@ switch($op) {
 
 function change_password(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
   if(isset($_GET['returnto'])){
     $returnto = urldecode($_GET['returnto']);
@@ -155,6 +156,7 @@ function cn_logout(){
 
 function cn_login() {
   global $COLLATE;
+  include 'include/validation_functions.php';
   
   $action = (empty($_GET['action'])) ? 'show form' : $_GET['action'];
   

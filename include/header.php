@@ -73,7 +73,7 @@
 	  echo "<a href=\"blocks.php\">All</a> ";
 	}
 	if(stristr($_SERVER['REQUEST_URI'], "block_id")){
-	  $block_id = clean($_GET['block_id']);
+	  $block_id = (is_numeric($_GET['block_id'])) ? $_GET['block_id'] : null;
 	  $sql = "SELECT name FROM blocks WHERE id='$block_id'";
 	  $result = mysql_query($sql);
 	  if(mysql_num_rows($result) == '1'){
@@ -82,7 +82,7 @@
 	  }
 	}
 	elseif(stristr($_SERVER['REQUEST_URI'], "subnet_id")){
-	  $subnet_id = clean($_GET['subnet_id']);
+	  $subnet_id = (is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : null;
 	  $sql = "SELECT blocks.name, subnets.name, subnets.block_id FROM blocks, subnets 
 			WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
 	  $result = mysql_query($sql);

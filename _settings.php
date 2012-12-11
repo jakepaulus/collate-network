@@ -103,7 +103,7 @@ function update_language(){
 function update_authorization(){
   global $COLLATE;
   
-  if (preg_match('/[023456]{1}/', $_GET['perms'])){
+  if (preg_match('/^[023456]{1}$/', $_GET['perms'])){
     $perms = $_GET['perms'];
   }
   else {
@@ -237,8 +237,7 @@ function add_ldap_server(){
 function delete_ldap_server(){
   global $COLLATE;
   
-  $server_id = (empty($_GET['ldap_server_id'])) ? '' : clean($_GET['ldap_server_id']);
-  
+  $server_id = (isset($_GET['ldap_server_id']) && is_numeric($_GET['ldap_server_id'])) ? $_GET['ldap_server_id'] : '';  
   if(empty($server_id)){
     header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['invalidrequest'];
@@ -269,23 +268,30 @@ function delete_ldap_server(){
 
 function edit_ldap(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
   $id = (isset($_GET['id']) && is_numeric($_GET['id'])) ? $_GET['id'] : '';
   $object = (isset($_GET['object']) && ($_GET['object'] === 'domain' || $_GET['object'] === 'server')) ? $_GET['object'] : '';
-  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  $value = (isset($_POST['value'])) ? $_POST['value'] : '';
   
   if(empty($id) || empty($object) || empty($value)){
     header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
+    
+  if($object == 'server' && ip2decimal($value) === false){
+    echo $COLLATE['languages']['selected']['invalidip'];
+	exit();
+  }
   
-  if($object == 'server'){
-    # this regex should be good enough
-    if(!preg_match("/(\d{1,3}\.){3}\d{1,3}/", $value)){
-	  echo $COLLATE['languages']['selected']['invalidip'];
-	  exit();
-	}
+  if($object == 'domain'){
+    $return = validate_text($value,'domain');
+    if($return['0'] === false){
+      header("HTTP/1.1 500 Internal Error");
+      echo $COLLATE['languages']['selected'][$return['error']];
+    exit();
+    }
   }
 
   $sql = "select count(*) from `ldap-servers` where id='$id'";
@@ -305,7 +311,16 @@ function edit_ldap(){
 
 function edit_domain(){
   global $COLLATE;
-  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  include 'include/validation_functions.php';
+  
+  $value = (isset($_POST['value'])) ? $_POST['value'] : '';
+  
+  $return = validate_text($value,'domain');
+  if($return['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$return['error']];
+	exit();
+  }
   
   if($COLLATE['settings']['domain'] == $value){ 
     echo $value;
@@ -371,7 +386,8 @@ function update_passwdlength(){
   
   if($passwdlength == $COLLATE['settings']['passwdlength']){ exit(); }
   
-  $message = "Settings Updated: minimum password length changed from ".$COLLATE['settings']['passwdlength']." to $passwdlength characters";
+  $message = "Settings Updated: minimum password length changed from ".
+             $COLLATE['settings']['passwdlength']." to $passwdlength characters";
   collate_log('5', $message);
   
   $sql = "update settings set value='$passwdlength' where name='passwdlength'";
@@ -410,7 +426,20 @@ function update_loginattempts(){
 }
 
 function edit_guidance(){
-  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  global $COLLATE;
+  include 'include/validation_functions.php';
+  
+  $value = (isset($_POST['value'])) ? $_POST['value'] : '';
+  
+  $return = validate_text($value,'guidance');
+  if($return['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$return['error']];
+	exit();
+  }
+  else{
+    $value = $return['1'];
+  }
     
   $sql = "update `settings` set value='$value' where name='guidance'";
   $result = mysql_query($sql);
@@ -420,7 +449,20 @@ function edit_guidance(){
 }
 
 function edit_dns(){
-  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  global $COLLATE;
+  include 'include/validation_functions.php';
+  
+  $value = (isset($_POST['value'])) ? $_POST['value'] : '';
+  
+  $return = validate_text($value,'dnshelper');
+  if($return['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$return['error']];
+	exit();
+  }
+  else{
+    $value = $return['1'];
+  }
     
   $sql = "update `settings` set value='$value' where name='dns'";
   $result = mysql_query($sql);
@@ -463,7 +505,7 @@ function add_api_key(){
   $javascript='';
   while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
 	if(!$outputjavascript){
-	  if($apikeystatus == '0'){
+	  if($apikeystatus == '1'){
 		$activechecked="selected=\"selected\"";
 		$revokedchecked="";
 	  }
@@ -521,25 +563,19 @@ function add_api_key(){
 
 function delete_api_key(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
-  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
-  
-  if(empty($apikey)){
+  $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
+
+  $return = validate_api_key($apikey);
+  if($return['0'] === false){
     header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
+    echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
-  
-  $sql = "SELECT description from `api-keys` WHERE apikey='$apikey'";
-  $result = mysql_query($sql);
-	
-  if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
-	echo $COLLATE['languages']['selected']['invalidrequest'];
-	exit();
+  else{
+    $keydescription = $return['description'];
   }
-  
-  $keydescription = mysql_result($result, 0);
 
   $sql = "DELETE FROM `api-keys` WHERE apikey='$apikey' LIMIT 1";
   mysql_query($sql);
@@ -552,20 +588,31 @@ function delete_api_key(){
 
 function edit_api_key_description(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
-  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
-  $value = (isset($_POST['value'])) ? clean($_POST['value']) : '';
+  $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
+  $value = (isset($_POST['value'])) ? $_POST['value'] : '';
   
-  if(empty($apikey) || empty($value)){
+  $return = validate_api_key($apikey);
+  if($return['0'] === false){
     header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
+    echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
+  else{
+    $old_description = $return['description'];
+  }
   
-  $sql = "select description from `api-keys` where apikey='$apikey'";
-  $result = mysql_query($sql);
-  $old_description = mysql_result($result, 0);
-      
+  $return = validate_text($value,'apidescription');
+  if($return['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$return['error']];
+	exit();
+  }
+  else{
+    $value = $return['1'];
+  }
+       
   $sql = "update `api-keys` set description='$value' where apikey='$apikey'";
   $result = mysql_query($sql);
   echo $value;
@@ -575,9 +622,10 @@ function edit_api_key_description(){
 
 function change_api_key_status(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
-  $apikey = (empty($_GET['apikey'])) ? '' : clean($_GET['apikey']);
-  $status = (empty($_GET['status'])) ? '' : clean($_GET['status']);
+  $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
+  $status = (isset($_GET['status'])) ? $_GET['status'] : '';
   
   if(empty($apikey) || empty($status) || !preg_match("/active|revoked/", $status)){
     header("HTTP/1.1 500 Internal Error");
@@ -585,14 +633,21 @@ function change_api_key_status(){
 	exit();
   }
   
-  $status = ($status == 'active') ? '0' : '1';
-  $status_action = ($status == '0') ? "activated" : "revoked";
-  $message = ($status == '0') ? $COLLATE['languages']['selected']['keyactivated'] : $COLLATE['languages']['selected']['keyrevoked'];
+  $return = validate_api_key($apikey);
+  if($return['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$return['error']];
+	exit();
+  }
+  else{
+    $description = $return['description'];
+	$old_status = $return['active'];
+  }
   
-  $sql = "select active, description from `api-keys` where apikey='$apikey'";
-  $result = mysql_query($sql);
-  list($old_status,$description) = mysql_fetch_row($result);
-  
+  $status = ($status == 'active') ? true : false;
+  $status_action = ($status === true) ? "activated" : "revoked";
+  $message = ($status === true) ? $COLLATE['languages']['selected']['keyactivated'] : $COLLATE['languages']['selected']['keyrevoked'];
+    
   if($status === $old_status){ exit(); }
   
   $sql = "update `api-keys` set active='$status' where apikey='$apikey'";

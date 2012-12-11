@@ -1,14 +1,21 @@
 <?php
 
 require_once('include/common.php');
+include 'include/validation_functions.php';
+
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
-$username = (isset($_GET['username'])) ? clean($_GET['username']) : '';
-if(empty($username)) {
+$username = (isset($_GET['username'])) ? $_GET['username'] : '';
+$result = validate_text($username,'username');
+if($result['0'] === false){
   header("HTTP/1.1 500 Internal Error");
-  echo $COLLATE['languages']['selected']['invalidrequest'];
+  echo $COLLATE['languages']['selected'][$result['error']];
   exit();
 }
+else{
+  $username = $result['1'];
+}
+
 $sql = "select count(*) from users where username='$username'";
 $count = mysql_result(mysql_query($sql), 0);
 if($count != '1'){ 
@@ -94,7 +101,16 @@ function edit_phone(){
 	exit();
   }
   
-  $phone = (isset($_POST['value'])) ? clean($_POST['value']) : "";
+  $phone = (isset($_POST['value'])) ? $_POST['value'] : '';
+  $result = validate_text($phone,'phone');
+  if($result['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$result['error']];
+    exit();
+  }
+  else{
+    $phone = $result['1'];
+  }
 
   $sql = "select phone,email from users where username='$username'";
   list($old_phone,$old_email) = mysql_fetch_row(mysql_query($sql));
@@ -134,8 +150,17 @@ function edit_email(){
 	exit();
   }
   
-  $email = (isset($_POST['value'])) ? clean($_POST['value']) : "";
-
+  $email = (isset($_POST['value'])) ? $_POST['value'] : '';
+  $result = validate_text($email,'email');
+  if($result['0'] === false){
+    header("HTTP/1.1 500 Internal Error");
+    echo $COLLATE['languages']['selected'][$result['error']];
+    exit();
+  }
+  else{
+    $email = $result['1'];
+  }
+  
   $sql = "select phone,email from users where username='$username'";
   list($old_phone,$old_email) = mysql_fetch_row(mysql_query($sql));
   
@@ -266,13 +291,12 @@ function reset_passwd(){
 function set_ldapexempt(){
   global $username;
   global $COLLATE;
-  $ldapexempt = (isset($_GET['ldapexempt']) && preg_match("/true|false/", $_GET['ldapexempt'])) ? $_GET['ldapexempt'] : "";
+  $ldapexempt = (isset($_GET['ldapexempt']) && preg_match("/^true$|^false$/", $_GET['ldapexempt'])) ? $_GET['ldapexempt'] : "";
   if(empty($ldapexempt)){
     header("HTTP/1.1 500 Internal Error");
 	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
-  $ldapexempt = ($locked === 'true') ? true : false;
   
   $sql = "select ldapexempt from users where username='$username'";
   $old_ldapexempt = mysql_result(mysql_query($sql), 0);
@@ -297,7 +321,7 @@ function set_ldapexempt(){
 function set_lock(){
   global $username;
   global $COLLATE;
-  $locked = (isset($_GET['locked']) && preg_match("/true|false/", $_GET['locked'])) ? $_GET['locked'] : "";
+  $locked = (isset($_GET['locked']) && preg_match("/^true$|^false$/", $_GET['locked'])) ? $_GET['locked'] : "";
   if(empty($locked)){
     header("HTTP/1.1 500 Internal Error");
 	echo $COLLATE['languages']['selected']['invalidrequest'];

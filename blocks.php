@@ -63,10 +63,14 @@ function add_block(){
 } // Ends add_block function
 
 function submit_block() {
-  $name = clean($_POST['name']);
-  $ip = clean($_POST['ip']);
-  $end_ip = clean($_POST['end_ip']);
-  $note = clean($_POST['note']);
+  global $COLLATE;
+  include 'include/validation_functions.php';
+  
+  $name = (isset($_POST['name'])) ? $_POST['name'] : '';
+  $note = (isset($_POST['note'])) ? $_POST['note'] : ''; # this input is optional
+  $ip = (isset($_POST['ip'])) ? $_POST['ip'] : '';
+  $end_ip = (isset($_POST['end_ip'])) ? $_POST['end_ip'] : '';
+  
  
   if(empty($name) || empty($ip)){
     $notice = "missingfield-notice";
@@ -74,75 +78,46 @@ function submit_block() {
 	exit();
   }
   
-  // Make sure that the block name isn't already in use
-  $sql = "SELECT name FROM blocks WHERE name='$name'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) >= '1'){
-    $notice = "blocknameconflict";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	exit();
-  }
-  
-  if(!strstr($ip, '/') && empty($end_ip)){
-    $notice = "blockbounds-notice";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	exit();
-  }
-  
-  if(strstr($ip, '/')){
-    list($ip,$mask) = explode('/', $ip);
-  
-    if(ip2decimal($ip) == FALSE){
-      $notice = "invalidip";
-      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	  exit();
-    }
-  
-    $ip = long2ip(ip2decimal($ip));  
-    $long_ip = ip2decimal($ip);
-    if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-      $notice = "invalidmask";
-      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	  exit();
-    }
-    elseif(!strstr($mask, '.')){
-      $bin = str_pad('', $mask, '1');
-	  $bin = str_pad($bin, '32', '0');
-	  $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
-      $mask = long2ip(ip2decimal($mask));
-    }
-    elseif(!checkNetmask($mask)){
-      $notice = "invalidmask";
-      header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	  exit();
-    }
-    
-	$long_mask = ip2decimal($mask);
-    $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
-    $long_end_ip = $long_ip | (~$long_mask);
-  }
-  else{
-    if(!long2ip($end_ip)){
-	  $notice = "blockbounds-notice";
-	  header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-	}
-    $long_ip = ip2decimal($ip);
-    $long_end_ip = ip2decimal($end_ip);
-  }
-  
-  // We need to make sure this new block doesn't overlap an existing block
-  $sql = "SELECT id FROM blocks WHERE (CAST(start_ip AS UNSIGNED) <= CAST('$long_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_ip' AS UNSIGNED)) OR 
-          (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) OR
-		  (CAST(start_ip AS UNSIGNED) >= CAST('$long_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
-
-  $search = mysql_query($sql);
-  if(mysql_num_rows($search) != '0'){
-    $notice = "blockoverlap-notice";
+  $return = validate_text($name,'blockname');
+  if($return['0'] === false){
+    $notice = $return['error'];
 	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
+  else{
+    $name = $return['1'];
+  }
+  
+  $return = validate_text($note,'note');
+  if($return['0'] === false){
+    $notice = $return['error'];
+	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	exit();
+  }
+  else{
+    $note = $return['1'];
+  }
+  
+  if(empty($end_ip)){ # subnet supplied
+    $return = validate_network($ip,'block');
+  }
+  else{ # range supplied
+    $return = validate_ip_range($ip,$end_ip,'block');
+  }
+  if($return['0'] === false){
+    $notice = $return['error'];
+	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	exit();
+  }
+  else{
+    $start_ip = $return['start_ip'];
+	$end_ip = $return['end_ip'];
+	$long_start_ip = $return['long_start_ip'];
+	$long_end_ip = $return['long_end_ip'];
+  }
+  
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
-  $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_ip', '$long_end_ip', '$note', '$username', now())";
+  $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now())";
   
   $accesslevel = "4";
   $message = "IP Block added: $name";

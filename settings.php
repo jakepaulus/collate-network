@@ -293,7 +293,7 @@ global $COLLATE;
 	    echo "<table width=\"90%\">";
 	$javascript='';
 	while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
-	  if($apikeystatus == '0'){
+	  if($apikeystatus == '1'){
 		$activechecked="selected=\"selected\"";
 		$revokedchecked="";
 	  }

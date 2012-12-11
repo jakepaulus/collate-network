@@ -22,21 +22,31 @@ switch($op){
 
 function edit_subnet(){
   global $COLLATE;
+  include 'include/validation_functions.php';
 
-  $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
-  $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
-  $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
+  $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
+  $edit = (empty($_GET['edit'])) ? '' : $_GET['edit'];
+  $value = (empty($_POST['value'])) ? '' : $_POST['value'];
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
-  if(empty($subnet_id) || empty($edit)){ 
+  if(empty($subnet_id) || !is_numeric($subnet_id) || !preg_match('/name|note/', $edit)){ 
     header("HTTP/1.1 500 Internal Error");
 	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
-  elseif($edit == 'name' && (strlen($value) < '3' OR strlen($value) > '60')){
+  if($edit == 'name'){
+    $return = validate_text($value,'subnetname');
+  }
+  else{
+    $return = validate_text($value,'note');
+  }
+  if($return['0'] === false){
     header("HTTP/1.1 500 Internal Error");
-	echo $COLLATE['languages']['selected']['shortsubnetname'];
+	echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
+  }
+  else{
+    $value = $return['1'];
   }
   
   $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
@@ -61,7 +71,6 @@ function edit_subnet(){
   
   echo $value;
 } // Ends edit_subnet function
-
 
 function delete_subnet(){
   global $COLLATE;

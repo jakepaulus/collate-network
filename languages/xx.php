@@ -168,6 +168,7 @@ $languages["xx"] = array(
   "DiscoveredHosts" => "########## #####",
   "StaleHosts"      => "##### #####",
   "Settings"        => "########",
+  "BulkImport"      => "#### ######",
   
 // search.php
   "shortsearch"        => "### #### ##### # ###### ###### ## ##### ########## ## #### ## ##### ## #### #######.",
@@ -397,6 +398,11 @@ $languages["xx"] = array(
   "LogIn"       => "### ##",
   "LogOut"      => "### ###",
   "QuickSearch" => "##### ######",
-  "Hostname"    => "########"  
+  "Hostname"    => "########",
+  
+// command.php
+  "uploadwarning" => "###### ####### ### <a href=\"http://code.google.com/p/collate-network/w/list\">#############</a>
+                      ### ######## ## ### ###### ## ### ### ##### #### #### ########.",
+  "SelectFile"    => "<b>###### # ####</b> (## ## %bytes% ##### ####)",
 );
 ?>
