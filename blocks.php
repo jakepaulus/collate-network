@@ -87,7 +87,7 @@ function submit_block() {
   else{
     $name = $return['1'];
   }
-  $result = mysql_query("SELECT name from blocks where name='$value'");
+  $result = mysql_query("SELECT id from blocks where name='$name'");
   if(mysql_num_rows($result) != '0'){
     header("HTTP/1.1 500 Internal Error");
     $notice = 'duplicatename';
@@ -132,7 +132,7 @@ function submit_block() {
   
   
   mysql_query($sql);
-  $notice=str_replace("%name%", "$name", $COLLATE['languages']['selected']['blockadded-notice']);
+  $notice = 'blockadded-notice';
   header("Location: blocks.php?notice=$notice");
   exit();
 

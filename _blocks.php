@@ -3,7 +3,7 @@
 require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
-if(isset($_GET['block_id'] && is_numeric($_GET['block_id']){
+if(isset($_GET['block_id']) && is_numeric($_GET['block_id'])){
   $block_id = $_GET['block_id'];
 }
 else{  
@@ -43,7 +43,7 @@ function edit_block(){
 	else{
 	  $value = $return['1'];
 	}
-	$result = mysql_query("SELECT name from blocks where name='$value'");
+	$result = mysql_query("SELECT id from blocks where name='$value'");
 	if(mysql_num_rows($result) != '0'){
 	  header("HTTP/1.1 500 Internal Error");
 	  echo $COLLATE['languages']['selected']['duplicatename'];

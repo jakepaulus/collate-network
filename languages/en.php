@@ -99,7 +99,7 @@ $languages["en"] = array(
                             example would be \"Point to Point subnets.\"",
   "missingfield-notice" => "Please verify that required fields have been completed.",
   "blockbounds-notice"  => "You must supply the number of mask bits, a mask, or a valid end IP to add an IP block.",
-  "blockadded-notice"   => "The %name% block has been created.",
+  "blockadded-notice"   => "The block has been created.",
   "AllIPBlocks"         => "All IP Blocks",
   "AddaBlock"           => "Add a Block",
   "BlockName"           => "Block Name",
