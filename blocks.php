@@ -87,6 +87,13 @@ function submit_block() {
   else{
     $name = $return['1'];
   }
+  $result = mysql_query("SELECT name from blocks where name='$value'");
+  if(mysql_num_rows($result) != '0'){
+    header("HTTP/1.1 500 Internal Error");
+    $notice = 'duplicatename';
+	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+    exit();
+  }
   
   $return = validate_text($note,'note');
   if($return['0'] === false){

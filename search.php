@@ -1,6 +1,6 @@
 <?php
 /*
-  * Please see /include/common.php for documentation on common.php and the $COLLATE global array used by this application as well as the AccessControl function used widely.
+ * Please see /include/common.php for documentation on common.php and the $COLLATE global array used by this application as well as the AccessControl function used widely.
  */
 require_once('./include/common.php');
 
@@ -32,21 +32,8 @@ switch($op){
  */
 
 function download() {
-  global $COLLATE;
-  $first_input = (!isset($_GET['first'])) ? '' : clean($_GET['first']);
-  $second_input = (!isset($_GET['second'])) ? '' : clean($_GET['second']);
-  $search_input = (!isset($_GET['search'])) ? '' : clean($_GET['search']);
-  $fromdate_input = (!isset($_GET['fromdate'])) ? '' : clean($_GET['fromdate']);
-  $todate_input = (!isset($_GET['todate'])) ? '' : clean($_GET['todate']);
-  $when_input = (!isset($_GET['when'])) ? '' : clean($_GET['when']);
-  
-  if($export == "on"){ // The download function is a separate page
-    $uri = $_SERVER['REQUEST_URI'];
-	$uri = str_replace("op=search", "op=download", $uri);
-	header("Location: $uri");
-	exit();
-  }
-  
+  global $COLLATE;  
+ 
   $tmparray=build_search_sql();
   $sql=$tmparray["sql"];
   $searchdescription=$tmparray["searchdescription"];
@@ -152,41 +139,39 @@ function search() {
   global $COLLATE;
   $export = (!isset($_GET['export'])) ? 'off' : $_GET['export'];
   
-  $first_input = (!isset($_GET['first'])) ? '' : clean($_GET['first']);
-  $second_input = (!isset($_GET['second'])) ? '' : clean($_GET['second']);
-  $search_input = (!isset($_GET['search'])) ? '' : clean($_GET['search']);
-  $fromdate_input = (!isset($_GET['fromdate'])) ? '' : clean($_GET['fromdate']);
-  $todate_input = (!isset($_GET['todate'])) ? '' : clean($_GET['todate']);
-  $when_input = (!isset($_GET['when'])) ? '' : clean($_GET['when']);
-  
   if($export == "on"){ // The download function is a separate page
     $uri = $_SERVER['REQUEST_URI'];
 	$uri = str_replace("op=search", "op=download", $uri);
 	header("Location: $uri");
 	exit();
   }
-  
-  $tmparray=build_search_sql();
-  $sql=$tmparray["sql"];
+
+  $tmparray = build_search_sql();
+  $sql = $tmparray["sql"];
   $searchdescription=$tmparray["searchdescription"];
   $first = $tmparray["first"];
   $First = $tmparray["First"];
   $second = $tmparray["second"];
   $Second = $tmparray["Second"];
   $search = $tmparray["search"];
+  $when = $tmparray["when"];
   $todate = $tmparray["todate"];
   $fromdate = $tmparray["fromdate"];
-  $sort=$tmparray["sort"];
+  $sort = $tmparray["sort"];
+  
+  $unsortedrequesturl = "search.php?op=search&amp;first=$first&amp;second=$second&amp;".
+                        "search=$search&amp;when=$when&amp;fromdate=$fromdate&amp;".
+						"todate=$todate&amp;page=1&amp;";
   
   require_once('include/header.php');
   
   $hiddenformvars = "<input type=\"hidden\" name=\"op\" value=\"search\" />
-	                 <input type=\"hidden\" name=\"first\" value=\"$first_input\" />
-	                 <input type=\"hidden\" name=\"second\" value=\"$second_input\" />
-		             <input type=\"hidden\" name=\"search\" value=\"$search_input\" />
-		             <input type=\"hidden\" name=\"when\" value=\"$when_input\" />
-		             <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate_input\" />
-		             <input type=\"hidden\" name=\"todate\" value=\"$todate_input\" />
+	                 <input type=\"hidden\" name=\"first\" value=\"$first\" />
+	                 <input type=\"hidden\" name=\"second\" value=\"$second\" />
+		             <input type=\"hidden\" name=\"search\" value=\"$search\" />
+		             <input type=\"hidden\" name=\"when\" value=\"$when\" />
+		             <input type=\"hidden\" name=\"fromdate\" value=\"$fromdate\" />
+		             <input type=\"hidden\" name=\"todate\" value=\"$todate\" />
 					 <input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
   $updatedsql = pageselector($sql,$hiddenformvars);
   $row = mysql_query($updatedsql);
@@ -212,9 +197,9 @@ function search() {
   
   if($first == "subnets"){
     echo "<table width=\"100%\">\n". 
-	     "<tr><th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=name\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
+	     "<tr><th align=\"left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
 		 "<th align=\"left\">".$COLLATE['languages']['selected']['Block']."</th>".
-	     "<th align=\"left\"><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=network\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
+	     "<th align=\"left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
 	     "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
 	     "<th align=\"left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th></tr>\n".
 	     "<tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
@@ -234,7 +219,8 @@ function search() {
 	  $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
       
       echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td>".$block_name[$block_id]."</td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
+           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td>".$block_name[$block_id].
+		   "</td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
            <td>$mask</td>$percent_subnet_used
            <td>";
          
@@ -301,11 +287,11 @@ function search() {
   }
   elseif($first == "static IPs"){
     echo "<table width=\"100%\"><tr>".
-         "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=ip\">".$COLLATE['languages']['selected']['IPAddress']."</a></th>".
+         "<th><a href=\"".$unsortedrequesturl."sort=ip\">".$COLLATE['languages']['selected']['IPAddress']."</a></th>".
 		 "<th>".$COLLATE['languages']['selected']['Path']."</th>".
-         "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=name\">".$COLLATE['languages']['selected']['Name']."</a></th>".
-         "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=contact\">".$COLLATE['languages']['selected']['Contact']."</a></th>".
-         "<th><a href=\"search.php?op=search&amp;first=$first_input&amp;second=$second_input&amp;search=$search_input&amp;when=$when_input&amp;fromdate=$fromdate_input&amp;todate=$todate_input&amp;page=1&amp;sort=failed_scans\">".$COLLATE['languages']['selected']['FailedScans']."</a></th>".
+         "<th><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['Name']."</a></th>".
+         "<th><a href=\"".$unsortedrequesturl."\">".$COLLATE['languages']['selected']['Contact']."</a></th>".
+         "<th><a href=\"".$unsortedrequesturl."sort=failed_scans\">".$COLLATE['languages']['selected']['FailedScans']."</a></th>".
          "</tr><tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 
 	$javascript = ''; # this gets appended to in the following while loop
@@ -552,17 +538,48 @@ function show_form()  {
 
 function build_search_sql(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
-  $first = $first_input = (!isset($_GET['first'])) ? '' : clean($_GET['first']);
-  $second = $second_input = (!isset($_GET['second'])) ? '' : clean($_GET['second']);
-  $search = $search_input = (!isset($_GET['search'])) ? '' : clean($_GET['search']);
-  $fromdate = $fromdate_input = (!isset($_GET['fromdate'])) ? '' : clean($_GET['fromdate']);
-  $todate = $todate_input = (!isset($_GET['todate'])) ? '' : clean($_GET['todate']);
-  $when = $when_input = (!isset($_GET['when'])) ? '' : clean($_GET['when']);
-  if($fromdate == $todate){ // The user forgot to move the button back to "all" without selecting specific dates
-    $when = "all";
+  $first = (isset($_GET['first'])) ? $_GET['first'] : '';
+  $second = (isset($_GET['second'])) ? $_GET['second'] : '';
+  $search = (isset($_GET['search'])) ? clean($_GET['search']) : '';
+  $fromdate = (isset($_GET['fromdate'])) ? $_GET['fromdate'] : '';
+  $todate = (isset($_GET['todate'])) ? $_GET['todate'] : '';
+  $when = ($fromdate == $todate) ? 'all' : 'dates';
+  
+  if($first === '0'){
+    // subnet search
+	$pattern = "/^ip$|^name$|^note$|^modified_by$/";
+	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
   }
-    
+  elseif($first === '1'){
+    // statics search
+	$pattern = "/^ip$|^name$|^contact$|^note$|^modified_by$|^failed_scans$/";
+	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
+  }
+  elseif($first === '2'){
+    // logs search
+	$pattern = "/^username$|^level$|^message$/";
+	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
+  }
+  else{ // error
+    $invalidrequest = true;
+  }
+  
+  if($when != 'all'){
+    $starttime = strtotime($fromdate);
+	$endtime = strtotime($enddate);
+	if($starttime === false || $endtime === false || $endtime >= $starttime){
+	  $invalidrequest = true;
+	}
+  }
+  
+  if($invalidrequest === true){
+    $notice = "invalidrequest";
+    header("Location: search.php?notice=$notice");
+    exit();
+  }
+												  
   if(strlen($search) < "3" && $second != 'failed_scans'){
     $notice = "shortsearch";
     header("Location: search.php?notice=$notice");
@@ -730,6 +747,7 @@ function build_search_sql(){
 	"second"=>$second,
 	"Second"=>$Second,
 	"search"=>$search,
+	"when"=>$when,
 	"todate"=>$todate,
 	"fromdate"=>$fromdate,
 	"sort"=>$sort

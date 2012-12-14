@@ -10,7 +10,7 @@ CREATE TABLE `acl` (
   `end_ip` int(10) NOT NULL,
   `subnet_id` int(9) UNSIGNED NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `api-keys` (
  `apikey` varchar(21) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE `blocks` (
   `modified_at` datetime NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `ldap-servers` (
   `id` tinyint(4) UNSIGNED NOT NULL auto_increment,
@@ -79,7 +79,7 @@ CREATE TABLE `statics` (
   `failed_scans` INT( 16 ) NOT NULL DEFAULT  '0',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `ip` (`ip`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `subnets` (
   `id` int(9) UNSIGNED NOT NULL auto_increment,
@@ -93,7 +93,7 @@ CREATE TABLE `subnets` (
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `users` (
   `id` int(9) UNSIGNED NOT NULL auto_increment,
@@ -339,7 +339,12 @@ CREATE TABLE `api-keys` (
  `description` varchar(60) NOT NULL,
  `active` tinyint(1) NOT NULL DEFAULT '0',
  PRIMARY KEY (`key`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+ALTER TABLE `blocks` ENGINE = INNODB;
+ALTER TABLE `subnets` ENGINE = INNODB;
+ALTER TABLE `acl` ENGINE = INNODB;
+ALTER TABLE `statics` ENGINE = INNODB
+
 ";
 
 $sql = "select value from settings where name='version'";

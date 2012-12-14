@@ -86,6 +86,7 @@ $languages["en"] = array(
 // _blocks.php
   "selectblock"       => "Please select a block to do that.",
   "blockdeleted"      => "The %name% block has been deleted",
+  "duplicatename"       => "An entry by that name already exists. Please choose a unique name.",
   
 // blocks.php
   "blocknamehelp"       => "Enter the name of the IP block here. The name should be descriptive of what the subnets inside 
@@ -104,7 +105,6 @@ $languages["en"] = array(
   "BlockName"           => "Block Name",
   "StartingIP"          => "Starting IP",
   "EndIP"               => "End IP",
-  
 
 
   

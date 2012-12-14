@@ -43,6 +43,12 @@ function edit_block(){
 	else{
 	  $value = $return['1'];
 	}
+	$result = mysql_query("SELECT name from blocks where name='$value'");
+	if(mysql_num_rows($result) != '0'){
+	  header("HTTP/1.1 500 Internal Error");
+	  echo $COLLATE['languages']['selected']['duplicatename'];
+	  exit();
+	}
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
     AccessControl('4', "Block $name has been updated to $value");

@@ -48,6 +48,8 @@ else{
   $COLLATE["languages"]["selected"] = $languages[$COLLATE['settings']['language']];
 }
 
+
+
 function AccessControl($accesslevel, $message) {
   /**
    * The goal of this section is to compare $_SESSION['accesslevel'] with the $accesslevel
