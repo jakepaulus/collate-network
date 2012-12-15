@@ -136,13 +136,13 @@ function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
 	return $return;
   }
   
-  $sql = "SELECT id FROM $sqltable WHERE (CAST(start_ip AS UNSIGNED) <= CAST('$long_start_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED)) OR 
+  $overlap_check_sql = "SELECT id FROM $sqltable WHERE (CAST(start_ip AS UNSIGNED) <= CAST('$long_start_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED)) OR 
          (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) OR
          (CAST(start_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
 
   if($range_type === 'block'){
     #can't overlap other blocks
-    $result = mysql_query($sql);
+    $result = mysql_query($overlap_check_sql);
     if(mysql_num_rows($result) != '0'){
 	  $return['0'] = false;
 	  $return['1'] = $rangeoverlapmessage;
@@ -151,43 +151,39 @@ function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
 	# If we get here, it's a valid block range
 	return true;
   }
-  elseif($range_type === 'acl' && $subnet_id != null){
-    # start and end must fall within $subnet	
-    $sql = "SELECT start_ip, end_ip FROM subnets WHERE id='$subnet_id'";
-    $result = mysql_query($sql);
-  
-    if(mysql_num_rows($result) != '1'){
-      $return['0'] = false;
-      $return['1'] = $COLLATE['languages']['selected']['invalidrequest'];
-      return $return;
-    }
-    
-    list($long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($result);
-    
-    if($long_start_ip < $long_subnet_start_ip || $long_start_ip > $long_subnet_end_ip || 
-	   $long_end_ip < $long_start_ip || $long_end_ip > $long_subnet_end_ip){
-	  $return['0'] = false;
-	  $return['1'] = $COLLATE['languages']['selected']['invalidrange'];
-	  return $return;
-    }
-	# can't overlap other ACLs
-	$result = mysql_query($sql);
+  elseif($range_type === 'acl'){
+    # can't overlap other ACLs
+	$result = mysql_query($overlap_check_sql);
     if(mysql_num_rows($result) != '0'){
 	  $return['0'] = false;
 	  $return['1'] = $rangeoverlapmessage;
 	  return $return;
 	}
-	# If we get here, it's a valid acl range
-	$return['0'] = true;
-	$return['start_ip'] = $start_ip;
-	$return['long_start_ip'] = $long_start_ip;
-	$return['end_ip'] = $end_ip;
-	$return['long_end_ip'] = $long_end_ip;
+	
+	# make sure start and end falls within only one subnet
+	# if $subnet_id is given, make sure it matches the subnet
+	# we find	
+	$sql = "SELECT id from subnets where '$start_ip' & mask = start_ip AND '$end_ip' & mask = start_ip";
+	$result = mysql_query($sql);
+	if(mysql_num_rows($result) != '1'){
+	  $return['0'] = false;
+	  $return['1'] = $COLLATE['languages']['selected']['invalidrange'];
+	  return $return;
+	}
+	$subnet_id = mysql_result($result, 0);
+	$return['subnet_id'] = $subnet_id;
+  }
+  else{ // we called the function wrong
+    $return['0'] = false;
+	$return['1'] = 'invalidrequest';
 	return $return;
   }
-  # we should never get here
-  $return['0'] = false;
-  $return['1'] = $COLLATE['languages']['selected']['invalidrequest'];
+  # If we get here, it's a valid acl range
+  $return['0'] = true;
+  $return['start_ip'] = $start_ip;
+  $return['long_start_ip'] = $long_start_ip;
+  $return['end_ip'] = $end_ip;
+  $return['long_end_ip'] = $long_end_ip;  
   return $return;
 }
 
