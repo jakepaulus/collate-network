@@ -422,6 +422,7 @@ $languages["en"] = array(
   "invalidrecord" => "Invalid record type.",
   "badfieldcount" => "Invalid number of fields for this record type.",
   "manyimporterr" => "<b>Note:</b> Only the first 50 validation errors are displayed.",
+  "blocknotfound" => "The block you specified does not exist.",
   
   
 );
