@@ -422,7 +422,7 @@ function modify_subnet (){
        "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
        "<p>".$COLLATE['languages']['selected']['selectblock']."</p>".
        "<select name=\"block_id\">";
-  $sql = "SELECT id, name FROM blocks";
+  $sql = "SELECT id, name FROM blocks ORDER BY NAME ASC";
   $result = mysql_query($sql);
   while(list($block_id,$block_name) = mysql_fetch_row($result)){
     echo "<option value=\"$block_id\">$block_name</option\">";
