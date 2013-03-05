@@ -220,6 +220,8 @@ function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
     }
   }
   
+  $subnet_size--; # broadcast address isn't usable
+  
   if ($subnet_size == '0'){
     $percent_subnet_used = '100'; // short cut to bypass cases where a whole subnet
                                   // is ACL'd out for DHCP resulting in a subnet_size of 0
@@ -249,7 +251,9 @@ function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
 
 function find_free_statics($subnet_id){
   # This function returns an array containing all free IP addresses in a subnet
-  # after excluding ACL'd ranges and already used addresses
+  # after excluding ACL'd ranges and already used addresses. If an IP is supplied,
+  # it will return an array with a truth value an an error message
+  
   $sql = "SELECT name, start_ip, end_ip, mask FROM subnets WHERE id='$subnet_id'";
   $results = mysql_query($sql);
   $return = array();
@@ -286,6 +290,7 @@ function find_free_statics($subnet_id){
   }
   $ipspace = array_reverse($ipspace);
   array_pop($ipspace); # remove the network address from the array
+  
   $return['0'] = true;
   $return['ipspace'] = $ipspace;
   $return['subnet_name'] = $subnet_name;
