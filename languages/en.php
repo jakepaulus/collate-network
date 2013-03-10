@@ -425,6 +425,6 @@ $languages["en"] = array(
   "subnetnotfound" => "The IP address you supplied did not fall within a subnet in the database.",
   "aclmatch"       => "The IP address you supplied is not available due to an ACL.",
   "badencoding"    => "Sorry. Collate:Network only supports ASCII-encoded CSV files right now.",
-  
+  "importsuccess"  => "You have successfully imported %rows% records!",
 );
 ?>

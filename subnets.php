@@ -72,10 +72,10 @@ function add_subnet (){
        "<div style=\"float: left; width: 45%; \">\n".
        "<p><b>".$COLLATE['languages']['selected']['Name'].":</b><br />\n".
        "<input type=\"text\" name=\"name\" value=\"$name\" />\n".
-       "<a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+       "<a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
        "</p>\n".
        "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
-       "<a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+       "<a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
        "</p>\n".
        "<p><b>".$COLLATE['languages']['selected']['Gateway'].":</b><br /><input type=\"text\" value=\"$gateway\" name=\"gateway\" /></p>\n".
        "<p><b>".$COLLATE['languages']['selected']['ACLName'].":</b><br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" />\n".
@@ -85,7 +85,7 @@ function add_subnet (){
        "<p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional']."<br />\n".
        "<input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
        "<p><b>".$COLLATE['languages']['selected']['IPGuidance'].":</b> ".$COLLATE['languages']['selected']['Optional']. 
-       "<a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+       "<a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
        "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\">$guidance</textarea></p>\n".
        "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
        "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
@@ -119,7 +119,7 @@ function add_subnet (){
     echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
          "<div id=\"blockspace\">\n".
          "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">".
+         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".
          $COLLATE['languages']['selected']['Showsearchinstead']."</a></p>\n".
          "<h3>$availableipspaceinblock:</h3><br />\n".
          "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
@@ -150,10 +150,10 @@ function add_subnet (){
 
     echo "<div id=\"spacesearch\" style=\"display: none;\">\n".
          "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })\">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
+         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
          "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
          "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\"><br />".
-         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> ".
+         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\"); return false;\"> ".
          $COLLATE['languages']['selected']['Go']." </button></p></div>";
 
     echo "</div><p style=\"clear: left;\">\n";
@@ -353,7 +353,8 @@ function list_subnets(){
                  new Effect.Fade('subnet_".$subnet_id."_row_3')
                ]); 
              }}); 
-           };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
+           };
+		   return false;\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
            $COLLATE['languages']['selected']['deletesubnet']."\" /></a>";
     }
     echo "</td>

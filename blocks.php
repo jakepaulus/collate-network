@@ -39,18 +39,18 @@ function add_block(){
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['IP'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['EndIP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
 	   "    <br /><input type=\"text\" name=\"end_ip\" value=\"$end_ip\" />\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('endiptip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    <a href=\"#\" onclick=\"new Effect.toggle($('endiptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional'].
 	   "    <br /><input type=\"text\" name=\"note\" value=\"$note\" />\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear')\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
 	   "</form></div>\n".
@@ -183,7 +183,8 @@ function list_blocks(){
 				 new Effect.Fade('block_".$block_id."_row_2'), 
 				 new Effect.Fade('block_".$block_id."_row_3')]); 
                }}); 
-			 };\">
+			 };
+			 return false;\">
 			 <img src=\"./images/remove.gif\" alt=\"X\" /></a>";
 	}
     echo "</td>

@@ -66,6 +66,7 @@ function list_users(){
 				  onSuccess:function(){ new Effect.Parallel([new Effect.Fade('user_${username}_row_1'), new Effect.Fade('user_${username}_row_2')]); }
 				});
                };
+			   return false;
 			   \"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['DeleteUser']."\" /></a> &nbsp".
 	  	     "&nbsp;<a href=\"users.php?op=edit&amp;username=$username\">".
 			 "<img src=\"./images/modify.gif\" alt=\"edit\" title=\"".$COLLATE['languages']['selected']['EditUser']."\" /></a>";

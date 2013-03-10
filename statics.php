@@ -57,7 +57,7 @@ function add_static(){
  
   echo "<h1>".$COLLATE['languages']['selected']['ReserveaStaticIP']."</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"#\" 
-       onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); \">".
+       onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); return false;\">".
        $COLLATE['languages']['selected']['IPGuidance']."</a></p>\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "<div style=\"float: left; width: 28%;\">\n".
@@ -77,7 +77,7 @@ function add_static(){
   echo "</select>".
        " <a href=\"#\" onclick=\"
        new Element.update('helper', '&lt;p&gt;&lt;img src=&quot;images/loading.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;'); 
-       new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value);\">[".$COLLATE['languages']['selected']['Ping']."]</a>\n".
+       new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value); return false;\">[".$COLLATE['languages']['selected']['Ping']."]</a>\n".
        "  </p> \n".
        "  <p><b>".$COLLATE['languages']['selected']['ContactPerson'].":</b><br /><input type=\"text\" name=\"contact\" value=\"$contact\"/></p>\n".
        "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional']."<br />".
@@ -273,6 +273,7 @@ function list_statics(){
                    ]); 
                  }}); 
                };
+			   return false;
               \"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['deletestatic']."\" /></a>";
       }
       echo "</td></tr>\n";
@@ -388,7 +389,7 @@ function list_statics(){
               new Ajax.Updater('notice', '_statics.php?op=delete_acl&acl_id=$acl_id', {onSuccess:function(){ 
                 new Effect.Fade('acl_".$acl_id."'); 
               }});
-            };\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+            }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";
     }
     echo "</td>
          </tr>\n";

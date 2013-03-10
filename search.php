@@ -238,7 +238,7 @@ function search() {
 				   new Effect.Fade('subnet_".$subnet_id."_row_2'), 
                    new Effect.Fade('subnet_".$subnet_id."_row_3')]);
                }}); 
-			 };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
+			 }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
 		     $COLLATE['languages']['selected']['deletesubnet']."\" /></a>";
       }
       echo "</td></tr>\n";
@@ -326,7 +326,7 @@ function search() {
 				    new Effect.Fade('static_".$static_id."_row_2'), 
 					new Effect.Fade('static_".$static_id."_row_3')]); 
 				}}); 
-               };\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['deletestatic']."\" /></a>";
+               }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['deletestatic']."\" /></a>";
       }
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
@@ -513,9 +513,9 @@ function show_form()  {
   </select> matching: <input name="search" type="text" /> &nbsp;
   <br />
   <br />
-  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2})" /> 
+  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2}); return false;" /> 
   <?php echo $COLLATE['languages']['selected']['Searchallrecords']; ?> <br />
-  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraforms', {duration: 0.2})" /> 
+  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraforms', {duration: 0.2}); return false;" /> 
   <?php echo $COLLATE['languages']['selected']['Specifydaterange']; ?><br />
   <div id="extraforms" style="display: none;">
     <br />

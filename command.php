@@ -141,7 +141,6 @@ function process_file(){
 	        }
 		  }
 	    }
-		unset($currentrow);
 		unset($rowdata);
 	  }
 	  unset($recordtype);
@@ -160,6 +159,13 @@ function process_file(){
 	}
 	if($errorcount != '0'){
 	  echo "<br /><p><a href=\"command.php\">".$COLLATE['languages']['selected']['tryagain']."</a></p>";
+	}
+	else{ // Success!
+	  $importedrecords = $currentrow + 1;
+	  $successmessage = str_replace("%rows%", $importedrecords, $COLLATE['languages']['selected']['importsuccess']);
+	  echo "<p><b>$successmessage</b></p>";
+	  $logmessage = "Bulk imported $importedrecords records";
+	  collate_log('5', $logmessage);
 	}
 	
 	include "include/footer.php";
