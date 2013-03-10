@@ -229,9 +229,7 @@ function edit_user_form(){
   }
   echo "</select></p>";
   
-  if (($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') && 
-      !isset($COLLATE['user']['username']) ||
-	  (isset($COLLATE['user']['username']) && $COLLATE['user']['username'] != $username)) {  
+  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {  
     echo "<p><b>".$COLLATE['languages']['selected']['UserAccessLevel'].":</b><br />\n";
     
     $checked0 = ($accesslevel == '0') ? "checked=\"checked\"" : '';
@@ -278,9 +276,7 @@ function edit_user_form(){
                );
 	     	--></script>";
   }
-  if (($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') && 
-      !isset($COLLATE['user']['username']) ||
-      (isset($COLLATE['user']['username']) && $COLLATE['user']['username'] != $username)) {
+  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
 	
 	$ldapexempt = ($ldapexempt) ? "checked=\"checked\"" : "";
     $locked = ($loginattempts >= $COLLATE['settings']['loginattempts']) ? "checked=\"checked\"" : "";
@@ -303,10 +299,10 @@ function submit_user(){
   $phone = (isset($_POST['phone'])) ? $_POST['phone'] : '';
   $email = (isset($_POST['email'])) ? $_POST['email'] : '';
   $language = (isset($_POST['languages'])) ? $_POST['languages'] : '';
-  $perms = (isset($_POST['perms']) && preg_match("/^[012345]{1}$/", $_POST['perms'])) $_POST['perms'] : '';
+  $perms = (isset($_POST['perms']) && preg_match("/^[012345]{1}$/", $_POST['perms'])) ? $_POST['perms'] : '';
   $locked = (isset($_POST['locked'])) ? 'on' : 'off';
   $loginattempts = ($locked == 'on') ? '9' : '0';
-  $ldapexempt = (isset($_POST['ldapexempt']) && $_POST['ldapexempt' == "on") ? true : false;
+  $ldapexempt = (isset($_POST['ldapexempt']) && $_POST['ldapexempt'] == "on") ? true : false;
 
   
   $return = validate_text($username,'username');

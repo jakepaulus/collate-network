@@ -74,6 +74,7 @@ function edit_subnet(){
 
 function delete_subnet(){
   global $COLLATE;
+  include 'include/validation_functions.php';
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   
@@ -120,6 +121,7 @@ function delete_subnet(){
 
 function search_subnets(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
   $search = (empty($_GET['search'])) ? '' : clean($_GET['search']);
   if(empty($search)) { exit(); }

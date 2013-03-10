@@ -131,6 +131,7 @@ function add_static(){
 
 function submit_static(){
   global $COLLATE;
+  include 'include/validation_functions.php';
   
   $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
   $ip_addr = (empty($_POST['ip_addr'])) ? '' : clean($_POST['ip_addr']);
@@ -145,23 +146,18 @@ function submit_static(){
     header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&ip_addr=$ip_addr&contact=$contact&note=$note&notice=$notice");
     exit();
   }
-  
-  $return = find_free_statics($subnet_id); 
-  if($return['0'] === false){
-    $notice = "invalidrequest";
-    header("Location: blocks.php?notice=$notice");
-    exit();
-  }
-  $ipspace = $return['ipspace'];
-  $long_mask = $return['long_mask'];
-  $mask = long2ip($long_mask);
-  
-  if(array_search($long_ip_addr, $ipspace) == FALSE){
-    $notice = "invalidrequest";
-    header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&contact=$contact&note=$note&notice=$notice");
-    exit();
-  }
     
+  $validate_ip = validate_static_ip($ip_addr);
+  if ($validate_ip['0'] === false){
+    $notice = $validate_ip['error'];
+	header("Location: statics.php?op=add&subnet_id=$subnet_id&name=$name&ip_addr=$ip_addr&contact=$contact&note=$note&notice=$notice");
+    exit();
+  }
+  else{
+    $long_mask = $validate_ip['long_mask'];
+	$mask = long2ip($long_mask);
+  }
+     
   $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
          VALUES('$long_ip_addr', '$name', '$contact', '$note', '$subnet_id', '$username', now())";
 
@@ -195,7 +191,6 @@ function submit_static(){
        "$error".
        "<br />\n".
        "<p><b><a href=\"statics.php?subnet_id=$subnet_id\">".$COLLATE['languages']['selected']['continuetostatics']."</a></b></p>\n";
-  exit();
   
 } // Ends submit_static function
 
@@ -438,16 +433,20 @@ function list_statics(){
 
 
 function submit_acl(){
+  include 'include/validation_functions.php';
+
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
+  $acl_name = (isset($_POST['acl_name'])) ? $_POST['acl_name'] : '';
+  $acl_start = (isset($_POST['acl_start'])) ? $_POST['acl_start'] : '';
+  $acl_end = (isset($_POST['acl_end'])) ? $_POST['acl_end'] : '';  
+  
+  
   if(empty($subnet_id)){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
   
-  $acl_name = (isset($_POST['acl_name'])) ? $_POST['acl_name'] : '';
-  $acl_start = (isset($_POST['acl_start'])) ? $_POST['acl_start'] : '';
-  $acl_end = (isset($_POST['acl_end'])) ? $_POST['acl_end'] : '';  
   if(empty($acl_name) || empty($acl_start) || empty($acl_end)){
     $notice = "blankfield-notice";
     header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
@@ -464,38 +463,22 @@ function submit_acl(){
     $acl_name = $result['1'];
   }
   
-  if(ip2decimal($acl_start) == FALSE || ip2decimal($acl_end) == FALSE){
-    $notice = "invalidrequest";
-    header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
+  $result = validate_ip_range($acl_start,$acl_end,'acl',$subnet_id);
+  if($result['0'] === false){
+    $notice = $result['error'];
+	header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
     exit();
   }
-  
-  $sql = "SELECT name, start_ip, end_ip FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
-  
-  if(mysql_num_rows($result) != '1'){
-    $notice = "invalidrequest";
-    header("Location: blocks.php?notice=$notice");
-    exit();
+  else{
+    $long_acl_start = $result['long_start_ip'];
+    $long_acl_end = $result['long_end_ip'];
+	$subnet_name = $result['subnet_name'];
   }
   
-  list($subnet_name,$long_start_ip,$long_end_ip) = mysql_fetch_row($result);
-  
-  AccessControl('3', "ACL for $subnet_name subnet edited");
-  
-  $long_acl_start = ip2decimal($acl_start);
-  $long_acl_end = ip2decimal($acl_end);
-  
-  if($long_acl_start < $long_start_ip || $long_acl_start > $long_end_ip || $long_acl_end < $long_acl_start || $long_acl_end > $long_end_ip){
-    $notice = "The ACL Range you specified is not valid.";
-    header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
-    exit();
-  }
+  AccessControl('3', "$acl_name ACL for $subnet_name subnet edited");
   
   $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES ('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
-  
   mysql_query($sql);
-  
   $notice = "acladded-notice";
   header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
   exit();

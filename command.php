@@ -1,4 +1,7 @@
 <?php
+
+#TODO: all calls to read_in_csv_row must expect the returned errors to be short errors
+
 require_once('./include/common.php');
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
@@ -24,10 +27,14 @@ switch($op){
 	
 }
 
+
 function process_file(){
   global $COLLATE;
   include "include/header.php";
+  include "include/validation_functions.php";
   echo "<h1>Upload Results</h1><br />";
+  
+  
   
   $uploaderror = (isset($_FILES['file']['error'])) ? $_FILES['file']['error'] : "UPLOAD_ERR_NO_FILE";
 
@@ -65,49 +72,105 @@ function process_file(){
   }
   
   $file = $_FILES['file']['tmp_name'];
-  $rownum = '1';
   $errorcount = '0';
   $sql = '';
+  ini_set('auto_detect_line_endings',TRUE);
   if (($handle = fopen($file, "r")) !== FALSE) {
     // forcing the user to order the rows in the CSV file is a little burdensome
-	// to enable the rows to be in any order, we will go through the file once
-	// for each record type, then a fifth time to catch rows that might be invalid
-    // The whole thing will have to be done inside a transaction :/
-    while (($row = fgetcsv($handle, '1000', ",", "'")) !== FALSE) {
-      $result = read_in_csv_row($row);
-	  if($result['error'] === true){
-	    $errorcount++;
-		if($errorcount <= '50'){
-		  $message = str_replace("%rownum%", $rownum, $COLLATE['languages']['selected']['erroronrow']);
-		  $message = str_replace("%error%", $result['errormessage'], $message);
-		  echo "<p>$message</p>";
-		  
+	// to enable the rows to be in any order, we load the file into an array, then
+	// iterate over the array once per record type
+    // The whole thing is done inside an SQL transaction. if any errors are found
+	// at any point, the transaction is rolled back.
+	$rownum = '0';
+	$checkedlinewithcontentforencoding=false;
+    while ($currentrow = fgetcsv($handle, '1000', ",", "'")) {
+	  if($currentrow['0'] === null && count($currentrow) === '1'){
+		  // blank line in csv file
+		  $rownum++;
+		  continue;
+      }
+	  if($checkedlinewithcontentforencoding === false){
+	    $characterencoding = mb_detect_encoding($currentrow['0']);
+		if($characterencoding != "ASCII"){
+		  echo "<p>".$COLLATE['languages']['selected']['badencoding']."</p>";
+		  echo "<br /><p><a href=\"command.php\">".$COLLATE['languages']['selected']['tryagain']."</a></p>";
+          include "include/footer.php";
+          exit();
 		}
+		$checkedlinewithcontentforencoding = true;
 	  }
-	  else{
-	    // Append SQL to send later as a large multi_query() if the whole file validates
-		$sql .= $return['sql'].';\n'; #### ---> remove \n later <--- #######
-	  }
+
+	  
+	  if($currentrow === false || ($currentrow['0'] != 'block' && $currentrow['0'] != 'subnet' && 
+      $currentrow['0'] != 'acl' && $currentrow['0'] != 'static')){
+		// This is not a well-formed record or is an invalid record type
+		$errorcount++;
+		if($errorcount <= '50'){
+	  	  $message = str_replace("%rownum%", $rownum+1, $COLLATE['languages']['selected']['erroronrow']);
+	  	  $message = str_replace("%error%", $COLLATE['languages']['selected']['invalidrecord'], $message);
+	  	  echo "<p>$message</p>";
+	    }
+      }
+	  
+	  $row[$rownum]=$currentrow;
 	  $rownum++;
-    }
+	}
 	fclose($handle);
+	unset($currentrow);
+	unset($rownum);
+	
+	if($errorcount === '0'){ // don't bother validating data further if we didn't even find a propper csv file
+	  mysql_query("BEGIN");
+	  $recordprocessingorder = array('block', 'subnet', 'acl', 'static');
+	  foreach($recordprocessingorder as $recordtype){
+	    foreach($row as $currentrow => $rowdata){
+	      if($rowdata['0'] === "$recordtype"){
+            $result = read_in_csv_row($rowdata);
+	        if($result['error'] === true){
+	          $errorcount++;
+		    
+			  if($errorcount <= '50'){
+	  	        $message = str_replace("%rownum%", $currentrow+1, $COLLATE['languages']['selected']['erroronrow']);
+	  	        $message = str_replace("%error%", $COLLATE['languages']['selected'][$result['errormessage']], $message);
+	  	        echo "<p>$message</p>";	  	    
+	  	      }
+		    }
+	        else{
+			  mysql_query($result['sql']);
+	  	      $sql .= $result['sql'].';<br><br>'; #### ---> remove this line later <--- #######
+	        }
+		  }
+	    }
+		unset($currentrow);
+		unset($rowdata);
+	  }
+	  unset($recordtype);
+	  
+	  
+	  if($errorcount !== '0'){
+	    mysql_query("ROLLBACK");
+	  }
+	  else {
+	    mysql_query("COMMIT");
+	  }
+    }
 	
 	if($errorcount > '50'){
 	  echo "<p>".$COLLATE['languages']['selected']['manyimporterr']."</p>";
 	}
 	if($errorcount != '0'){
 	  echo "<br /><p><a href=\"command.php\">".$COLLATE['languages']['selected']['tryagain']."</a></p>";
-	  include "include/footer.php";
-      exit();
 	}
-	else{
-	  // execute multi_query($sql) and output some success message
-	  echo "<pre>$sql</pre>";
-	}    
+	
+	include "include/footer.php";
+    exit();
+    
+    // report errors if any	
   }  
   include "include/footer.php";
   exit();
 }
+
 
 function show_form(){
   global $COLLATE;
@@ -139,7 +202,6 @@ function show_form(){
 }
 
 
-
 function return_ini_setting_in_bytes($val) {
   # example 1 in http://php.net/manual/en/function.ini-get.php
   $val = trim($val);
@@ -157,7 +219,7 @@ function return_ini_setting_in_bytes($val) {
 }
 
 
-function read_in_csv_row($row,$action='validate'){
+function read_in_csv_row($row){
   global $COLLATE;
   $recordtype=$row['0'];
   $fieldcount = count($row);
@@ -165,40 +227,35 @@ function read_in_csv_row($row,$action='validate'){
 
   /*
    *  Record format:
-   *  block: (6 fields)
-   *  'block','$block_name','$start_ip','$end_ip','$block_note','$last_modified_by'
+   *  block: (5 fields)
+   *  'block','$block_name','$start_ip','$end_ip','$block_note'
    *  
-   *  subnet: (6 fields)
-   *  'subnet','$block_name','$subnet_name','$subnet','$subnet_note','$last_modified_by'
+   *  subnet: (5 fields)
+   *  'subnet','$block_name','$subnet_name','$subnet','$subnet_note'
    *  
    *  acl: (4 fields)
    *  'acl','$acl_name','$start_ip','$end_ip'
    *  
-   *  static ip: (6 fields)
-   *  'static','$static_name','$ip_address','$static_contact','$static_note','$last_modified_by'
+   *  static ip: (5 fields)
+   *  'static','$static_name','$ip_address','$static_contact','$static_note'
    */
    
-  if($recordtype != 'block' && $recordtype != 'subnet' && $recordtype != 'acl' && $recordtype != 'static'){
+  if(($recordtype == 'block' && $fieldcount != '5') ||
+     ($recordtype == 'subnet' && $fieldcount != '5') ||
+     ($recordtype == 'acl' && $fieldcount != '4') ||
+     ($recordtype == 'static' && $fieldcount != '5')){
     $result['error'] = true;
-    $result['errormessage'] = $COLLATE['languages']['selected']['invalidrecord'];
+    $result['errormessage'] = 'badfieldcount';
     return $result;
   }
   
-  if(($recordtype == 'block' && $fieldcount != '6') ||
-     ($recordtype == 'subnet' && $fieldcount != '6') ||
-     ($recordtype == 'acl' && $fieldcount != '4') ||
-     ($recordtype == 'static' && $fieldcount != '6')){
-    $result['error'] = true;
-    $result['errormessage'] = $COLLATE['languages']['selected']['badfieldcount'];
-    return $result;
-  }
+  $last_modified_by = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   
   if($recordtype == 'block'){
 	$block_name = $row['1'];
 	$block_start_ip = $row['2'];
 	$block_end_ip = $row['3'];
 	$block_note = $row['4'];
-	$last_modified_by = $row['5'];
 	
 	$validate = validate_text($block_name,'blockname');
 	if($validate['0'] === false){
@@ -207,10 +264,10 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $block_name = $return['1'];
+	  $block_name = $validate['1'];
     }
-	$result = mysql_query("SELECT id from blocks where name='$value'");
-	if(mysql_num_rows($result) != '0'){
+	$query_result = mysql_query("SELECT id from blocks where name='$block_name'");
+	if(mysql_num_rows($query_result) != '0'){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'duplicatename';
 	  return $result;
@@ -254,23 +311,13 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $block_note = $return['1'];
+	  $block_note = $validate['1'];
     }
 	
-	$validate = validate_text($block_contact,'contact');
-	if($validate['0'] === false){
-	  $result['error'] = true;
-	  $result['errormessage'] = $validate['error'];
-	  return $result;
-	}
-	else{
-	  $block_contact = $return['1'];
-    }
-	
-    $return['error'] = false;
-	$return['sql'] = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) 
-	                  VALUES('$block_name', '$block_long_start_ip', '$block_long_end_ip', '$block_note', '$block_contact', now())";
-    return $return;
+    $row_result['error'] = false;
+	$row_result['sql'] = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) 
+	                  VALUES('$block_name', '$block_long_start_ip', '$block_long_end_ip', '$block_note', '$last_modified_by', now())";
+    return $row_result;
 	
   }
   elseif($recordtype == 'subnet'){
@@ -278,7 +325,6 @@ function read_in_csv_row($row,$action='validate'){
 	$subnet_name = $row['2'];
 	$subnet = $row['3'];
 	$subnet_note = $row['4'];
-	$last_modified_by = $row['5'];
 	
 	$validate = validate_text($block_name,'blockname');
 	if($validate['0'] === false){
@@ -287,16 +333,16 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $block_name = $return['1'];
+	  $block_name = $validate['1'];
     }
-	$result = mysql_query("SELECT id from blocks where name='$value'");
-	if(mysql_num_rows($result) != '1'){
+	$query_result = mysql_query("SELECT id from blocks where name='$block_name'");
+	if(mysql_num_rows($query_result) != '1'){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'blocknotfound';
 	  return $result;
 	}
 	else{
-	  $block_id = mysql_result($result, 0);
+	  $block_id = mysql_result($query_result, 0);
 	}
 	
 	$validate = validate_text($subnet_name,'subnetname');
@@ -306,7 +352,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $subnet_name = $return['1'];
+	  $subnet_name = $validate['1'];
     }
 	
 	$validate = validate_network($subnet);
@@ -331,17 +377,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $subnet_note = $return['1'];
-    }
-	
-	$validate = validate_text($last_modified_by,'contact');
-	if($validate['0'] === false){
-	  $result['error'] = true;
-	  $result['errormessage'] = $validate['error'];
-	  return $result;
-	}
-	else{
-	  $last_modified_by = $return['1'];
+	  $subnet_note = $validate['1'];
     }
 	
 	$return['error'] = false;
@@ -364,7 +400,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $acl_name = $return['1'];
+	  $acl_name = $validate['1'];
     }
 	
 	$validate = validate_ip_range($acl_start_ip,$acl_end_ip,'acl',null);
@@ -374,11 +410,11 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $subnet_id = $return['subnet_id'];
-	  $acl_start_ip = $return['start_ip'];
-	  $acl_long_start_ip = $return['long_start_ip'];
-	  $acl_end_ip = $return['end_ip'];
-	  $acl_long_end_ip = $return['long_end_ip'];
+	  $subnet_id = $validate['subnet_id'];
+	  $acl_start_ip = $validate['start_ip'];
+	  $acl_long_start_ip = $validate['long_start_ip'];
+	  $acl_end_ip = $validate['end_ip'];
+	  $acl_long_end_ip = $validate['long_end_ip'];
     }
 	
 	$return['error'] = false;
@@ -392,7 +428,7 @@ function read_in_csv_row($row,$action='validate'){
 	$static_long_ip = ip2decimal($static_ip);
 	$static_contact = $row['3'];
 	$static_note = $row['4'];
-	$last_modified_by = $row['5'];
+	
 	
 	$validate = validate_text($static_name,'staticname');
 	if($validate['0'] === false){
@@ -401,7 +437,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $static_name = $return['1'];
+	  $static_name = $validate['1'];
     }
 	
 	if($static_long_ip === false){
@@ -410,7 +446,24 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}	
     $sql = "SELECT id from subnets where '$static_long_ip' & mask = start_ip";
-	$subnet_id = mysql_result(mysql_query($sql), 0);
+	$subnet_result = mysql_query($sql);
+	
+	if(mysql_num_rows($subnet_result) != '1'){
+	  $result['error'] = true;
+	  $result['errormessage'] = 'subnetnotfound';
+	  return $result;
+	}
+	else{
+	  $subnet_id = mysql_result($subnet_result, 0);
+	}
+	
+	// Make sure the static IP isn't in use already or excluded from use via an ACL
+	$validate = validate_static_ip($static_long_ip);
+	if($validate['0'] === false){
+	  $result['error'] = true;
+	  $result['errormessage'] = $validate['error'];
+	  return $result;
+    }
 	
 	$validate = validate_text($static_contact,'contact');
 	if($validate['0'] === false){
@@ -419,7 +472,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $static_contact = $return['1'];
+	  $static_contact = $validate['1'];
     }
 	
 	$validate = validate_text($static_note,'note');
@@ -429,17 +482,7 @@ function read_in_csv_row($row,$action='validate'){
 	  return $result;
 	}
 	else{
-	  $static_note = $return['1'];
-    }
-	
-	$validate = validate_text($last_modified_by,'contact');
-	if($validate['0'] === false){
-	  $result['error'] = true;
-	  $result['errormessage'] = $validate['error'];
-	  return $result;
-	}
-	else{
-	  $last_modified_by = $return['1'];
+	  $static_note = $validate['1'];
     }
 	
 	$return['error'] = false;
@@ -451,7 +494,6 @@ function read_in_csv_row($row,$action='validate'){
   // We should never get here
   exit(); 
 }
-
 
 
 ?>

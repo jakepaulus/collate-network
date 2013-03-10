@@ -277,6 +277,8 @@ function edit_perms(){
 
 function reset_passwd(){
   global $username;
+  global $COLLATE;
+  
   $tmppasswd = (isset($_POST['value']) && !empty($_POST['value'])) ? sha1(clean($_POST['value'])) : "";
   
   if(empty($tmppasswd)){ exit(); }

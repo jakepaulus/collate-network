@@ -255,17 +255,16 @@ function cn_login() {
   $_SESSION['language'] = $auth['language'];
   $_SESSION['ldapexempt'] = $auth['ldapexempt'];
   
+  $sql = "UPDATE users SET loginattempts='0' WHERE username='$username'";
+  mysql_query($sql);
+  $sql = "UPDATE users SET last_login_at=NOW() WHERE username='$username'";
+  mysql_query($sql);
+  
   if($auth['passwdexpire'] < $now && $auth['passwdexpire'] != '0000-00-00 00:00:00' || isset($auth['tmppasswd'])){
     $returnto = urlencode($returnto);
 	$notice = "passwdexpired-notice";
     header("Location: login.php?op=changepasswd&returnto=$returnto&notice=$notice");
 	exit();
-  }
-  else{ // Normal successful login.
-    $sql = "UPDATE users SET loginattempts='0' WHERE username='$username'";
-	mysql_query($sql);
-    $sql = "UPDATE users SET last_login_at=NOW() WHERE username='$username'";
-      mysql_query($sql);
   }
   
   if($authtype == 'ldap'){

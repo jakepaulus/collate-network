@@ -16,7 +16,7 @@ CREATE TABLE `api-keys` (
  `apikey` varchar(21) NOT NULL,
  `description` varchar(60) NOT NULL,
  `active` tinyint(1) NOT NULL DEFAULT '0',
- PRIMARY KEY (`key`)
+ PRIMARY KEY (`apikey`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE `blocks` (
@@ -59,7 +59,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '2.0');
+INSERT INTO `settings` VALUES ('version', '2.1');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -112,7 +112,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.0 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.1 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -338,7 +338,7 @@ CREATE TABLE `api-keys` (
  `apikey` varchar(21) NOT NULL,
  `description` varchar(60) NOT NULL,
  `active` tinyint(1) NOT NULL DEFAULT '0',
- PRIMARY KEY (`key`)
+ PRIMARY KEY (`apikey`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 ALTER TABLE `blocks` ENGINE = INNODB;
 ALTER TABLE `subnets` ENGINE = INNODB;

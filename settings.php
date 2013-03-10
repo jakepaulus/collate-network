@@ -264,6 +264,8 @@ global $COLLATE;
 	</div>
   </div>
   <br /><br />
+  <?php
+  /* This section is for later
   <h3><?php echo $COLLATE['languages']['selected']['APIKeys']; ?></h3>
   <hr />
   <div id="apinotice" class="tip"></div>
@@ -345,6 +347,7 @@ global $COLLATE;
     </div>
   </div>
   <br /><br />
+  */ ?>
 	
   <h3><?php echo $COLLATE['languages']['selected']['UserGuidance']; ?></h3>
   <hr />

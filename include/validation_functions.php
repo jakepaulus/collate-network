@@ -36,6 +36,7 @@ function validate_text($text,$fieldtype){
   #   * 25 for names (subnet, block, static, acl, api key description)
   #   * 80 for notes
   #   * 100 for usernames or contacts
+  global $COLLATE;
   $length = '25';
   $canbeempty = false;
   switch($fieldtype) {
@@ -103,123 +104,148 @@ function validate_text($text,$fieldtype){
 	$error = 'apidescriptionlengtherror';
 	break;
   }
-  $return=array();
+  $function_return=array();
   $text = clean($text);
   if(($canbeempty === false && strlen($text) < '3' ) || strlen($text) > $length){
-    $return['0'] = false;
-	$return['error'] = $error;
-	return $return;
+    $function_return['0'] = false;
+	$function_return['error'] = $error;
+	return $function_return;
   }
-  $return['0'] = true;
-  $return['1'] = $text;
-  return $return;
+  $function_return['0'] = true;
+  $function_return['1'] = $text;
+  return $function_return;
 }
 
 function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
-  $return = array();
+  global $COLLATE;
+  $function_return = array();
   $long_start_ip = ip2decimal($start_ip);
   $long_end_ip = ip2decimal($end_ip);
   $sqltable = ($range_type == 'block') ? 'blocks' : 'acl';
-  $rangeoverlapmessage=str_replace("%rangetype%", $range_type, $COLLATE['languages']['selected']['rangeoverlap-notice']);
+  $function_return['0'] = false;
   
   # are the inputs valid ipv4 addresses?
   if($long_start_ip === false || $long_end_ip === false){
-    $return['0'] = false;
-	$return['1'] = $COLLATE['languages']['selected']['invalidip'];
-	return $return;
+	$function_return['error'] = 'invalidip';
+	return $function_return;
   }
   
   # range must have smaller start_ip than end_ip
   if($long_end_ip <= $long_start_ip){
-    $return['0'] = false;
-	$return['1'] = $COLLATE['languages']['selected']['invalidrange'];
-	return $return;
+    $function_return['error'] = 'invalidrange';
+    return $function_return;
   }
   
-  $overlap_check_sql = "SELECT id FROM $sqltable WHERE (CAST(start_ip AS UNSIGNED) <= CAST('$long_start_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED)) OR 
-         (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) OR
-         (CAST(start_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED) AND CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
+  # does this overlap an existing block or acl?
+  $overlap_check_sql = "SELECT id FROM $sqltable WHERE 
+    (CAST(start_ip AS UNSIGNED) <= CAST('$long_start_ip' AS UNSIGNED) AND 
+	  CAST(end_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED)) 
+	OR 
+    (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND 
+	  CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) 
+	OR
+    (CAST(start_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED) AND 
+	  CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
 
-  if($range_type === 'block'){
-    #can't overlap other blocks
-    $result = mysql_query($overlap_check_sql);
-    if(mysql_num_rows($result) != '0'){
-	  $return['0'] = false;
-	  $return['1'] = $rangeoverlapmessage;
-	  return $return;
-	}
-	# If we get here, it's a valid block range
-	return true;
+  
+  $result = mysql_query($overlap_check_sql);
+  if(mysql_num_rows($result) != '0'){
+    $function_return['error'] = ($range_type == 'block') ? 'blockoverlap-notice' : 'acloverlap-notice';
+    return $function_return;
   }
-  elseif($range_type === 'acl'){
-    # can't overlap other ACLs
-	$result = mysql_query($overlap_check_sql);
-    if(mysql_num_rows($result) != '0'){
-	  $return['0'] = false;
-	  $return['1'] = $rangeoverlapmessage;
-	  return $return;
-	}
-	
+  if($range_type === 'acl'){
 	# make sure start and end falls within only one subnet
-	# if $subnet_id is given, make sure it matches the subnet
-	# we find	
-	$sql = "SELECT id from subnets where '$start_ip' & mask = start_ip AND '$end_ip' & mask = start_ip";
+	# when $subnet_id is given, make sure it matches the subnet
+	# we find
+	if($subnet_id === null){
+	  $sql = "SELECT id,name from subnets where CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) 
+              AND CAST('$long_end_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED)";
+	}
+	else {
+	  $sql = "SELECT id,name from subnets where CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) 
+              AND CAST('$long_end_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) AND id='$subnet_id'";
+	}
 	$result = mysql_query($sql);
 	if(mysql_num_rows($result) != '1'){
-	  $return['0'] = false;
-	  $return['1'] = $COLLATE['languages']['selected']['invalidrange'];
-	  return $return;
+	  $function_return['error'] = 'invalidrange';
+	  return $function_return;
 	}
-	$subnet_id = mysql_result($result, 0);
-	$return['subnet_id'] = $subnet_id;
+	list($subnet_id,$subnet_name) =  mysql_fetch_row($result);
+	$function_return['subnet_id'] = $subnet_id;
+	$function_return['subnet_name'] = $subnet_name;
   }
-  else{ // we called the function wrong
-    $return['0'] = false;
-	$return['1'] = 'invalidrequest';
-	return $return;
+  elseif($range_type != 'block'){ // we called the function wrong
+	$function_return['error'] = 'invalidrequest';
+	return $function_return;
   }
   # If we get here, it's a valid acl range
-  $return['0'] = true;
-  $return['start_ip'] = $start_ip;
-  $return['long_start_ip'] = $long_start_ip;
-  $return['end_ip'] = $end_ip;
-  $return['long_end_ip'] = $long_end_ip;  
-  return $return;
+  $function_return['0'] = true;
+  $function_return['start_ip'] = $start_ip;
+  $function_return['long_start_ip'] = $long_start_ip;
+  $function_return['end_ip'] = $end_ip;
+  $function_return['long_end_ip'] = $long_end_ip;
+  return $function_return;
 }
 
 function validate_static_ip($ip){
   /* Returns true if the IP is safe to insert into the database */
   
-  $return = array();
+  $function_return = array();
   
   # is an ipv4 address
   $long_ip = ip2decimal($ip);
   if($long_ip === false){
-    $return['0'] = false;
-	$return['error'] = 'invalidip';
-	return $return;
+    $function_return['0'] = false;
+	$function_return['error'] = 'invalidip';
+	return $function_return;
+  }
+  
+  $function_return['long_ip'] = $long_ip;
+  
+  # determine if this static falls within a reserved subnet
+  $sql = "select id,start_ip,mask from subnets where CAST('$long_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED)";
+  $query_handle = mysql_query($sql);
+  if(mysql_num_rows($query_handle) != '1'){
+    $function_return['0'] = false;
+	$function_return['error'] = 'subnetnotfound';
+	return $function_return;
+  }
+  list($subnet_id,$long_start_ip,$long_mask) = mysql_fetch_row($query_handle);
+  $function_return['subnet_id'] = $subnet_id;
+  $function_return['long_start_ip'] = $long_start_ip;
+  $function_return['long_mask'] = $long_mask;
+  
+  # determine whether or not this IP falls within an ACL
+  $sql = "select id from acl where subnet_id='$subnet_id' AND (CAST(start_ip AS UNSIGNED) <= CAST('$long_ip' AS UNSIGNED) ".
+         "AND CAST(end_ip AS UNSIGNED) >= CAST('$long_ip' AS UNSIGNED))";
+  $query_handle = mysql_query($sql);
+  if(mysql_num_rows($query_handle) != '0'){
+    $function_return['0'] = false;
+	$function_return['error'] = 'aclmatch';
+	return $function_return;
   }
   
   # determine whether or not it is already reserved
   $sql = "SELECT id from statics where ip='$long_ip'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '0'){
-    $return['0'] = false;
-    $return['error'] = 'ipalreadyreserved';
-    return $return;
+    $function_return['0'] = false;
+    $function_return['error'] = 'ipalreadyreserved';
+    return $function_return;
   }
-  return true;  
+  $function_return['0'] = true;
+  return $function_return;  
 }
 
 function validate_network($subnet,$network_type="subnet"){
 
-  $return = array();
+  $function_return = array();
   
   if(!strstr($subnet, '/')){
     # invalid mask
-	$return['0'] = false;
-    $return['error'] = 'invalidmask';
-    return $return;
+	$function_return['0'] = false;
+    $function_return['error'] = 'invalidmask';
+    return $function_return;
   }
   
   list($ip,$mask) = explode('/', $subnet);
@@ -227,9 +253,9 @@ function validate_network($subnet,$network_type="subnet"){
   
   if($long_ip === false){
     # invalid ip
-    $return['0'] = false;
-    $return['error'] = 'invalidip';
-    return $return;
+    $function_return['0'] = false;
+    $function_return['error'] = 'invalidip';
+    return $function_return;
   }
   
   if(!strstr($mask, '.') && is_numeric($mask) && $mask > '0' && $mask < '32'){ # number of mask bits
@@ -241,62 +267,64 @@ function validate_network($subnet,$network_type="subnet"){
   $long_mask = ip2decimal($mask);
   if(!validate_netmask($mask) || $long_mask === false){
     #invalid mask
-	$return['0'] = false;
-    $return['error'] = 'invalidmask';
-    return $return;
+	$function_return['0'] = false;
+    $function_return['error'] = 'invalidmask';
+    return $function_return;
   }
   
-  $long_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
+  $long_start_ip = ($long_ip & $long_mask); // This makes sure they entered the network address and not an IP inside the network
+  $start_ip = long2ip($long_start_ip);
   $long_end_ip = $long_ip | (~$long_mask);
+  $end_ip = long2ip($long_end_ip);
   
   if($network_type == 'block'){
     # make sure we don't overlap other blocks
   }
   else{
     # make sure we don't overlap other subnets
-	$sql = "SELECT id FROM subnets WHERE CAST('$long_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) OR CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED)";
+	$sql = "SELECT id FROM subnets WHERE CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) OR CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_start_ip' AS UNSIGNED)";
     $result = mysql_query($sql);
 	if(mysql_num_rows($result) != '0'){
 	  # subnet overlap
-	  $return['0'] = false;
-      $return['error'] = 'subnetoverlap';
-      return $return;
+	  $function_return['0'] = false;
+      $function_return['error'] = 'subnetoverlap-notice';
+      return $function_return;
 	}
   }
   # everything is ok if we get here
-  $return['0'] = true;
-  $return['start_ip'] = $start_ip;
-  $return['long_start_ip'] = $long_start_ip;
-  $return['end_ip'] = $end_ip;
-  $return['long_end_ip'] = $long_end_ip;
-  $return['mask'] = $mask;
-  $return['long_mask'] = $long_mask;
-  return $return;
+  $function_return['0'] = true;
+  $function_return['start_ip'] = $start_ip;
+  $function_return['long_start_ip'] = $long_start_ip;
+  $function_return['end_ip'] = $end_ip;
+  $function_return['long_end_ip'] = $long_end_ip;
+  $function_return['mask'] = $mask;
+  $function_return['long_mask'] = $long_mask;
+  return $function_return;
 }
 
 function validate_api_key($apikey){
-  $return = array();
+  $function_return = array();
   if(strlen($apikey) != '21' || preg_match("/[^0-9a-zA-Z]/", $apikey)){
-    $return['0'] = false;
-	$return['error'] = 'invalidrequest';
+    $function_return['0'] = false;
+	$function_return['error'] = 'invalidrequest';
   }
   
   $sql = "SELECT description,active from `api-keys` WHERE apikey='$apikey'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) != '1'){
-    $return['0'] = false;
-	$return['error'] = 'apiaccessdenied';
+    $function_return['0'] = false;
+	$function_return['error'] = 'apiaccessdenied';
   }
   
   list($description,$active) = mysql_fetch_row($result);
   
   $active = ($active === '0') ? false : true;
   
-  $return['0'] = true;  
-  $return['description'] = $description;
-  $return['active'] = $active;
+  $function_return['0'] = true;  
+  $function_return['description'] = $description;
+  $function_return['active'] = $active;
   
-  return $return;
+  return $function_return;
 }
 
 ?>

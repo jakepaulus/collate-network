@@ -91,7 +91,7 @@ function edit_acl(){
   global $COLLATE;
   include 'include/validation_functions.php';
   
-  $acl_id = (isset($_GET['acl_id'] && is_numeric($_GET['acl_id'])) ? $_GET['acl_id'] : '';
+  $acl_id = (isset($_GET['acl_id']) && is_numeric($_GET['acl_id'])) ? $_GET['acl_id'] : '';
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
   
   if(empty($acl_id)){ 
@@ -157,7 +157,7 @@ function ip_guidance(){
   
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   
-  if(empty($subnet_id){ 
+  if(empty($subnet_id)){ 
     header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
@@ -187,7 +187,7 @@ function edit_guidance(){
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']); # the guidance column is a longtext field, so is the settings value
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
-  if(empty($subnet_id){ 
+  if(empty($subnet_id)){ 
     header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
@@ -284,7 +284,8 @@ function delete_acl(){
 function toggle_stalescan(){
   global $COLLATE;
   
-  $long_ip = (isset($_GET['static_ip'])) ? ip2decimal($_GET['static_ip']) : '';
+  $static_ip = (isset($_GET['static_ip'])) ? $_GET['static_ip'] : '';
+  $long_ip = ip2decimal($static_ip);
   $toggle = (isset($_GET['toggle']) && preg_match("/on|off/", $_GET['toggle'])) ? $_GET['toggle'] : '';
   $referer = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : './search.php?notice=';
   
@@ -296,7 +297,7 @@ function toggle_stalescan(){
 
   if(empty($long_ip) || $long_ip === false || empty($toggle)){
     header("HTTP/1.1 500 Internal Error");
-    $notice = 'invalidrequest'];
+    $notice = 'invalidrequest';
     header("Location: $referer"."$notice");
     exit();
   }
@@ -305,7 +306,6 @@ function toggle_stalescan(){
   $message = "Stale Scan toggled $toggle for IP: $static_ip";
   AccessControl($accesslevel, $message); 
 
-  $long_ip = ip2decimal($static_ip);
   if($toggle == 'on'){
     $count='0';
     $notice='staletoggleon-notice';

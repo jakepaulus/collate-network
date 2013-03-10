@@ -14,6 +14,7 @@ switch($op){
     break;
     
     case "submit";
+	AccessControl("3", null);
     submit_subnet();
     break;
     
@@ -163,7 +164,7 @@ function add_subnet (){
 function submit_subnet(){
   include 'include/validation_functions.php';
   
-  $block_id = (isset($_POST['block_id']) && is_numeric($_GET['block_id'])) ? $_POST['block_id'] : '';
+  $block_id = (isset($_POST['block_id']) && is_numeric($_POST['block_id'])) ? $_POST['block_id'] : '';
   $name = (isset($_POST['name'])) ? $_POST['name'] : '';
   $ip = (isset($_POST['ip'])) ? $_POST['ip'] : '';
   $gateway = (isset($_POST['gateway'])) ? $_POST['gateway'] : '';
@@ -188,78 +189,89 @@ function submit_subnet(){
   
   $result = validate_text($name,'subnetname');
   if($result['0'] === false){
-    $notice = $return['error'];
+    $notice = $result['error'];
     $guidance = urlencode($guidance);
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
     exit();
   }
   else{
-    $name = $return['1'];
+    $name = $result['1'];
   }
   
-  $return = validate_network($ip);
+  $result = validate_network($ip);
   if($result['0'] === false){
-    $notice = $return['error'];
+    $notice = $result['error'];
     $guidance = urlencode($guidance);
     header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
     exit();
   }
   else{
-    $start_ip = $return['start_ip'];
-    $end_ip = $return['end_ip'];
-    $mask = $return['mask'];
-    $long_start_ip = $return['long_start_ip'];
-    $long_end_ip = $return['long_end_ip'];
-    $long_mask = $return['long_mask'];
-  }
+    $start_ip = $result['start_ip'];
+    $end_ip = $result['end_ip'];
+    $mask = $result['mask'];
+    $long_start_ip = $result['long_start_ip'];
+    $long_end_ip = $result['long_end_ip'];
+    $long_mask = $result['long_mask'];
+  } 
   
-  $return = validate_ip_range($acl_start,$acl_end);
-  if($result['0'] === false){
-    $notice = $return['error'];
-    $guidance = urlencode($guidance);
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
-    exit();
-  }
-  else{
-    $long_acl_start = $return['long_start_ip'];
-    $long_acl_end = $return['long_end_ip'];
-  }
-  
-  $long_gateway = ip2decimal($gateway);
-  
-  if(!empty($gateway) && (long_gateway === false || $long_gateway < $long_ip || $long_gateway > $long_end_ip)){
-    $notice = "invalidgateway-notice";
-    header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
-    exit();
-  }
-  
-  $cidr=subnet2cidr($long_ip,$long_mask);
-  $accesslevel = "3";
-  $message = "Subnet $name ($cidr) has been created";
-  AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This goes down here just before we know stuff is actually going to be written.
+  mysql_query("BEGIN");
   
   $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
-        VALUES('$name', '$long_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
+        VALUES('$name', '$long_start_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
   
     
   mysql_query($sql);
   
-  // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
-  if(!empty($acl_start)){
-    $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', 
-           (SELECT id FROM subnets WHERE start_ip = '$long_ip'))";
+  if(!empty($acl_start) && !empty($acl_end)){
+    $result = validate_ip_range($acl_start,$acl_end,'acl');
+    if($result['0'] === false){
+      mysql_query("ROLLBACK");
+      $notice = $result['error'];
+      $guidance = urlencode($guidance);
+      header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
+      exit();
+    }
+    else{
+      $long_acl_start = $result['long_start_ip'];
+      $long_acl_end = $result['long_end_ip'];
+	  $subnet_id = $result['subnet_id'];
+    }
     
-    mysql_query($sql);
-  }
-  // Add static IP for the Default Gateway
-  if(!empty($gateway)){
-    $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
-           VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', 
-           (SELECT id FROM subnets WHERE start_ip = '$long_ip'), '$username', now())";
+    // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
+    $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
     mysql_query($sql);
   }
   
+  // Add static IP for the Default Gateway  
+  if(!empty($gateway)){
+    $validate_gateway = validate_static_ip($gateway);
+	if($validate_gateway['0'] === false){
+	  mysql_query("ROLLBACK");
+	  $notice = $validate_gateway['error'];
+	  $guidance = urlencode($guidance);
+	  header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
+      exit();
+	}
+	else{
+	  $long_gateway = $validate_gateway['long_ip'];
+	  $subnet_id = $validate_gateway['subnet_id'];
+	}
+    $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
+           VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', '$subnet_id', '$username', now())";
+    mysql_query($sql);
+  }
+  
+  mysql_query("COMMIT");
+  
+  $cidr=subnet2cidr($long_ip,$long_mask);
+  $accesslevel = "3";
+  $message = "Subnet $name ($cidr) has been created";
+  AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This 
+                                         // goes down here where we know stuff has actually been written. Access
+										 // Control actually happened before submit_subnet() was called.
+										 
+ 
   $notice = "subnetadded-notice";
   header("Location: subnets.php?block_id=$block_id&notice=$notice");
   exit();

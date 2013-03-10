@@ -70,7 +70,7 @@ function submit_block() {
   $note = (isset($_POST['note'])) ? $_POST['note'] : ''; # this input is optional
   $ip = (isset($_POST['ip'])) ? $_POST['ip'] : '';
   $end_ip = (isset($_POST['end_ip'])) ? $_POST['end_ip'] : '';
-  
+  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
  
   if(empty($name) || empty($ip)){
     $notice = "missingfield-notice";
@@ -111,6 +111,7 @@ function submit_block() {
   else{ # range supplied
     $return = validate_ip_range($ip,$end_ip,'block');
   }
+  
   if($return['0'] === false){
     $notice = $return['error'];
 	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
@@ -122,8 +123,7 @@ function submit_block() {
 	$long_start_ip = $return['long_start_ip'];
 	$long_end_ip = $return['long_end_ip'];
   }
-  
-  $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+    
   $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now())";
   
   $accesslevel = "4";
