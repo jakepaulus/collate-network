@@ -120,7 +120,7 @@ function process_file(){
 	unset($rownum);
 	
 	if($errorcount === '0'){ // don't bother validating data further if we didn't even find a propper csv file
-	  mysql_query("BEGIN");
+	  mysql_query("START TRANSACTION");
 	  $recordprocessingorder = array('block', 'subnet', 'acl', 'static');
 	  foreach($recordprocessingorder as $recordtype){
 	    foreach($row as $currentrow => $rowdata){
@@ -296,7 +296,7 @@ function read_in_csv_row($row){
 	}
 	else{
 	  // range
-	  $validate = validate_ip_range($block_start_ip,$block_end_ip);
+	  $validate = validate_ip_range($block_start_ip,$block_end_ip,'block');
 	  if($validate['0'] === false){
 	    $result['error'] = true;
 	    $result['errormessage'] = $validate['error'];
