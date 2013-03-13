@@ -456,6 +456,7 @@ else{ // Everything went well.
 
 function multiple_query($sql){
   $tok = strtok($sql, ";");
+  $results = "";
   while ($tok){
     mysql_query($tok);
 	$results = mysql_error()."<br />$results<br /><br />";
