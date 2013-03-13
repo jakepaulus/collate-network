@@ -379,6 +379,7 @@ $languages["xx"] = array(
   "nosubnetsoverlap"      => "## ######## ####### ### ########## ## ####### #### ######.",
   "confirmproceed"        => "##### ### #### ## #######?",
   "resized-notice"        => "### ###### ### #### #######.",
+  "ipalreadyreserved"     => "### ## ####### ### ######## ## ####### ########.",
   
 // footer.php
 #

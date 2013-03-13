@@ -214,7 +214,7 @@ function submit_subnet(){
     $long_mask = $result['long_mask'];
   } 
   
-  mysql_query("BEGIN");
+  mysql_query("START TRANSACTION");
   
   $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
@@ -222,6 +222,7 @@ function submit_subnet(){
   
     
   mysql_query($sql);
+  $subnet_id = mysql_insert_id();
   
   if(!empty($acl_start) && !empty($acl_end)){
     $result = validate_ip_range($acl_start,$acl_end,'acl');
@@ -235,16 +236,25 @@ function submit_subnet(){
     else{
       $long_acl_start = $result['long_start_ip'];
       $long_acl_end = $result['long_end_ip'];
-	  $subnet_id = $result['subnet_id'];
     }
     
     // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
     $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
     mysql_query($sql);
   }
-  
+   
   // Add static IP for the Default Gateway  
   if(!empty($gateway)){
+    $long_gateway = ip2decimal($gateway);
+	$subnet_test = $long_gateway & $long_mask;
+	if($subnet_test !== $long_start_ip){
+	  mysql_query("ROLLBACK");
+      $notice = 'invalidip';
+      $guidance = urlencode($guidance);
+      header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
+      exit();
+	}
+	
     $validate_gateway = validate_static_ip($gateway);
 	if($validate_gateway['0'] === false){
 	  mysql_query("ROLLBACK");
@@ -253,10 +263,7 @@ function submit_subnet(){
 	  header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
       exit();
 	}
-	else{
-	  $long_gateway = $validate_gateway['long_ip'];
-	  $subnet_id = $validate_gateway['subnet_id'];
-	}
+	
     $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
            VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', '$subnet_id', '$username', now())";
     mysql_query($sql);

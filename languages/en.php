@@ -379,6 +379,7 @@ $languages["en"] = array(
   "nosubnetsoverlap"      => "No reserved subnets are overlapped by growing this subnet.",
   "confirmproceed"        => "Would you like to proceed?",
   "resized-notice"        => "The subnet has been resized.",
+  "ipalreadyreserved"     => "The IP address you supplied is already reserved.",
   
 // footer.php
 #
