@@ -513,9 +513,9 @@ function show_form()  {
   </select> matching: <input name="search" type="text" /> &nbsp;
   <br />
   <br />
-  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2}); return false;" /> 
+  <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2});" /> 
   <?php echo $COLLATE['languages']['selected']['Searchallrecords']; ?> <br />
-  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraforms', {duration: 0.2}); return false;" /> 
+  <input type="radio" name="when" value="dates" onclick="new Effect.Appear('extraforms', {duration: 0.2}); " /> 
   <?php echo $COLLATE['languages']['selected']['Specifydaterange']; ?><br />
   <div id="extraforms" style="display: none;">
     <br />
