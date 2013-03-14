@@ -70,6 +70,7 @@ function validate_text($text,$fieldtype){
 	case "contact";
 	$length = '100';
 	$error = 'contactlengtherror';
+	$canbeempty = true;
 	break;
 	
 	case "guidance";
