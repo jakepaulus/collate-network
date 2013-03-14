@@ -445,13 +445,14 @@ function read_in_csv_row($row){
 	else{
 	  $static_name = $validate['1'];
     }
-	
+		
 	if($static_long_ip === false){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'invalidip';
 	  return $result;
-	}	
-    $sql = "SELECT id from subnets where '$static_long_ip' & mask = start_ip";
+	}
+		
+    $sql = "SELECT id from subnets where CAST('$static_long_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED)";
 	$subnet_result = mysql_query($sql);
 	
 	if(mysql_num_rows($subnet_result) != '1'){
@@ -464,7 +465,7 @@ function read_in_csv_row($row){
 	}
 	
 	// Make sure the static IP isn't in use already or excluded from use via an ACL
-	$validate = validate_static_ip($static_long_ip);
+	$validate = validate_static_ip($static_ip);
 	if($validate['0'] === false){
 	  $result['error'] = true;
 	  $result['errormessage'] = $validate['error'];
