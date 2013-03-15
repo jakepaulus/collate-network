@@ -1,13 +1,15 @@
 <?php
 
-#TODO: all calls to read_in_csv_row must expect the returned errors to be short errors
-
 require_once('./include/common.php');
+
+# All features in this page require privilege level 5. Logging
+# is handled directly withion each function as needed.
+AccessControl("5", null);
+
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
-
 	case "get";
 	get_record();
 	break;
@@ -20,11 +22,9 @@ switch($op){
 	process_file();
 	break;
 	
-	default:
-	AccessControl("1", null);
+	default:	
 	show_form();
 	break;
-	
 }
 
 
@@ -33,9 +33,7 @@ function process_file(){
   include "include/header.php";
   include "include/validation_functions.php";
   echo "<h1>Upload Results</h1><br />";
-  
-  
-  
+   
   $uploaderror = (isset($_FILES['file']['error'])) ? $_FILES['file']['error'] : "UPLOAD_ERR_NO_FILE";
 
   if($uploaderror != "UPLOAD_ERR_OK"){
@@ -391,8 +389,6 @@ function read_in_csv_row($row){
                       VALUES('$subnet_name', '$subnet_long_start_ip', '$subnet_long_end_ip', '$subnet_long_mask', 
 					  '$subnet_note', '$block_id', '$last_modified_by', now())";
 	return $return;
-	
-	
   }
   elseif($recordtype == 'acl'){
 	$acl_name = $row['1'];
@@ -434,7 +430,6 @@ function read_in_csv_row($row){
 	$static_long_ip = ip2decimal($static_ip);
 	$static_contact = $row['3'];
 	$static_note = $row['4'];
-	
 	
 	$validate = validate_text($static_name,'staticname');
 	if($validate['0'] === false){

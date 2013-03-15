@@ -83,7 +83,13 @@ function AccessControl($accesslevel, $message) {
   }
   // if we've gotten this far in the function, we've not met any condition to allow access so access is denied.
   $notice = "perms-notice";
-  header("Location: index.php?notice=$notice");
+  $referer = $_SERVER['HTTP_REFERER'];
+  if(stristr($referer, "?") == TRUE){ 
+    header("Location: $referer&notice=$notice");
+  } 
+  else {
+    header("Location: $referer?notice=$notice");
+  }
   exit();  
   
 } // Ends AccessControl function
