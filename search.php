@@ -54,7 +54,7 @@ function download() {
 	echo $COLLATE['languages']['selected']['SearchResults'];
 	
 	if($second == 'failed_scans'){
-	  $SearchResultsText=str_replace("%search%", '$search', $COLLATE['languages']['selected']['failedscansearch']);
+	  $SearchResultsText=str_replace("%search%", "$search", $COLLATE['languages']['selected']['failedscansearch']);
     }
     else{
       $SearchResultsText=str_replace("%first%", "$first", $COLLATE['languages']['selected']['generalsearchterm']);
@@ -180,7 +180,7 @@ function search() {
 
   echo $COLLATE['languages']['selected']['SearchResults'];
   if($second == 'failed_scans'){
-	  $SearchResultsText=str_replace("%search%", '$search', $COLLATE['languages']['selected']['failedscansearch']);
+	  $SearchResultsText=str_replace("%search%", "$search", $COLLATE['languages']['selected']['failedscansearch']);
     }
     else{
       $SearchResultsText=str_replace("%first%", "$first", $COLLATE['languages']['selected']['generalsearchterm']);
