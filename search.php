@@ -74,12 +74,13 @@ function download() {
   
   if($first == "subnets"){
     echo "<tr><th>".$COLLATE['languages']['selected']['SubnetName']."</th>".
+	     "<th>".$COLLATE['languages']['selected']['Block']."</th>".
          "<th>".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
          "<th>".$COLLATE['languages']['selected']['SubnetMask']."</th>".
          "<th>".$COLLATE['languages']['selected']['StaticsUsed']."</th>".
          "<th>".$COLLATE['languages']['selected']['Note']."</th></tr>\n";
  
-    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($row)){
+    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = mysql_fetch_row($row)){
       $start_ip = long2ip($long_start_ip);
       $mask = long2ip($long_mask);
 	  
@@ -93,7 +94,7 @@ function download() {
       $in_color=false;
       $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
     
-      echo "<tr><td><b>$name</b></td><td>".$block_name[$block_id]."</td><td>$start_ip</td>".
+      echo "<tr><td>$name</td><td>".$block_name[$block_id]."</td><td>$start_ip</td>".
            "<td>$mask</td>$percent_subnet_used<td>$note</td></tr>";
     }
   }
@@ -110,13 +111,13 @@ function download() {
     }
   }
   elseif($first == "logs"){
-    echo "<tr><td><b>".$COLLATE['languages']['selected']['Timestamp']."</b></td><td><b>".
-	     $COLLATE['languages']['selected']['Username']."</b></td><td><b>".
-		 $COLLATE['languages']['selected']['IPAddress']."</b></td>".
-         "<td><b>".$COLLATE['languages']['selected']['Severity']."</b></td><td><b>".
-		 $COLLATE['languages']['selected']['Message']."</b></td></tr>\n";
+    echo "<tr><th>".$COLLATE['languages']['selected']['Timestamp']."</th>".
+	     "<th>".$COLLATE['languages']['selected']['Username']."</th>".
+		 "<th>".$COLLATE['languages']['selected']['IPAddress']."</th>".
+         "<th>".$COLLATE['languages']['selected']['Severity']."</th>".
+		 "<th>".$COLLATE['languages']['selected']['Message']."</th></tr>\n";
     while(list($occuredat,$username,$ipaddress, $level,$message) = mysql_fetch_row($row)){
-      echo "<tr><td>$occuredat</td><td>$username</td><td>$ipaddress</td><td>$level</td><td>$message</td></tr>";
+      echo "<tr><td>$occuredat</td><td>$username</td><td>$ipaddress</td><td>$level</td><td>$message</td></tr>\n";
     }
   }
   
@@ -398,19 +399,20 @@ function search() {
     echo "</table>\n";
   }
   elseif($first == "logs"){
-    echo "<table width=\"100%\"><tr><td><b>".$COLLATE['languages']['selected']['Timestamp'].
-         "</b></td><td><b>".$COLLATE['languages']['selected']['Username'].
-		 "</b></td><td><b>".$COLLATE['languages']['selected']['IPAddress']."</b></td>".
-         "<td><b>".$COLLATE['languages']['selected']['Severity'].
-		 "</b></td><td><b>".$COLLATE['languages']['selected']['Message']."</b></td></tr>\n".
+    echo "<table width=\"100%\">".
+	     "<tr><th>".$COLLATE['languages']['selected']['Timestamp']."</th>".
+		 "<th>".$COLLATE['languages']['selected']['Username']."</th>".
+		 "<th>".$COLLATE['languages']['selected']['IPAddress']."</th>".
+         "<th>".$COLLATE['languages']['selected']['Severity']."</th>".
+		 "<th>".$COLLATE['languages']['selected']['Message']."</th></tr>\n".
          "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
     while(list($occuredat,$username,$ipaddress, $level,$message) = mysql_fetch_row($row)){
       if($level == "high"){
 	    $level = "<b>$level</b>";
       }
-	  echo "<tr><td>$occuredat</td><td>$username</td><td>$ipaddress</td><td>$level</td><td>$message</td></tr>".
-	       "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>";
+	  echo "<tr><td>$occuredat</td><td>$username</td><td>$ipaddress</td><td>$level</td><td>$message</td></tr>\n".
+	       "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     }
     echo "</table>\n";
   }
