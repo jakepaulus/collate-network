@@ -103,7 +103,7 @@ function download() {
 	     "<th>".$COLLATE['languages']['selected']['Name']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Contact']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Note']."</th>".
-		 "<th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>";
+		 "<th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>\n";
   
     while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
       $ip = long2ip($ip);
