@@ -20,10 +20,7 @@ function validate_netmask($ip) {
   }
   $binip=decbin(ip2decimal($ip));
   
-  if(strlen($binip) != 32 && ip2decimal($ip) != 0) {
-    return false;
-  }
-  elseif(preg_match("/01/", "$binip") || !preg_match("/0/", "$binip")) {
+  if(preg_match("/01/", "$binip") || !preg_match("/0/", "$binip")) {
     return false;
   }
   else {
