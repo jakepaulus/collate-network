@@ -57,7 +57,7 @@ function add_static(){
  
   echo "<h1>".$COLLATE['languages']['selected']['ReserveaStaticIP']."</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"#\" 
-       onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id'); return false;\">".
+       onclick=\"new Ajax.Updater('helper', '_statics.php?op=guidance&amp;subnet_id=$subnet_id', { evalScripts: true }); return false; \">".
        $COLLATE['languages']['selected']['IPGuidance']."</a></p>\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "<div style=\"float: left; width: 28%;\">\n".

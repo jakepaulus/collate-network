@@ -175,6 +175,24 @@ function ip_guidance(){
   }
   
   echo "<pre><span id=\"guidance\">$help</span></pre>";
+  if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
+    echo "<script type=\"text/javascript\"><!--\n".
+           "  new Ajax.InPlaceEditor('guidance', '_statics.php?op=edit_guidance&subnet_id=$subnet_id',
+              {
+              clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+              highlightcolor: '#a5ddf8', rows: '7', cols: '49',
+              callback:
+                function(form) {
+                  new Element.update('notice', '');
+                  return Form.serialize(form);
+                },
+               onFailure: 
+                function(transport) {
+                  new Element.update('notice', transport.responseText.stripTags());
+                }}
+              );
+          --></script>";
+  }
   exit();
 } // Ends ip_guidance function  
 
