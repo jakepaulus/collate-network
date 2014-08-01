@@ -198,7 +198,7 @@ function submit_static(){
 function list_statics(){
   global $COLLATE;
   
-  $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
+  $subnet_id = (isset($_GET['subnet_id']) && preg_match("/[0-9]*/", $_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   if(empty($_GET['subnet_id'])){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");

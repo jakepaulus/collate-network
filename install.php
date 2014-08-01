@@ -59,7 +59,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '2.1');
+INSERT INTO `settings` VALUES ('version', '2.2');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -92,6 +92,7 @@ CREATE TABLE `subnets` (
   `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
   `guidance` longtext NOT NULL,
+  `stalescan_enabled` BOOL NOT NULL default true,
   PRIMARY KEY  (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=latin1;
 
@@ -112,7 +113,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.1 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.2 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -350,7 +351,6 @@ ALTER TABLE `statics` ENGINE = INNODB
 $upgrade_from_two_dot_one =
 "
 ALTER TABLE subnets ADD stalescan_enabled BOOL NOT NULL default true; 
-ALTER TABLE blocks ADD stalescan_enabled BOOL NOT NULL default true; 
 UPDATE settings SET value='2.2' WHERE name='version';
 ";
 
