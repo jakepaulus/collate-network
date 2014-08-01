@@ -362,30 +362,38 @@ function ldap_auth($username, $password){
   
   $sql = "SELECT domain, server FROM `ldap-servers` WHERE domain='$domain'";
   $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '1'){
+  if(mysql_num_rows($result) < '1'){
     return FALSE;
   }
-  list($domain,$ldap_server) = mysql_fetch_row($result);
-  	
-  // connect to ldap server
-  $ldapconn = ldap_connect($ldap_server)
-    or die("Could not connect to LDAP server.");
-	
-  if ($ldapconn) {
-    // binding to ldap server
-    $ldapbind = ldap_bind($ldapconn, $username, $password);
-	
-    // verify binding
-    if (!$ldapbind) {
-      $auth = false;
-    }
-	else{
-	  $auth = array();
-	  $auth['accesslevel'] = $accesslevel;
-	  $auth['passwdexpire'] = '0000-00-00 00:00:00';
+
+  while(list($domain,$ldap_server) = mysql_fetch_row($result)){ # do anonymous binds to find a working server
+
+	// set up ldap connect parameters. Connection doesn't happen until ldap_bind...
+	$ldapconn = ldap_connect($ldap_server);
+	$ldapbind = @ldap_bind($ldapconn);
+
+	if($ldapbind){ # good server
+		ldap_unbind($ldapconn);
+		$ldapconn = ldap_connect($ldap_server);
+		$ldapbind = ldap_bind($ldapconn, $username, $password);
+
+		// verify binding
+		if (!$ldapbind) {
+			$auth = false;
+		}
+		else{
+			$auth = array();
+			$auth['accesslevel'] = $accesslevel;
+			$auth['passwdexpire'] = '0000-00-00 00:00:00';
+		}
+		return $auth;
 	}
-    return $auth;
+	collate_log('5', "Failed to do anonymous bind to LDAP server: $ldap_server");
   }
+  
+  # If we get here, all servers are down
+  collate_log('5', 'No ldap servers responded to anonymous binds.');
+  return false;
   
 } // Ends ad_auth function
 ?>
