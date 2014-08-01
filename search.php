@@ -300,11 +300,11 @@ function search() {
 	
 		# Build path information for IP - use an array to avoid accessive db calls
 		if(!isset($path[$subnet_id])) {
-			$pathsql = "SELECT blocks.name, subnets.name, subnets.block_id FROM blocks, subnets 
+			$pathsql = "SELECT blocks.name, subnets.name, subnets.block_id, subnets.stalescan_enabled FROM blocks, subnets 
                         WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
 			$result = mysql_query($pathsql);
 			if(mysql_num_rows($result) == '1'){
-				list($block_name, $subnet_name, $block_id) = mysql_fetch_row($result);
+				list($block_name, $subnet_name, $block_id, $stalescan_enabled) = mysql_fetch_row($result);
 				$path[$subnet_id] = "<a href=\"blocks.php\">All</a> / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
 				 <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
 			}
@@ -333,7 +333,10 @@ function search() {
       echo "<tr id=\"static_".$static_id."_row_2\">".
            "  <td colspan=\"4\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
 
-      if($failed_scans == '-1'){
+      if($stalescan_enabled == false){
+	    echo "  <td><img src=\"./images/skipping_disabled.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['StaleScandisabled']."\" /></td>";
+	  }
+	  elseif($failed_scans == '-1'){
         echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\">".
              "<img src=\"./images/skipping.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['enablestalescan']."\" /></a></td>";
       }

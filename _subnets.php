@@ -17,6 +17,11 @@ switch($op){
 	AccessControl('1', null);
 	search_subnets();
 	break;
+	
+	case "toggle_stale-scan";
+	AccessControl('3', null);
+	toggle_stalescan();
+	break;
 }
 
 
@@ -216,4 +221,54 @@ function search_subnets(){
   exit();
 }
 
+function toggle_stalescan(){
+  global $COLLATE;
+  
+  $subnet_id = (isset($_GET['subnet_id']) && preg_match("/[0-9]*/", $_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
+  $toggle = (isset($_GET['toggle']) && preg_match("/on|off/", $_GET['toggle'])) ? $_GET['toggle'] : '';
+  
+  if(empty($subnet_id) || empty($toggle)){
+    header("HTTP/1.1 500 Internal Error");
+    $notice = 'invalidrequest';
+    header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
+    exit();
+  }
+  
+  $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
+  $query_result = mysql_query($sql);
+  if(mysql_num_rows($query_result) !== 1){
+    header("HTTP/1.1 500 Internal Error");
+    $notice = 'invalidrequest';
+    header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
+    exit();
+  }
+  
+  list($subnet_name,$long_start_ip,$long_mask) = mysql_fetch_row($query_result);
+  $cidr = subnet2cidr($long_start_ip,$long_mask); 
+  
+  $accesslevel = "3";
+  $message = "Stale Scan toggled $toggle for Subnet: $subnet_name ($cidr)";
+  AccessControl($accesslevel, $message); 
+
+  if($toggle == 'on'){
+    $stalescan_enabled='1';
+    $notice='staletoggleon-notice';
+	
+	$sql = "UPDATE statics SET failed_scans='0' WHERE subnet_id='$subnet_id'";
+    mysql_query($sql);
+  }
+  else{
+    $stalescan_enabled='0';
+    $notice='staletoggleoff-notice';
+	
+	$sql = "UPDATE statics SET failed_scans='-1' WHERE subnet_id='$subnet_id'";
+    mysql_query($sql);
+  }
+  
+  $sql = "UPDATE subnets SET stalescan_enabled=$stalescan_enabled WHERE id='$subnet_id'";
+  mysql_query($sql);
+ 
+  header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
+  exit();
+}
 ?>

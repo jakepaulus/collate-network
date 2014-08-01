@@ -347,6 +347,13 @@ ALTER TABLE `statics` ENGINE = INNODB
 
 ";
 
+$upgrade_from_two_dot_one =
+"
+ALTER TABLE subnets ADD stalescan_enabled BOOL NOT NULL default true; 
+ALTER TABLE blocks ADD stalescan_enabled BOOL NOT NULL default true; 
+UPDATE settings SET value='2.2' WHERE name='version';
+";
+
 $sql = "select value from settings where name='version'";
 $result = mysql_query($sql);
 
@@ -362,6 +369,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
@@ -372,6 +380,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
@@ -381,6 +390,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
@@ -389,6 +399,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
@@ -396,26 +407,34 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.7'){
     $results = multiple_query("$upgrade_from_one_dot_seven");
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.7.1'){
     $results = multiple_query($upgrade_from_one_dot_seven_dot_one);
 	$results .= multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '1.7.2'){
 	$results = multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '2.0'){
     $results = multiple_query($upgrade_from_two_dot_zero);
+	$results .= multiple_query($upgrade_from_two_dot_one);
   }
   elseif($version == '2.1'){
+	$results = multiple_query($upgrade_from_two_dot_one);
+  }
+  elseif($version == '2.2'){
     // We're at the current version!
     echo '<html>';
 	echo "<head>

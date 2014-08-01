@@ -424,18 +424,36 @@ function modify_subnet (){
     header("Location: blocks.php?notice=$notice");
     exit();
   }
-  require_once('./include/header.php');  
   
-  $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
-  list($subnet_name,$long_start_ip,$long_mask) = mysql_fetch_row(mysql_query($sql)); 
+  $sql = "SELECT id, name, start_ip, mask, stalescan_enabled FROM subnets WHERE id='$subnet_id'";
+  $query_result = mysql_query($sql);
+  if(mysql_num_rows($query_result) !== 1){
+    $notice = "invalidrequest";
+    header("Location: blocks.php?notice=$notice");
+    exit();
+  }
+  require_once('./include/header.php'); 
+  
+  list($subnet_id,$subnet_name,$long_start_ip,$long_mask,$stalescan_enabled) = mysql_fetch_row($query_result); 
   $start_ip = long2ip($long_start_ip);
   $mask = long2ip($long_mask);
-
+  
   $modifythesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['ModifySubnet']);
   $modifythesubnet = str_replace("%start_ip%", $start_ip, $modifythesubnet);
   $modifythesubnet = str_replace("%mask%", $mask, $modifythesubnet);
   echo "<h1>$modifythesubnet</h1><br />\n";
-
+  
+  echo "<h3>".$COLLATE['languages']['selected']['StaleScan'];
+    if($stalescan_enabled == false){
+      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=on\" \">".
+           "<img src=\"./images/skipping.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['enablestalescan']."\" /></a>";
+    }
+    else{
+      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=off\" \">".
+           "<img src=\"./images/scanning.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['disablestalescan']."\" /></a>";
+    }
+	echo "</h3><br /><br />";
+	
   $movesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['Movesubnet']);
   echo "<h3>$movesubnet</h3><hr />\n".
        "<form action=\"subnets.php?op=submitmove\" method=\"post\">\n".
