@@ -97,7 +97,7 @@
 		    $sql = "SELECT `name`, `parent_id`, `type` FROM blocks WHERE id='$parent_id'";
 			$recursive_result = mysql_query($sql);
 			list($recursive_parent_name,$recursive_parent_id,$recursive_block_type) = mysql_fetch_row($recursive_result);
-			if($block_type == 'container'){
+			if($recursive_block_type == 'container'){
 		      $block_path = "/ <a href=\"blocks.php?block_id=$parent_id\">$recursive_parent_name</a>".$block_path;
 		    }
 		    else{

@@ -38,6 +38,7 @@ function add_block(){
   $end_ip = (empty($_GET['end_ip'])) ? '' : $_GET['end_ip'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
   $parent_block = (isset($_GET['parent_block'])) ? $_GET['parent_block'] : null;
+  $block_type = (isset($_GET['block_type'])) ? $_GET['block_type'] : '';
   
   if(!empty($block_id)){ #this is an edit, not an add
     if(!preg_match("/[0-9]*/", $block_id)){ #this better be a block id and not some sort of trick
@@ -45,14 +46,14 @@ function add_block(){
 	  header("Location: blocks.php?notice=$notice");
 	  exit();
 	}
-	$sql = "SELECT name, start_ip, end_ip, note, parent_id FROM blocks WHERE id='$block_id'";
+	$sql = "SELECT name, start_ip, end_ip, note, parent_id, type FROM blocks WHERE id='$block_id'";
 	$result = mysql_query($sql);
 	if(mysql_num_rows($result) != '1'){
 	  $notice = 'invalidrequest';
 	  header("Location: blocks.php?notice=$notice");
 	  exit();
 	}
-	list($name,$long_start_ip,$long_end_ip,$note,$parent_block) = mysql_fetch_row($result);
+	list($name,$long_start_ip,$long_end_ip,$note,$parent_block,$block_type) = mysql_fetch_row($result);
 	$ip = (empty($long_start_ip)) ? '' : long2ip($long_start_ip);
 	$end_ip = (empty($long_end_ip)) ? '' : long2ip($long_end_ip);
 	$hidden_form_inputs = '<input type="hidden" name="update_block" value="true">'.
@@ -64,12 +65,26 @@ function add_block(){
 	$hidden_form_inputs = '';
   }
   
+  if(empty($block_type) || $block_type == 'ipv4'){
+    $ipv4block_html = 'checked="checked"';
+	$containerblock_html = '';
+  }
+  else{
+    $ipv4block_html = '';
+    $containerblock_html = 'checked="checked"';
+  }
+  
   require_once('./include/header.php');
 
   echo "<h1>$block_action_text</h1>\n".
 	   "<br />\n".
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
+	   "  <p><input type=\"radio\" name=\"block_type\" $containerblock_html value=\"container\"> ".
+	      $COLLATE['languages']['selected']['iscontainerblock']."<br />\n".
+	   "     <input type=\"radio\" name=\"block_type\" $ipv4block_html value=\"ipv4\"> ".
+	      $COLLATE['languages']['selected']['isipv4block']."\n".
+	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
@@ -97,7 +112,6 @@ function add_block(){
   $sql = "SELECT id, name, parent_id FROM blocks WHERE type='container'";
   $result = mysql_query($sql);
   while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
-    #$block_paths[$select_block_id]['name']=$select_block_name;
 	$block_paths[$select_block_id]="$select_block_name";
 	while($select_block_parent !== null){ #this has the potential to be really slow and awful...
 	  $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
@@ -140,10 +154,17 @@ function submit_block() {
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
   $update_block = (isset($_POST['update_block'])) ? $_POST['update_block'] : false;
   $submit_op = ($update_block == 'true') ? "modify&block_id=$block_id" : 'add';
- 
+  $parent_block = (isset($_POST['parent_block'])) ? $_POST['parent_block'] : '';
+   
   if(empty($name) || (!empty($end_ip) && empty($ip))){
     $notice = "missingfield-notice";
     header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	exit();
+  }
+  
+  if(empty($parent_block) || (!preg_match("/[0-9]*/", $parent_block) && $parent_block != 'null')){
+    $notice = "invalidrequest";
+    header("Location: blocks.php?notice=$notice");
 	exit();
   }
   
@@ -207,11 +228,36 @@ function submit_block() {
   }
   unset($return);
   
-  if($update_block){
-    $sql = "UPDATE blocks SET name='$name', start_ip='$long_start_ip', end_ip='$long_end_ip', note='$note', modified_by='$username', modified_at=now() WHERE id='$block_id'";
+  $result = '';
+  if($parent_block != 'null'){
+    $sql = "SELECT id FROM blocks WHERE id='$parent_block'";
+    $result = mysql_query($sql);
+	if(mysql_num_rows($result) != '1'){
+	  $notice = "invalidrequest";
+      header("Location: blocks.php?notice=$notice");
+	  exit();
+	}
+	$parent_id = "'$parent_block'";
   }
   else{
-    $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now())";
+    $parent_id = 'null';
+  }
+  
+  if($update_block === false){ # new block
+    $old_parent_block = $parent_block; #we're going to redirect the user to the block they put this block into
+  }
+  else{ 
+    $sql = "SELECT parent_id FROM blocks WHERE id='$block_id'";
+    $old_parent_block = mysql_result(mysql_query($sql), 0);
+  }
+  
+  if($update_block){
+    $sql = "UPDATE blocks SET name='$name', start_ip='$long_start_ip', end_ip='$long_end_ip', note='$note', modified_by='$username', modified_at=now(),
+           parent_id=$parent_id WHERE id='$block_id'";
+  }
+  else{
+    $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at, parent_id) 
+	       VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now(), $parent_id)";
   }
  
   $accesslevel = "4";
@@ -221,7 +267,12 @@ function submit_block() {
   
   mysql_query($sql);
   $notice = ($update_block) ? 'blockupdated-notice' : 'blockadded-notice';
-  header("Location: blocks.php?notice=$notice");
+  if($old_parent_block == 'null'){
+    header("Location: blocks.php?notice=$notice");
+  }
+  else{
+    header("Location: blocks.php?block_id=$old_parent_block&notice=$notice");
+  }
   exit();
 
 } // Ends submit_blocks function

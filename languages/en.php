@@ -117,8 +117,8 @@ $languages["en"] = array(
   "modifyblock"         => "modify IP block",
   "ModifyBlock"         => "Modify the %block_name% IP block:",
   "blockupdated-notice" => "The block has been updated.",
-  "isparentblock"       => "This block is meant to hold other blocks",
-  "ischildblock"        => "This block is meant to hold subnets",
+  "iscontainerblock"    => "This block is meant to hold other blocks",
+  "isipv4block"         => "This block is meant to hold IPv4 subnets",
   "ParentBlock"         => "Parent Block",
 
   

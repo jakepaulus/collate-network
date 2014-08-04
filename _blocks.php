@@ -3,10 +3,10 @@
 require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
-if(isset($_GET['block_id']) && is_numeric($_GET['block_id'])){
+if(isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])){
   $block_id = $_GET['block_id'];
 }
-else{  
+else{
   header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
   echo $COLLATE['languages']['selected']['selectblock'];
   exit();
@@ -85,6 +85,10 @@ function delete_block(){
   global $COLLATE;
   global $block_id;
   
+  $block_ids = array();
+  $block_ids[] = $block_id;
+  
+  
   $sql = "SELECT name FROM blocks WHERE id='$block_id'";
   $result = mysql_query($sql);
 	
@@ -97,26 +101,50 @@ function delete_block(){
   $name = mysql_result($result, 0, 0);
 
   AccessControl("4", "Block $name has been deleted!");
+  
+  if(find_child_blocks($block_id) !== false){ # this is a recursive function
+    $block_ids = array_merge($block_ids, find_child_blocks($block_id));
+  }
+
+  foreach($block_ids as $block_id){
+    // First delete all static IPs
+    $sql = "DELETE FROM statics WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
+    mysql_query($sql);
     
-  // First delete all static IPs
-  $sql = "DELETE FROM statics WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
-  mysql_query($sql);
-  
-  // Next, remove the DHCP ACLs
-  $sql = "DELETE FROM acl WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
-  mysql_query($sql);
-  
-  // Next, remove the subnets
-  $sql = "DELETE FROM subnets WHERE block_id='$block_id'";
-  mysql_query($sql);
-  
-  // Lastly, delete the IP block
-  $sql = "DELETE FROM blocks WHERE id='$block_id'";
-  mysql_query($sql);
+    // Next, remove the DHCP ACLs
+    $sql = "DELETE FROM acl WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
+    mysql_query($sql);
+    
+    // Next, remove the subnets
+    $sql = "DELETE FROM subnets WHERE block_id='$block_id'";
+    mysql_query($sql);
+    
+    // Lastly, delete the IP block
+    $sql = "DELETE FROM blocks WHERE id='$block_id'";
+    mysql_query($sql);
+  }
   
   $message=str_replace("%name%", "$name", $COLLATE['languages']['selected']['blockdeleted']);
   echo $message;
   
 } // Ends delete_block function
+
+function find_child_blocks($block_id){
+  # Input: integer block id
+  # output: single-dimensional array of child blocks (recursive)
+  # outputs false if the block has no children
+  
+  $sql = "SELECT id FROM blocks WHERE parent_id='$block_id'";
+  $result = mysql_query($sql);
+  if(mysql_num_rows($result) === 0){ return false; }
+  $return = array();
+  while(list($child_block) = mysql_fetch_row($result)){
+    $return[] = $child_block;
+	if(find_child_blocks($child_block) !== false){
+      $return = array_merge($return,find_child_blocks($child_block));
+    }
+  }
+  return $return;  
+}
 
 ?>

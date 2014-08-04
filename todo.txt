@@ -1,15 +1,17 @@
 blocks.php
 
-* block add should allow specification of block type
 * submit block should handle block type in submission
 * block modify should check whether block has subnets before changing it to a container
-
-_blocks.php
-
-* delete must delete child blocks and their child objects, etc.
+* block add should offer IP guidance based on parent block IP range if present - also offer search
 
 search.php
 
 * apply block path code
 * allow search for blocks
 * static IP search should match ACLs and list their block/subnet path
+
+_settings.php
+* Update..() calls should return Effect.Fade() javascript
+
+settings.php
+* calls to _settings.php?op=update* should have { evalScripts: true } to execute Effect.Fade()
