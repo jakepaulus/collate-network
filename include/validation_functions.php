@@ -114,7 +114,7 @@ function validate_text($text,$fieldtype){
   return $function_return;
 }
 
-function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
+function validate_ip_range($start_ip,$end_ip,$range_type,$table_id=null){
   global $COLLATE;
   $function_return = array();
   $long_start_ip = ip2decimal($start_ip);
@@ -136,16 +136,17 @@ function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
   
   # does this overlap an existing block or acl?
   $overlap_check_sql = "SELECT id FROM $sqltable WHERE 
-    (CAST(start_ip AS UNSIGNED) <= CAST('$long_start_ip' AS UNSIGNED) AND 
-	  CAST(end_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED)) 
+    ((CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED)) 
 	OR 
-    (CAST(start_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED) AND 
-	  CAST(end_ip AS UNSIGNED) >= CAST('$long_end_ip' AS UNSIGNED)) 
+    (CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED)) 
 	OR
-    (CAST(start_ip AS UNSIGNED) >= CAST('$long_start_ip' AS UNSIGNED) AND 
-	  CAST(end_ip AS UNSIGNED) <= CAST('$long_end_ip' AS UNSIGNED))";
+    (CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED)))";
 
-  
+  $overlap_check_sql .= ($table_id !== NULL) ? " AND id!='$table_id'" : '';
+
   $result = mysql_query($overlap_check_sql);
   if(mysql_num_rows($result) != '0'){
     $function_return['error'] = ($range_type == 'block') ? 'blockoverlap-notice' : 'acloverlap-notice';
@@ -153,15 +154,15 @@ function validate_ip_range($start_ip,$end_ip,$range_type,$subnet_id=null){
   }
   if($range_type === 'acl'){
 	# make sure start and end falls within only one subnet
-	# when $subnet_id is given, make sure it matches the subnet
+	# when $table_id is given, make sure it matches the subnet
 	# we find
-	if($subnet_id === null){
+	if($table_id === null){
 	  $sql = "SELECT id,name from subnets where CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) 
               AND CAST('$long_end_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED)";
 	}
 	else {
 	  $sql = "SELECT id,name from subnets where CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) 
-              AND CAST('$long_end_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) AND id='$subnet_id'";
+              AND CAST('$long_end_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) AND id='$table_id'";
 	}
 	$result = mysql_query($sql);
 	if(mysql_num_rows($result) != '1'){
@@ -235,7 +236,7 @@ function validate_static_ip($ip){
   return $function_return;  
 }
 
-function validate_network($subnet,$network_type="subnet"){
+function validate_network($subnet,$network_type="subnet",$table_id=null){
 
   $function_return = array();
   
@@ -277,10 +278,30 @@ function validate_network($subnet,$network_type="subnet"){
   
   if($network_type == 'block'){
     # make sure we don't overlap other blocks
+	$overlap_check_sql = "SELECT id FROM blocks WHERE 
+    ((CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED)) 
+	OR 
+    (CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED)) 
+	OR
+    (CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) AND 
+	  CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_end_ip' & 0xFFFFFFFF AS UNSIGNED)))";
+
+    $overlap_check_sql .= ($table_id !== NULL) ? " AND id!='$table_id'" : '';
+	
+	$result = mysql_query($overlap_check_sql);
+    if(mysql_num_rows($result) != '0'){
+	  $function_return['0'] = false;
+      $function_return['error'] = 'blockoverlap-notice';
+      return $function_return;
+    }
   }
   else{
     # make sure we don't overlap other subnets
-	$sql = "SELECT id FROM subnets WHERE CAST('$long_start_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED) OR CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_start_ip' AS UNSIGNED)";
+	$sql = "SELECT id FROM subnets WHERE 
+	  CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) OR 
+	  CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED)";
     $result = mysql_query($sql);
 	if(mysql_num_rows($result) != '0'){
 	  # subnet overlap

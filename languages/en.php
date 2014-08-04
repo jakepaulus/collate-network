@@ -109,11 +109,17 @@ $languages["en"] = array(
   "blockbounds-notice"  => "You must supply the number of mask bits, a mask, or a valid end IP to add an IP block.",
   "blockadded-notice"   => "The block has been created.",
   "AllIPBlocks"         => "All IP Blocks",
+  "SomeIPBlocks"        => "%block_name% IP Blocks",
   "AddaBlock"           => "Add a Block",
   "BlockName"           => "Block Name",
   "StartingIP"          => "Starting IP",
   "EndIP"               => "End IP",
-
+  "modifyblock"         => "modify IP block",
+  "ModifyBlock"         => "Modify the %block_name% IP block:",
+  "blockupdated-notice" => "The block has been updated.",
+  "isparentblock"       => "This block is meant to hold other blocks",
+  "ischildblock"        => "This block is meant to hold subnets",
+  "ParentBlock"         => "Parent Block",
 
   
 // index.php

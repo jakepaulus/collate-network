@@ -129,38 +129,28 @@ function search_subnets(){
   include 'include/validation_functions.php';
   
   $search = (empty($_GET['search'])) ? '' : clean($_GET['search']);
+  $search_only = (isset($_GET['searchonly']) && preg_match("/true/", $_GET['searchonly'])) ? true : false;
+  $searchonlyparam = ($search_only) ? '&amp;searchonly=true' : '';
+  $input_error=false;
+  
   if(empty($search)) { exit(); }
   
-  echo "<p><a href=\"#\" onclick=\"
-         new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); 
-		 new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })
-		 \">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
-		 "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
-		 "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\" value=\"$search\"><br />".
-		 "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\")\"> ".
-		 $COLLATE['languages']['selected']['Go']." </button></p>";
-
-  echo "<h4>".$COLLATE['languages']['selected']['Results'].":</h4>";
-  
   if(!strstr($search, '/')){
-    header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['IPSearchFormat'];
-    exit();
+    $input_error=true;
   }
   
   list($ip,$mask) = explode('/', $search);
   
   if(ip2decimal($ip) == FALSE){
-    header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['IPSearchFormat'];
-    exit();
+    $input_error=true;
   }
   
   $ip = long2ip(ip2decimal($ip));  
   if(!strstr($mask, '.') && ($mask <= '0' || $mask >= '32')){
-    header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['IPSearchFormat'];
-    exit();
+    $input_error=true;
   }
   elseif(!strstr($mask, '.')){
     $bin = str_pad('', $mask, '1');
@@ -168,56 +158,72 @@ function search_subnets(){
     $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
     $mask = long2ip(ip2decimal($mask));
   }
-  elseif(!checkNetmask($mask)){
-    header("HTTP/1.1 500 Internal Error");
+  elseif(!validate_netmask($mask)){
     echo $COLLATE['languages']['selected']['invalidmask'];
-    exit();
+    $input_error=true;
   }
-	
-  $long_ip = ip2decimal($ip);
-  $long_mask = ip2decimal($mask);
-  $long_end_ip = $long_ip | (~$long_mask);
   
-  $ipspace = array();
-  array_push($ipspace, $long_ip);
-	
-  $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$long_ip' & 0xFFFFFFFF) AS UNSIGNED) AND ".
-         "CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
-  $subnet_rows = mysql_query($sql);
-	
-  while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
-    array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
+  if(!$input_error){
+
+    $long_ip = ip2decimal($ip);
+    $long_mask = ip2decimal($mask);
+    $long_end_ip = $long_ip | (~$long_mask);
+    
+    $ipspace = array();
+    array_push($ipspace, $long_ip);
+	  
+    $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$long_ip' & 0xFFFFFFFF) AS UNSIGNED) AND ".
+           "CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
+    $subnet_rows = mysql_query($sql);
+	  
+    while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
+      array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
+    }
+    array_push($ipspace, $long_end_ip);
+    $ipspace = array_reverse($ipspace);
+    
+    $ipspace_count = count($ipspace);
   }
-  array_push($ipspace, $long_end_ip);
-  $ipspace = array_reverse($ipspace);
-  
-  $ipspace_count = count($ipspace);
-  
-  echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
-       "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
-     
-  while(!empty($ipspace)){
-    $long_start = array_pop($ipspace);
-    if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
-      $start = long2ip($long_start + 1);
-    }
-    else{
-      $start = long2ip($long_start);
-    }
-  	
-    $long_end = array_pop($ipspace);
-    if(count($ipspace) > '1'){
-      $end = long2ip($long_end - 1);
-    }
-    else{
-      $end = long2ip($long_end);
-    }
-  	
-    if($long_start + 1 != $long_end && $long_start != $long_end){
-      echo "<tr><td>$start</td><td>$end</td></tr>";
-    }
+  if(!$search_only){
+    echo "<p><a href=\"#\" onclick=\"
+           new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); 
+  		 new Effect.toggle('spacesearch', 'blind', { delay: 0.1 })
+  		 \">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n";
   }
-  echo "</table>";
+  echo "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
+	   "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\" value=\"$search\"><br />".
+	   "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search$searchonlyparam&amp;search=' + $('subnetsearch').value);\")\"> ".
+	   $COLLATE['languages']['selected']['Go']." </button></p>";
+  
+  if(!$input_error){
+    echo "<h4>".$COLLATE['languages']['selected']['Results'].":</h4>";
+    
+    echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+         "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
+       
+    while(!empty($ipspace)){
+      $long_start = array_pop($ipspace);
+      if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
+        $start = long2ip($long_start + 1);
+      }
+      else{
+        $start = long2ip($long_start);
+      }
+    	
+      $long_end = array_pop($ipspace);
+      if(count($ipspace) > '1'){
+        $end = long2ip($long_end - 1);
+      }
+      else{
+        $end = long2ip($long_end);
+      }
+    	
+      if($long_start + 1 != $long_end && $long_start != $long_end){
+        echo "<tr><td>$start</td><td>$end</td></tr>";
+      }
+    }
+    echo "</table>";
+  }
   exit();
 }
 

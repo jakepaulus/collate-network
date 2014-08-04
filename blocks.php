@@ -13,6 +13,10 @@ switch($op){
 	add_block();
 	break;
 	
+	case "modify":
+	add_block();
+	break;
+	
 	case "submit";
 	submit_block();
 	break;
@@ -27,21 +31,50 @@ require_once('./include/footer.php');
 
 function add_block(){
   global $COLLATE;
-  require_once('./include/header.php');
   
+  $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
   $ip = (empty($_GET['ip'])) ? '' : $_GET['ip'];
   $end_ip = (empty($_GET['end_ip'])) ? '' : $_GET['end_ip'];
   $note = (empty($_GET['note'])) ? '' : $_GET['note'];
+  $parent_block = (isset($_GET['parent_block'])) ? $_GET['parent_block'] : null;
+  
+  if(!empty($block_id)){ #this is an edit, not an add
+    if(!preg_match("/[0-9]*/", $block_id)){ #this better be a block id and not some sort of trick
+	  $notice = 'invalidrequest';
+	  header("Location: blocks.php?notice=$notice");
+	  exit();
+	}
+	$sql = "SELECT name, start_ip, end_ip, note, parent_id FROM blocks WHERE id='$block_id'";
+	$result = mysql_query($sql);
+	if(mysql_num_rows($result) != '1'){
+	  $notice = 'invalidrequest';
+	  header("Location: blocks.php?notice=$notice");
+	  exit();
+	}
+	list($name,$long_start_ip,$long_end_ip,$note,$parent_block) = mysql_fetch_row($result);
+	$ip = (empty($long_start_ip)) ? '' : long2ip($long_start_ip);
+	$end_ip = (empty($long_end_ip)) ? '' : long2ip($long_end_ip);
+	$hidden_form_inputs = '<input type="hidden" name="update_block" value="true">'.
+	                      "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\">";
+	$block_action_text = str_replace("%block_name%", $name, $COLLATE['languages']['selected']['ModifyBlock']);
+  }
+  else{
+    $block_action_text = $COLLATE['languages']['selected']['AddaBlock'];
+	$hidden_form_inputs = '';
+  }
+  
+  require_once('./include/header.php');
 
-  echo "<h1>".$COLLATE['languages']['selected']['AddaBlock']."</h1>\n".
+  echo "<h1>$block_action_text</h1>\n".
 	   "<br />\n".
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
-	   "  <p><b>".$COLLATE['languages']['selected']['IP'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
+	   "  <p><b>".$COLLATE['languages']['selected']['IP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
+	   "    <br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['EndIP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
@@ -51,8 +84,41 @@ function add_block(){
 	   "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional'].
 	   "    <br /><input type=\"text\" name=\"note\" value=\"$note\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	   "  </p>\n".
-	   "  <p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
+	   "  $hidden_form_inputs</p>\n".
+       "  <p><b>".$COLLATE['languages']['selected']['ParentBlock'].":</b><select name=\"parent_block\">";
+	   
+  if($parent_block !== null){
+    echo "<option value=\"null\">[root]</option>\n";
+  }
+  else{
+     echo "<option selected=\"selected\" value=\"null\">[root]</option>\n";
+  }
+  
+  $sql = "SELECT id, name, parent_id FROM blocks WHERE type='container'";
+  $result = mysql_query($sql);
+  while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
+    #$block_paths[$select_block_id]['name']=$select_block_name;
+	$block_paths[$select_block_id]="$select_block_name";
+	while($select_block_parent !== null){ #this has the potential to be really slow and awful...
+	  $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
+	  list($recursive_parent_name,$recursive_parent_parent) = mysql_fetch_row($recursive_result);
+	  $block_paths[$select_block_id] = "$recursive_parent_name/".$block_paths[$select_block_id];
+	  $select_block_parent = $recursive_parent_parent;
+	}
+	$block_paths[$select_block_id]='[root]/'.$block_paths[$select_block_id];
+  }
+  natcasesort($block_paths);
+  foreach ($block_paths as $select_id => $select_text){
+    if($parent_block == $select_id){
+	  echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
+	}
+	else{
+	  echo "<option value=\"$select_id\">$select_text</option>\n";
+    }
+  }
+	   
+  echo "</select></p>\n".
+       "  <p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
 	   "</form></div>\n".
 	   "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknamehelp']."<br /><br /></div>\n".
 	   "<div id=\"iptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockiphelp']."<br /><br /></div>\n".
@@ -66,73 +132,95 @@ function submit_block() {
   global $COLLATE;
   include 'include/validation_functions.php';
   
+  $block_id = (isset($_POST['block_id'])) ? $_POST['block_id'] : '';
   $name = (isset($_POST['name'])) ? $_POST['name'] : '';
   $note = (isset($_POST['note'])) ? $_POST['note'] : ''; # this input is optional
   $ip = (isset($_POST['ip'])) ? $_POST['ip'] : '';
   $end_ip = (isset($_POST['end_ip'])) ? $_POST['end_ip'] : '';
   $username = (empty($_SESSION['username'])) ? 'system' : $_SESSION['username'];
+  $update_block = (isset($_POST['update_block'])) ? $_POST['update_block'] : false;
+  $submit_op = ($update_block == 'true') ? "modify&block_id=$block_id" : 'add';
  
-  if(empty($name) || empty($ip)){
+  if(empty($name) || (!empty($end_ip) && empty($ip))){
     $notice = "missingfield-notice";
-    header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   
   $return = validate_text($name,'blockname');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   else{
     $name = $return['1'];
   }
-  $result = mysql_query("SELECT id from blocks where name='$name'");
-  if(mysql_num_rows($result) != '0'){
-    header("HTTP/1.1 500 Internal Error");
-    $notice = 'duplicatename';
-	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
-    exit();
+  unset($return);
+
+  if($update_block === false){ # checking for duplicate block name
+    $result = mysql_query("SELECT id from blocks where name='$name'");
+	if(mysql_num_rows($result) != '0'){
+  	  header("HTTP/1.1 500 Internal Error");
+   	  $notice = 'duplicatename';
+   	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+   	  exit();
+	}
+  }
+  else{ # checking that we're updating a block that actually exists
+    $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
+	if(mysql_num_rows($result) != '1'){
+      header("HTTP/1.1 500 Internal Error");
+      $notice = 'selectblock';
+	  header("Location: blocks.php?notice=$notice");
+   	  exit();
+	}
+	$old_block_name = mysql_result($result, 0);
   }
   
   $return = validate_text($note,'note');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
   else{
     $note = $return['1'];
   }
+  unset($return);
   
-  if(empty($end_ip)){ # subnet supplied
-    $return = validate_network($ip,'block');
+  if(empty($end_ip) && !empty($ip)){ # subnet supplied
+    $return = validate_network($ip,'block',$block_id);
   }
-  else{ # range supplied
-    $return = validate_ip_range($ip,$end_ip,'block');
+  elseif(!empty($ip)){ # range supplied
+    $return = validate_ip_range($ip,$end_ip,'block',$block_id);
   }
   
-  if($return['0'] === false){
+  if(isset($return) && $return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=add&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
 	exit();
   }
-  else{
-    $start_ip = $return['start_ip'];
-	$end_ip = $return['end_ip'];
+  elseif(isset($return)){
 	$long_start_ip = $return['long_start_ip'];
 	$long_end_ip = $return['long_end_ip'];
   }
-    
-  $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now())";
+  unset($return);
   
+  if($update_block){
+    $sql = "UPDATE blocks SET name='$name', start_ip='$long_start_ip', end_ip='$long_end_ip', note='$note', modified_by='$username', modified_at=now() WHERE id='$block_id'";
+  }
+  else{
+    $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at) VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now())";
+  }
+ 
   $accesslevel = "4";
-  $message = "IP Block added: $name";
+  $message = ($update_block) ? "IP Block updated: $name" : "IP Block added: $name";
+  $message .= ($name != $old_block_name) ? "(previously $old_block_name)" : '';
   AccessControl($accesslevel, $message); // We don't want to generate logs when nothing is really happening, so this goes down here.
   
-  
   mysql_query($sql);
-  $notice = 'blockadded-notice';
+  $notice = ($update_block) ? 'blockupdated-notice' : 'blockadded-notice';
   header("Location: blocks.php?notice=$notice");
   exit();
 
@@ -141,6 +229,28 @@ function submit_block() {
 function list_blocks(){
   global $COLLATE;
   require_once('./include/header.php');
+  
+  $block_id = (isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])) ? $_GET['block_id'] : '';
+  
+  if(!empty($block_id)){
+    $parent_name_check = "SELECT name FROM blocks WHERE id = '$block_id'";
+    $result = mysql_query($parent_name_check);
+    if(mysql_num_rows($result) != '1'){
+      $block_id = ''; # Instead of an error, we'll just show them the root-level blocks list
+    }
+    else{
+      $parent_block_name = mysql_result($result, 0);
+	  $block_limit_sql = "WHERE parent_id='$block_id'";
+    }
+  }
+  
+  if(empty($block_id)){
+    $heading = $COLLATE['languages']['selected']['AllIPBlocks'];
+	$block_limit_sql = "WHERE parent_id is NULL";
+  }
+  else{
+	$heading = str_replace("%block_name%", $parent_block_name, $COLLATE['languages']['selected']['SomeIPBlocks']);
+  }
    
   $sort = (empty($_GET['sort'])) ? "" : $_GET['sort'];
   if ($sort === 'network') { 
@@ -150,32 +260,48 @@ function list_blocks(){
     $sort = 'name';
   }
  
-  echo "<h1>".$COLLATE['languages']['selected']['AllIPBlocks']."</h1>\n".
-       "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add\">
-	   <img src=\"./images/add.gif\" alt=\"Add\" /> ".$COLLATE['languages']['selected']['AddaBlock']." </a></p>";
+  echo "<h1>$heading</h1>";
+  if(!empty($block_id)){
+    echo "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add&parent_block=$block_id\">";
+  }
+  else{
+    echo "<p style=\"text-align: right;\"><a href=\"blocks.php?op=add\">";
+  }
+       
+ echo "<img src=\"./images/add.gif\" alt=\"Add\" /> ".$COLLATE['languages']['selected']['AddaBlock']." </a></p>";
 	   
   echo "<table width=\"100%\">\n". // Here we actually build the HTML table
 	     "<tr><th align=\"left\"><a href=\"blocks.php\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
 	     "<th align=\"left\"><a href=\"blocks.php?sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
 	     "<th align=\"left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
 	     "</tr>\n".
-	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
+	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
 		 
-  $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note` FROM `blocks` ORDER BY `$sort` ASC";
+  $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note`,`type` FROM `blocks` $block_limit_sql ORDER BY `$sort` ASC";
   $results = mysql_query($sql);
   $javascript = ''; # this gets concatenated to below
-  while(list($block_id,$name,$long_start_ip,$long_end_ip,$note) = mysql_fetch_row($results)){
-    $start_ip = long2ip($long_start_ip);
-	$end_ip = long2ip($long_end_ip);
+  while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($results)){
+    $link_target = ($block_type == 'container') ? "blocks.php?block_id=$block_id" : "subnets.php?block_id=$block_id";
+	if(empty($long_start_ip)){
+	  $start_ip = $COLLATE['languages']['selected']['Browse'];
+	  $end_ip = '';
+	}
+	else{
+	  $start_ip = long2ip($long_start_ip);
+	  $end_ip = long2ip($long_end_ip);
+	}
+    
 	
     echo "<tr id=\"block_".$block_id."_row_1\">
 	     <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
-		 <td><a href=\"subnets.php?block_id=$block_id\">$start_ip</a></td>
+		 <td><a href=\"$link_target\">$start_ip</a></td>
 		 <td>$end_ip</td>
-		 <td>";
+		 <td style=\"text-align: right;\">";
 		 
 	if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
-	  echo " <a href=\"#\" onclick=\"
+	  echo "<a href=\"blocks.php?op=modify&amp;block_id=$block_id\"><img alt=\"modify block\" title=\"".
+           $COLLATE['languages']['selected']['modifyblock']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
+		   " <a href=\"#\" onclick=\"
 	         if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
 			   new Element.update('notice', ''); 
 			   new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 

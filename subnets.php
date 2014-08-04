@@ -92,68 +92,74 @@ function add_subnet (){
        "</div>\n".
        "</form>";
     
-    
+    echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n";
+	
     // Here we'll figure out what available space is left in the IP Block and list it out for the user
     $ipspace = array();
     
     $sql = "SELECT name, start_ip, end_ip FROM blocks WHERE id = '$block_id'";
     $results = mysql_query($sql);
     list($block_name,$block_long_start_ip,$block_long_end_ip) = mysql_fetch_row($results);
+	if(!empty($block_long_start_ip)){
 
-    array_push($ipspace, $block_long_start_ip);
-    
-    // We need to consider that some subnets in the block are not in the IP range the block specifies, so we compare ranges as well as block_id.
-    $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$block_long_start_ip' & 0xFFFFFFFF) AS UNSIGNED) AND CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$block_long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
-    $subnet_rows = mysql_query($sql);
-    
-    while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
-      array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
-    }
-    array_push($ipspace, $block_long_end_ip);
-    $ipspace = array_reverse($ipspace);
-    
-    $ipspace_count = count($ipspace);
-    
-    $availableipspaceinblock = str_replace("%block_name%", "$block_name", $COLLATE['languages']['selected']['AvailableIPinBlock']);
-    
-    echo "<div style=\"float: left; width: 45%; padding-left: 10px; border-left: 1px solid #000;\">\n".
-         "<div id=\"blockspace\">\n".
-         "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".
-         $COLLATE['languages']['selected']['Showsearchinstead']."</a></p>\n".
-         "<h3>$availableipspaceinblock:</h3><br />\n".
-         "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
-         "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
+      array_push($ipspace, $block_long_start_ip);
+      
+      // We need to consider that some subnets in the block are not in the IP range the block specifies, so we compare ranges as well as block_id.
+      $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$block_long_start_ip' & 0xFFFFFFFF) AS UNSIGNED) AND CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$block_long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
+      $subnet_rows = mysql_query($sql);
+      
+      while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
+        array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
+      }
+      array_push($ipspace, $block_long_end_ip);
+      $ipspace = array_reverse($ipspace);
+      
+      $ipspace_count = count($ipspace);
+      
+      $availableipspaceinblock = str_replace("%block_name%", "$block_name", $COLLATE['languages']['selected']['AvailableIPinBlock']);
+      
+      echo "<div id=\"blockspace\">\n".
+           "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
+           "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".
+           $COLLATE['languages']['selected']['Showsearchinstead']."</a></p>\n".
+           "<h3>$availableipspaceinblock:</h3><br />\n".
+           "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+           "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
+      
+      while(!empty($ipspace)){
+        $long_start = array_pop($ipspace);
+        if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
+          $start = long2ip($long_start + 1);
+        }
+        else{
+          $start = long2ip($long_start);
+        }
+          
+        $long_end = array_pop($ipspace);
+        if(count($ipspace) > '1'){
+          $end = long2ip($long_end - 1);
+        }
+        else{
+          $end = long2ip($long_end);
+        }
+          
+        if($long_start + 1 != $long_end && $long_start != $long_end){
+          echo "<tr><td>$start</td><td>$end</td></tr>";
+        }
+      }
+      echo "</table></div>\n".
+	       "<div id=\"spacesearch\" style=\"display: none;\">\n".
+		   "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); \n".
+		   "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n";
+	}
+	else{
+	  echo "<div id=\"spacesearch\">";
+	  $searchonlyparam = '&amp;searchonly=true';
+	}
 
-    while(!empty($ipspace)){
-      $long_start = array_pop($ipspace);
-      if(count($ipspace) != $ipspace_count - '1'){ // Don't subtract 1 from the very first start IP
-        $start = long2ip($long_start + 1);
-      }
-      else{
-        $start = long2ip($long_start);
-      }
-        
-      $long_end = array_pop($ipspace);
-      if(count($ipspace) > '1'){
-        $end = long2ip($long_end - 1);
-      }
-      else{
-        $end = long2ip($long_end);
-      }
-        
-      if($long_start + 1 != $long_end && $long_start != $long_end){
-        echo "<tr><td>$start</td><td>$end</td></tr>";
-      }
-    }
-    echo "</table></div>";
-
-    echo "<div id=\"spacesearch\" style=\"display: none;\">\n".
-         "<p><a href=\"#\" onclick=\"new Effect.toggle('blockspace', 'blind', { delay: 0.1 }); ".
-         "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".$COLLATE['languages']['selected']['showblockspace']."</a></p>\n".
-         "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
+    echo "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
          "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\"><br />".
-         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search&amp;search=' + $('subnetsearch').value);\"); return false;\"> ".
+         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search$searchonlyparam&amp;search=' + $('subnetsearch').value);\"); return false;\"> ".
          $COLLATE['languages']['selected']['Go']." </button></p></div>";
 
     echo "</div><p style=\"clear: left;\">\n";
@@ -345,7 +351,7 @@ function list_subnets(){
     echo "<tr id=\"subnet_".$subnet_id."_row_1\">
          <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
          <td>$mask</td>$percent_subnet_used
-         <td>";
+         <td style=\"text-align: right;\">";
          
     if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
       echo "<a href=\"subnets.php?op=modify&amp;subnet_id=$subnet_id\"><img alt=\"modify subnet\" title=\"".
@@ -460,12 +466,31 @@ function modify_subnet (){
        "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
        "<p>".$COLLATE['languages']['selected']['selectblock']."</p>".
        "<select name=\"block_id\">";
-  $sql = "SELECT id, name FROM blocks ORDER BY NAME ASC";
+
+  $sql = "SELECT id, name, parent_id FROM blocks WHERE type='ipv4'";
   $result = mysql_query($sql);
-  while(list($block_id,$block_name) = mysql_fetch_row($result)){
-    echo "<option value=\"$block_id\">$block_name</option\">";
+  while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
+    #$block_paths[$select_block_id]['name']=$select_block_name;
+	$block_paths[$select_block_id]="$select_block_name";
+	while($select_block_parent !== null){ #this has the potential to be really slow and awful...
+	  $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
+	  list($recursive_parent_name,$recursive_parent_parent) = mysql_fetch_row($recursive_result);
+	  $block_paths[$select_block_id] = "$recursive_parent_name/".$block_paths[$select_block_id];
+	  $select_block_parent = $recursive_parent_parent;
+	}
+	$block_paths[$select_block_id]='[root]/'.$block_paths[$select_block_id];
   }
-  echo "</select><br /><br />".
+  natcasesort($block_paths);
+  foreach ($block_paths as $select_id => $select_text){
+    if($parent_block == $select_id){
+	  echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
+	}
+	else{
+	  echo "<option value=\"$select_id\">$select_text</option>\n";
+    }
+  }
+	   
+  echo "</select></p>\n".
        "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p></form><br /><br />";
 
   $resizesubnet = str_replace("%subnet_name%", $subnet_name, $COLLATE['languages']['selected']['Resizesubnet']);
@@ -481,8 +506,8 @@ function modify_subnet (){
 
 function submit_move_subnet (){
   
-  $subnet_id = (isset($_POST['subnet_id']) && is_numeric($_POST['subnet_id'])) ? $_POST['subnet_id'] : '';
-  $block_id = (isset($POST['block_id']) && is_numeric($_POST['block_id'])) ? $_POST['block_id'] : '';
+  $subnet_id = (isset($_POST['subnet_id']) && preg_match("/[0-9]*/", $_POST['subnet_id'])) ? $_POST['subnet_id'] : '';
+  $block_id = (isset($_POST['block_id']) && preg_match("/[0-9]*/", $_POST['block_id'])) ? $_POST['block_id'] : '';
   
   if(empty($subnet_id) || empty($block_id)){
     $notice = "invalidrequest";

@@ -27,6 +27,7 @@ CREATE TABLE `blocks` (
   `note` varchar(255) NOT NULL,
   `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
+  `parent_id` int(9) UNSIGNED,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=latin1;
@@ -350,6 +351,8 @@ ALTER TABLE `statics` ENGINE = INNODB
 
 $upgrade_from_two_dot_one =
 "
+ALTER TABLE blocks ADD `parent_id` int(9) UNSIGNED;
+ALTER TABLE blocks ADD `type` ENUM('container','ipv4','ipv6') DEFAULT 'ipv4';
 ALTER TABLE subnets ADD stalescan_enabled BOOL NOT NULL default true; 
 UPDATE settings SET value='2.2' WHERE name='version';
 ";
