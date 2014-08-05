@@ -26,7 +26,7 @@
 	    <li style="font-size: .8em;"><?php echo $COLLATE['languages']['selected']['Hostname']; ?>:</li>
 		<li>
 		  <input type="hidden" name="op" value="search" />
-		  <input type="hidden" name="first" value="1" />
+		  <input type="hidden" name="first" value="2" />
 		  <input type="hidden" name="second" value="name" />
 		  <input type="text" name="search" />
 		</li>
@@ -38,7 +38,7 @@
 	    <li style="font-size: .8em;"><?php echo $COLLATE['languages']['selected']['IP']; ?>:</li>
 		<li>
 		  <input type="hidden" name="op" value="search" />
-		  <input type="hidden" name="first" value="1" />
+		  <input type="hidden" name="first" value="2" />
 		  <input type="hidden" name="second" value="ip" />
 		  <input type="text" name="search" />		  
 		</li>
