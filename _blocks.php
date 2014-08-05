@@ -128,23 +128,4 @@ function delete_block(){
   echo $message;
   
 } // Ends delete_block function
-
-function find_child_blocks($block_id){
-  # Input: integer block id
-  # output: single-dimensional array of child blocks (recursive)
-  # outputs false if the block has no children
-  
-  $sql = "SELECT id FROM blocks WHERE parent_id='$block_id'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) === 0){ return false; }
-  $return = array();
-  while(list($child_block) = mysql_fetch_row($result)){
-    $return[] = $child_block;
-	if(find_child_blocks($child_block) !== false){
-      $return = array_merge($return,find_child_blocks($child_block));
-    }
-  }
-  return $return;  
-}
-
 ?>

@@ -1,6 +1,9 @@
 <?php
 /*
  * Please see /include/common.php for documentation on common.php and the $COLLATE global array used by this application as well as the AccessControl function used widely.
+ *
+ * Also, I'm *so* sorry about the use of $first, $second in this file. 
+ * $first is haystack, $second is needle-type.
  */
 require_once('./include/common.php');
 
@@ -72,7 +75,31 @@ function download() {
 
   echo "<table>\n";
   
-  if($first == "subnets"){
+  if($first == "blocks"){
+    echo "<tr><th>".$COLLATE['languages']['selected']['BlockName']."</a></th>".
+         "<th>".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
+         "<th>".$COLLATE['languages']['selected']['EndIP']."</th>".
+	     "<th>".$COLLATE['languages']['selected']['Note']."</th></tr>\n";
+
+    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($row)){
+      if(empty($long_start_ip)){
+        $start_ip = '';
+        $end_ip = '';
+      }
+      else{
+        $start_ip = long2ip($long_start_ip);
+        $end_ip = long2ip($long_end_ip);
+      }   
+      
+      echo "<tr>
+            <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
+            <td>$start_ip</td>
+            <td>$end_ip</td>
+			<td>$note</td>
+            </tr>";
+	}
+  }
+  elseif($first == "subnets"){
     echo "<tr><th>".$COLLATE['languages']['selected']['SubnetName']."</th>".
 	     "<th>".$COLLATE['languages']['selected']['Block']."</th>".
          "<th>".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
@@ -196,7 +223,91 @@ function search() {
     exit();
   }
   
-  if($first == "subnets"){
+  if($first == "blocks"){
+    echo "<table width=\"100%\">\n". // Here we actually build the HTML table
+       "<tr><th align=\"left\"><a href=\"blocks.php\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
+       "<th align=\"left\"><a href=\"blocks.php?sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
+       "<th align=\"left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
+       "</tr>\n".
+       "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
+    
+    $javascript = ''; # this gets concatenated to below
+    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($row)){
+      $link_target = ($block_type == 'container') ? "blocks.php?block_id=$block_id" : "subnets.php?block_id=$block_id";
+      if(empty($long_start_ip)){
+        $start_ip = $COLLATE['languages']['selected']['Browse'];
+        $end_ip = '';
+      }
+      else{
+        $start_ip = long2ip($long_start_ip);
+        $end_ip = long2ip($long_end_ip);
+      }   
+      
+      echo "<tr id=\"block_".$block_id."_row_1\">
+            <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
+            <td><a href=\"$link_target\">$start_ip</a></td>
+            <td>$end_ip</td>
+            <td style=\"text-align: right;\">";
+      
+      if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+        echo "<a href=\"blocks.php?op=modify&amp;block_id=$block_id\"><img alt=\"modify block\" title=\"".
+               $COLLATE['languages']['selected']['modifyblock']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
+      	   " <a href=\"#\" onclick=\"
+               if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
+      		   new Element.update('notice', ''); 
+      		   new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
+      		     new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), 
+      			 new Effect.Fade('block_".$block_id."_row_2'), 
+      			 new Effect.Fade('block_".$block_id."_row_3')]); 
+                   }}); 
+      		 };
+      		 return false;\">
+      		 <img src=\"./images/remove.gif\" alt=\"X\" /></a>";
+      }
+      echo "</td>
+            </tr>\n";
+      echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
+      echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
+      
+      if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
+        $javascript .=
+      	   "<script type=\"text/javascript\"><!--\n".
+             "  new Ajax.InPlaceEditor('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
+      	      {
+      		   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+      		   highlightcolor: '#a5ddf8', 
+      		   callback:
+      		    function(form) {
+      		      new Element.update('notice', '');
+      			  return Form.serialize(form);
+      		    },
+      		   onFailure: 
+      		    function(transport) {
+      		      new Element.update('notice', transport.responseText.stripTags());
+      		    }
+      		  }
+      		  );\n".
+      	   "  new Ajax.InPlaceEditor('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
+      	      {
+      		   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
+      		   highlightcolor: '#a5ddf8',  
+      		   callback:
+      		    function(form) {
+      		      new Element.update('notice', '');
+      			  return Form.serialize(form);
+      		    },
+      		   onFailure: 
+      		    function(transport) {
+      		      new Element.update('notice', transport.responseText.stripTags());
+      		    }
+      		  }
+      		  );\n".
+      	   "--></script>\n";
+      }
+	}
+    echo "</table>";
+  }
+  elseif($first == "subnets"){
     echo "<table width=\"100%\">\n". 
 	     "<tr><th align=\"left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
 		 "<th align=\"left\">".$COLLATE['languages']['selected']['Block']."</th>".
@@ -220,7 +331,8 @@ function search() {
 	  $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
       
       echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td>".$block_name[$block_id].
+           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"subnets.php?block_id=$block_id\">".
+		   $block_name[$block_id]."</a>".
 		   "</td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
            <td>$mask</td>$percent_subnet_used
            <td>";
@@ -300,13 +412,19 @@ function search() {
 	
 		# Build path information for IP - use an array to avoid accessive db calls
 		if(!isset($path[$subnet_id])) {
-			$pathsql = "SELECT blocks.name, subnets.name, subnets.block_id, subnets.stalescan_enabled FROM blocks, subnets 
+			$pathsql = "SELECT blocks.name, blocks.parent_id, subnets.name, subnets.block_id, subnets.stalescan_enabled FROM blocks, subnets 
                         WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
 			$result = mysql_query($pathsql);
 			if(mysql_num_rows($result) == '1'){
-				list($block_name, $subnet_name, $block_id, $stalescan_enabled) = mysql_fetch_row($result);
-				$path[$subnet_id] = "<a href=\"blocks.php\">All</a> / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
-				 <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
+				list($block_name, $block_parent, $subnet_name, $block_id, $stalescan_enabled) = mysql_fetch_row($result);
+				if($block_parent === null){
+				  $path[$subnet_id] = "<a href=\"blocks.php\">[root]</a> / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
+				   <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
+				}
+				else{
+				  $path[$subnet_id] = "<a href=\"blocks.php\">[root]</a> / ... / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
+				   <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
+				}
 			}
 		}
 	
@@ -444,12 +562,16 @@ function show_form()  {
   var store = new Array();
   
   store[0] = new Array(
+  	'<?php echo $COLLATE['languages']['selected']['name']; ?>', 'name',
+  	'<?php echo $COLLATE['languages']['selected']['note']; ?>', 'note');
+  
+  store[1] = new Array(
   	'<?php echo $COLLATE['languages']['selected']['IP']; ?>', 'ip',
   	'<?php echo $COLLATE['languages']['selected']['name']; ?>', 'name',
   	'<?php echo $COLLATE['languages']['selected']['note']; ?>', 'note',
   	'<?php echo $COLLATE['languages']['selected']['lastmodifiedby']; ?>', 'modified_by');
   
-  store[1] = new Array(
+  store[2] = new Array(
   	'<?php echo $COLLATE['languages']['selected']['IP']; ?>', 'ip',
   	'<?php echo $COLLATE['languages']['selected']['name']; ?>', 'name',
   	'<?php echo $COLLATE['languages']['selected']['contact']; ?>', 'contact',
@@ -457,7 +579,7 @@ function show_form()  {
   	'<?php echo $COLLATE['languages']['selected']['lastmodifiedby']; ?>', 'modified_by',
     '<?php echo $COLLATE['languages']['selected']['failedscanscount']; ?>', 'failed_scans');
   	
-  store[2] = new Array(
+  store[3] = new Array(
   	'<?php echo $COLLATE['languages']['selected']['username']; ?>', 'username',
   	'<?php echo $COLLATE['languages']['selected']['level']; ?>', 'level',
   	'<?php echo $COLLATE['languages']['selected']['message']; ?>', 'message');
@@ -505,16 +627,15 @@ function show_form()  {
   <form onload="init();" id="test" action="search.php" method="get">
   <p><?php echo $COLLATE['languages']['selected']['Lookfor']; ?> <input type="hidden" name="op" value="search" />
   <select name="first" onchange="populate();">
-    <option value="0"><?php echo $COLLATE['languages']['selected']['subnets']; ?></option>
-	<option value="1"><?php echo $COLLATE['languages']['selected']['staticIPs']; ?></option>
-	<option value="2"><?php echo $COLLATE['languages']['selected']['logs']; ?></option>
+    <option value="0"><?php echo $COLLATE['languages']['selected']['IPblocks']; ?></option>
+    <option value="1"><?php echo $COLLATE['languages']['selected']['subnets']; ?></option>
+	<option value="2"><?php echo $COLLATE['languages']['selected']['staticIPs']; ?></option>
+	<option value="3"><?php echo $COLLATE['languages']['selected']['logs']; ?></option>
   </select>
   <?php echo $COLLATE['languages']['selected']['withaan']; ?>
   <select name="second">
-	<option value="ip"><?php echo $COLLATE['languages']['selected']['IP']; ?></option>
 	<option value="name"><?php echo $COLLATE['languages']['selected']['name']; ?></option>
 	<option value="note"><?php echo $COLLATE['languages']['selected']['note']; ?></option>
-	<option value="modified_by"><?php echo $COLLATE['languages']['selected']['lastmodifiedby']; ?></option>
   </select> matching: <input name="search" type="text" /> &nbsp;
   <br />
   <br />
@@ -553,16 +674,21 @@ function build_search_sql(){
   $when = ($fromdate == $todate) ? 'all' : 'dates';
   
   if($first === '0'){
+    // block search
+	$pattern = "/^name$|^note$/";
+	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
+  }
+  elseif($first === '1'){
     // subnet search
 	$pattern = "/^ip$|^name$|^note$|^modified_by$/";
 	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
   }
-  elseif($first === '1'){
+  elseif($first === '2'){
     // statics search
 	$pattern = "/^ip$|^name$|^contact$|^note$|^modified_by$|^failed_scans$/";
 	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
   }
-  elseif($first === '2'){
+  elseif($first === '3'){
     // logs search
 	$pattern = "/^username$|^level$|^message$/";
 	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
@@ -597,7 +723,7 @@ function build_search_sql(){
   }
   
   // -----------------------------------------------Build our sort variable---------------------------------------------
-  if($first == '0'){ // subnet search
+  if($first == '1'){ // subnet search
     // use what they ask for or default to what they searched by
     // $sort is what the URI uses, $order and $full_order go into the SQL query - $full_order includes ASC or DESC
     if(!empty($_GET['sort']) && ( $_GET['sort'] == 'network' || $_GET['sort'] == 'name' )){
@@ -609,7 +735,7 @@ function build_search_sql(){
     $order = $sort;
     if($sort == 'network' || $sort == 'ip'){ $order = 'start_ip'; }
   }
-  else{ // static IP search or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
+  else{ // IP blocks, statics, or logs (logs are always sorted by ID Desc. because they're logs and i'm lazy)
     if(!empty($_GET['sort']) && ( $_GET['sort'] == 'ip' || $_GET['sort'] == 'name' || $_GET['sort'] == 'contact' || $_GET['sort'] == 'failed_scans')){
       $sort = $_GET['sort'];
     }
@@ -620,7 +746,7 @@ function build_search_sql(){
   }
   //-----------------------------------------------------------------------------------------------------------------------------
   
-  if(($first == '0' || $first == '1') && $second == "ip"){
+  if(($first == '1' || $first == '2') && $second == "ip"){
   
     if(!strstr($search, '/')){
       $ip = $search;
@@ -654,6 +780,7 @@ function build_search_sql(){
 	  exit();
     }
   }
+  
   $long_ip = (isset($ip)) ? ip2decimal($ip) : '';
   $long_mask = (isset($mask)) ? ip2decimal($mask) : '';
   
@@ -662,13 +789,20 @@ function build_search_sql(){
 	$searchdescription = str_replace("%todate%", "$todate", $COLLATE['languages']['selected']['searchdatedesc']);
   }
   
-  if($first == "0") { // Subnet search
+  if($first == "0") { // Blocks search
+    $first = "blocks";
+    $First = "IP Blocks";
+	
+	$sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%'";
+  }
+  if($first == "1") { // Subnet search
     $first = "subnets";
     $First = "Subnets";
 
     if($when == "dates"){
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) AND
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE 
+		CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF  AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF  AS UNSIGNED) AND
         modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
         }
       else{
@@ -678,14 +812,17 @@ function build_search_sql(){
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE CAST(start_ip AS UNSIGNED) & CAST('$long_mask' AS UNSIGNED) = CAST('$long_ip' AS UNSIGNED) ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE 
+               CAST(start_ip & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) & 
+			   CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) 
+			   ORDER BY `$order` ASC";
         }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
       }
     }
   }
-  elseif($first == "1"){ // Statics earch
+  elseif($first == "2"){ // Statics earch
     $first = "static IPs";
     if($sort == 'failed_scans'){
       $full_order = "`failed_scans` DESC";
@@ -724,7 +861,7 @@ function build_search_sql(){
       }
     }
   }
-  elseif($first == "2"){ // They're trying to search logs
+  elseif($first == "3"){ // They're trying to search logs
     $first = "logs";
     $First = "Logs";
     $Second = ucfirst($second);

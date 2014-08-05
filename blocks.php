@@ -68,10 +68,12 @@ function add_block(){
   if(empty($block_type) || $block_type == 'ipv4'){
     $ipv4block_html = 'checked="checked"';
 	$containerblock_html = '';
+	$ip_range_style = '';
   }
   else{
     $ipv4block_html = '';
     $containerblock_html = 'checked="checked"';
+	$ip_range_style = 'style="display: none;"';
   }
   
   require_once('./include/header.php');
@@ -80,26 +82,34 @@ function add_block(){
 	   "<br />\n".
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
-	   "  <p><input type=\"radio\" name=\"block_type\" $containerblock_html value=\"container\"> ".
-	      $COLLATE['languages']['selected']['iscontainerblock']."<br />\n".
-	   "     <input type=\"radio\" name=\"block_type\" $ipv4block_html value=\"ipv4\"> ".
-	      $COLLATE['languages']['selected']['isipv4block']."\n".
+	   "  <p><input type=\"radio\" name=\"block_type\" $containerblock_html value=\"container\" 
+	          onchange=\"new Effect.Fade('iprangefields', {duration: 0.2}); return false;\"> ".$COLLATE['languages']['selected']['iscontainerblock'].
+       "<br />\n".
+	   "     <input type=\"radio\" name=\"block_type\" $ipv4block_html value=\"ipv4\" 
+	          onchange=\"new Effect.Appear('iprangefields'); return false;\"> ".
+	      $COLLATE['languages']['selected']['isipv4block'].
 	   "  </p>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
-	   "  <p><b>".$COLLATE['languages']['selected']['IP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
-	   "    <br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	   "  </p>\n".
-	   "  <p><b>".$COLLATE['languages']['selected']['EndIP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
-	   "    <br /><input type=\"text\" name=\"end_ip\" value=\"$end_ip\" />\n".
-	   "    <a href=\"#\" onclick=\"new Effect.toggle($('endiptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-	   "  </p>\n".
+	   "  <p id=\"nametip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknamehelp']."</p>\n".
+	   "  <div id=\"iprangefields\" $ip_range_style>\n".
+	   "    <p><b>".$COLLATE['languages']['selected']['IP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
+	   "      <br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
+	   "      <a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    </p>\n".
+	   "    <p id=\"iptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockiphelp']."</p>\n".
+	   "    <p><b>".$COLLATE['languages']['selected']['EndIP'].":</b> ".$COLLATE['languages']['selected']['Optional'].
+	   "      <br /><input type=\"text\" name=\"end_ip\" value=\"$end_ip\" />\n".
+	   "      <a href=\"#\" onclick=\"new Effect.toggle($('endiptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
+	   "    </p>\n".
+	   "    <p id=\"endiptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockendiphelp']."</p>\n".
+	   "  </div>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional'].
 	   "    <br /><input type=\"text\" name=\"note\" value=\"$note\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  $hidden_form_inputs</p>\n".
+	   "  <p id=\"notetip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknotehelp']."</p>\n".
        "  <p><b>".$COLLATE['languages']['selected']['ParentBlock'].":</b><select name=\"parent_block\">";
 	   
   if($parent_block !== null){
@@ -134,15 +144,15 @@ function add_block(){
   echo "</select></p>\n".
        "  <p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
 	   "</form></div>\n".
-	   "<div id=\"nametip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknamehelp']."<br /><br /></div>\n".
-	   "<div id=\"iptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockiphelp']."<br /><br /></div>\n".
-	   "<div id=\"endiptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockendiphelp']."<br /><br /></div>\n".
-	   "<div id=\"notetip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknotehelp']."<br /><br /></div>\n".
-	   "<p style=\"clear: both\" />\n";
+       "<p style=\"clear: both\" />\n";
 
 } // Ends add_block function
 
 function submit_block() {
+  #validation here might look messy, but it's essentially in order of parameters listed below by
+  # 1. all checks that don't require db lookups
+  # 2. all other checks
+  
   global $COLLATE;
   include 'include/validation_functions.php';
   
@@ -155,10 +165,16 @@ function submit_block() {
   $update_block = (isset($_POST['update_block'])) ? $_POST['update_block'] : false;
   $submit_op = ($update_block == 'true') ? "modify&block_id=$block_id" : 'add';
   $parent_block = (isset($_POST['parent_block'])) ? $_POST['parent_block'] : '';
+  $block_type = (isset($_POST['block_type'])) ? $_POST['block_type'] : '';
+  
+  if($block_type == 'container'){ #containers don't have IP ranges associated with them
+    $ip = '';
+	$end_ip = '';
+  }
    
-  if(empty($name) || (!empty($end_ip) && empty($ip))){
+  if(empty($name) || (!empty($end_ip) && empty($ip)) || empty($block_type)){
     $notice = "missingfield-notice";
-    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
 	exit();
   }
   
@@ -171,20 +187,26 @@ function submit_block() {
   $return = validate_text($name,'blockname');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
 	exit();
   }
   else{
     $name = $return['1'];
   }
   unset($return);
+  
+  if(!preg_match('/^container$|^ipv4$/', $block_type)){
+    $notice = 'invalidrequest';
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	exit();
+  }
 
   if($update_block === false){ # checking for duplicate block name
     $result = mysql_query("SELECT id from blocks where name='$name'");
 	if(mysql_num_rows($result) != '0'){
   	  header("HTTP/1.1 500 Internal Error");
    	  $notice = 'duplicatename';
-   	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+   	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
    	  exit();
 	}
   }
@@ -202,7 +224,7 @@ function submit_block() {
   $return = validate_text($note,'note');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
 	exit();
   }
   else{
@@ -219,7 +241,7 @@ function submit_block() {
   
   if(isset($return) && $return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
 	exit();
   }
   elseif(isset($return)){
@@ -251,15 +273,32 @@ function submit_block() {
     $old_parent_block = mysql_result(mysql_query($sql), 0);
   }
   
+  # If we're changing an existing block, we must make sure we don't orphan a child object
+  if($update_block !== false){
+    if($block_type == 'ipv4' && find_child_blocks($block_id) !== false){
+	  $notice = 'wouldorphanblocks';
+	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	  exit();	  
+	}
+	elseif($block_type == 'container'){ # just check this block for subnets
+	  $sql = "SELECT count(*) FROM subnets where block_id='$block_id'";
+	  if(mysql_result(mysql_query($sql), 0) != '0'){
+	    $notice = 'wouldorphansubnets';
+	    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	    exit();
+	  }
+	}
+  }
+  
   if($update_block){
     $sql = "UPDATE blocks SET name='$name', start_ip='$long_start_ip', end_ip='$long_end_ip', note='$note', modified_by='$username', modified_at=now(),
-           parent_id=$parent_id WHERE id='$block_id'";
+           parent_id=$parent_id, type='$block_type' WHERE id='$block_id'";
   }
   else{
-    $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at, parent_id) 
-	       VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now(), $parent_id)";
+    $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at, parent_id, type) 
+	       VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now(), $parent_id, $block_type)";
   }
- 
+  
   $accesslevel = "4";
   $message = ($update_block) ? "IP Block updated: $name" : "IP Block added: $name";
   $message .= ($name != $old_block_name) ? "(previously $old_block_name)" : '';

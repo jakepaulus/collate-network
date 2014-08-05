@@ -120,6 +120,8 @@ $languages["en"] = array(
   "iscontainerblock"    => "This block is meant to hold other blocks",
   "isipv4block"         => "This block is meant to hold IPv4 subnets",
   "ParentBlock"         => "Parent Block",
+  "wouldorphansubnets"  => "You cannot change the block to the type specified because there are subnets in this block.",
+  "wouldorphanblocks"   => "You cannot change the block to the type specified because there are child blocks that would be orphaned.",
 
   
 // index.php
@@ -229,6 +231,7 @@ $languages["en"] = array(
   "dateTo"             => "To:",
   "Exportresults"      => "Export Results as XML (Compatable with most spreadsheet applications.)",
   "searchdatedesc"     => "and the record was last modified between %fromdate% and %todate%",
+  "IPblocks"           => "IP blocks",
   
 // common.php
   "login-notice" => "The administrator of this application requires you to log in to use this feature.",

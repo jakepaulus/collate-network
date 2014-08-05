@@ -482,7 +482,7 @@ function modify_subnet (){
   }
   natcasesort($block_paths);
   foreach ($block_paths as $select_id => $select_text){
-    if($parent_block == $select_id){
+    if($select_block_parent == $select_id){
 	  echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
 	}
 	else{
