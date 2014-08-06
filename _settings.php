@@ -77,25 +77,27 @@ switch($op){
 
 function update_language(){
   global $COLLATE;
-  $language = (isset($_GET['language'])) ? $_GET['language'] : '';
+  $language = (isset($_GET['value'])) ? $_GET['value'] : '';
   
   foreach (glob("languages/*.php") as $filename){
     include $filename;
   }
   if(!isset($languages[$language]['isocode']) || $language != $languages[$language]['isocode'] || empty($language)){
     header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit(); 
   } 
 
-  if($language == $COLLATE['settings']['language']){ exit(); }
+  if($language == $COLLATE['settings']['language']){ 
+    echo $languages[$language]['languagename'];
+	exit();
+  }
   
   $message = "Settings Updated: default language changed from ".$COLLATE['languages']['selected']['languagename']." to ".$languages[$language]['languagename'];
   collate_log('5', $message);
   
   $sql = "update settings set value='$language' where name='language'";
   mysql_query($sql);
-  echo $COLLATE['languages']['selected']['settingupdated'];
+  echo $languages[$language]['languagename'];
   exit();
 
 }
@@ -118,13 +120,13 @@ function update_authorization(){
   $sql = "SELECT id FROM users WHERE accesslevel='5'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) < '1'){
+    header("HTTP/1.1 500 Internal Error");
     echo $COLLATE['languages']['selected']['needadmin'];
     exit();
   }
   $sql = "UPDATE settings SET value='$perms' WHERE name='perms'";
   mysql_query($sql);
-
-  echo $COLLATE['languages']['selected']['settingupdated'];
+  echo ""; # this clears the notification div
   collate_log('5', "Settings Updated: authorization level changed");
   exit();
 }
@@ -143,13 +145,13 @@ function update_authentication(){
   
   if($COLLATE['settings']['auth_type'] != $auth_type) {
     if($auth_type == 'ldap' && !function_exists('ldap_connect')){
+	  header("HTTP/1.1 500 Internal Error");
       echo $COLLATE['languages']['selected']['noldapsupport'];
       exit();
 	}
 	else{
       $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
 	  mysql_query($sql);
-	  echo $COLLATE['languages']['selected']['settingupdated'];
       exit();
 	}
   echo $COLLATE['languages']['selected']['nosettingupdated'];
@@ -240,7 +242,6 @@ function delete_ldap_server(){
   $server_id = (isset($_GET['ldap_server_id']) && is_numeric($_GET['ldap_server_id'])) ? $_GET['ldap_server_id'] : '';  
   if(empty($server_id)){
     header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   
@@ -249,7 +250,6 @@ function delete_ldap_server(){
 	
   if(mysql_num_rows($result) != '1'){
     header("HTTP/1.1 500 Internal Error");
-	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   
@@ -260,8 +260,7 @@ function delete_ldap_server(){
   
   $message=str_replace("%server%", "$server", $COLLATE['languages']['selected']['ldapdeleted']);
   $message=str_replace("%domain%", "$domain", $message);
-  echo $message;
-  collate_log('5', "Settings Updated: deleted LDAP server $server for $domain domain");
+  collate_log('5', "$message");
   exit();
   
 } // Ends delete_block function
@@ -326,15 +325,7 @@ function edit_domain(){
     echo $value;
 	exit(); 
   }
-  
-  $sql = "select count(*) from `ldap-servers` where domain='$value'";
-  $result = mysql_query($sql);
-  if(mysql_result($result, 0) < '1'){
-    header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['defineldap'];
-	exit();
-  }
-  
+
   $message = "Settings Updated: default domain changed from ".$COLLATE['settings']['domain']." to $value";
   collate_log('5', $message);
   
@@ -346,7 +337,7 @@ function edit_domain(){
 
 function update_accountexpire(){
   global $COLLATE;
-  $accountexpire = (isset($_GET['accountexpire'])) ? $_GET['accountexpire'] : '';
+  $accountexpire = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($accountexpire != "0" && 
      $accountexpire != "30" &&
      $accountexpire != "45" &&
@@ -355,24 +346,26 @@ function update_accountexpire(){
      $accountexpire != "120" &&
 	 $accountexpire != "180"){
 	header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit(); 
   }
   
-  if($accountexpire == $COLLATE['settings']['accountexpire']){ exit(); }
+  if($accountexpire == $COLLATE['settings']['accountexpire']){ 
+    echo $accountexpire;
+	exit();
+  }
   
   $message = "Settings Updated: password expiration changed from ".$COLLATE['settings']['accountexpire']." to $accountexpire days";
   collate_log('5', $message);
   
   $sql = "update settings set value='$accountexpire' where name='accountexpire'";
   mysql_query($sql);
-  echo $COLLATE['languages']['selected']['settingupdated'];
+  echo $accountexpire;
   exit();
 }
 
 function update_passwdlength(){
   global $COLLATE;
-  $passwdlength = (isset($_GET['passwdlength'])) ? $_GET['passwdlength'] : '';
+  $passwdlength = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($passwdlength != "5" && 
      $passwdlength != "6" &&
      $passwdlength != "7" &&
@@ -380,11 +373,13 @@ function update_passwdlength(){
      $passwdlength != "9" &&
      $passwdlength != "10"){
 	header("HTTP/1.1 500 Internal Error");
-    echo $COLLATE['languages']['selected']['invalidrequest'];
-	exit(); 
+	exit();
   }
   
-  if($passwdlength == $COLLATE['settings']['passwdlength']){ exit(); }
+  if($passwdlength == $COLLATE['settings']['passwdlength']){
+    echo $passwdlength;
+	exit();
+  }
   
   $message = "Settings Updated: minimum password length changed from ".
              $COLLATE['settings']['passwdlength']." to $passwdlength characters";
@@ -392,13 +387,13 @@ function update_passwdlength(){
   
   $sql = "update settings set value='$passwdlength' where name='passwdlength'";
   mysql_query($sql);
-  echo $COLLATE['languages']['selected']['settingupdated'];
+  echo $passwdlength;
   exit();
 }
 
 function update_loginattempts(){
   global $COLLATE;
-  $loginattempts = (isset($_GET['loginattempts'])) ? $_GET['loginattempts'] : '';
+  $loginattempts = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($loginattempts != "0" && 
      $loginattempts != "1" &&
      $loginattempts != "2" &&
@@ -414,14 +409,17 @@ function update_loginattempts(){
 	exit(); 
   }
   
-  if($loginattempts == $COLLATE['settings']['loginattempts']){ exit(); }
+  if($loginattempts == $COLLATE['settings']['loginattempts']){
+    echo $loginattempts;
+	exit();
+  }
   
   $message = "Settings Updated: maximum login attempts changed from ".$COLLATE['settings']['loginattempts']." to $loginattempts";
   collate_log('5', $message);
   
   $sql = "update settings set value='$loginattempts' where name='loginattempts'";
   mysql_query($sql);
-  echo $COLLATE['languages']['selected']['settingupdated'];
+  echo $loginattempts;
   exit();
 }
 

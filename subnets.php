@@ -380,7 +380,7 @@ function list_subnets(){
            
       $javascript .=
            "<script type=\"text/javascript\"><!--\n".
-           "  new Ajax.InPlaceEditor('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
               {
                clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
                highlightcolor: '#a5ddf8', 
@@ -395,7 +395,7 @@ function list_subnets(){
                 }
               }
               );\n".
-           "  new Ajax.InPlaceEditor('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
               {
                clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
                highlightcolor: '#a5ddf8',  

@@ -2,8 +2,5 @@ search.php
 
 * static IP search should match ACLs and list their block/subnet path
 
-_settings.php
-* Update..() calls should return Effect.Fade() javascript
-
-settings.php
-* calls to _settings.php?op=update* should have { evalScripts: true } to execute Effect.Fade()
+_users.php + users.php
+Move to Ajax.InPlaceCollectionEditor for <select>'s and Ajax.Updater with onSuccess:Effect.Highlight for propper feedback on settings updates

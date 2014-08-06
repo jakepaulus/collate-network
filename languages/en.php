@@ -7,7 +7,7 @@
 # (including this notice at the top)
 
 
-# This last two-letter code in bracks should be the ISO 639-1 language code (http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+# This last two-letter code in brackets should be the ISO 639-1 language code (http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
 # This code should also match the file name.
 $languages["en"] = array(
 

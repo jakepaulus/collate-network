@@ -165,6 +165,10 @@ div.autocomplete ul li {
     color: #999;
 }
 
+.inplaceeditor-form{
+	display: inline;
+}
+
 /* content column: */
 
 .tip {

@@ -272,7 +272,7 @@ function search() {
       if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
         $javascript .=
       	   "<script type=\"text/javascript\"><!--\n".
-             "  new Ajax.InPlaceEditor('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
+             "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
       	      {
       		   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
       		   highlightcolor: '#a5ddf8', 
@@ -287,7 +287,7 @@ function search() {
       		    }
       		  }
       		  );\n".
-      	   "  new Ajax.InPlaceEditor('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
+      	   "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
       	      {
       		   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
       		   highlightcolor: '#a5ddf8',  
@@ -363,7 +363,7 @@ function search() {
              
           $javascript .=
            "<script type=\"text/javascript\"><!--\n".
-             "  new Ajax.InPlaceEditor('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
+             "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=name',
               {
 			  clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			  highlightcolor: '#a5ddf8', 
@@ -378,7 +378,7 @@ function search() {
                }
             }
             );\n".
-           "  new Ajax.InPlaceEditor('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$subnet_id."', '_subnets.php?op=edit&subnet_id=$subnet_id&edit=note',
               {
 			  clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			  highlightcolor: '#a5ddf8',  
@@ -469,7 +469,7 @@ function search() {
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=	  
              "<script type=\"text/javascript\"><!--\n".
-             "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
+             "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
               {
 			  clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			  highlightcolor: '#a5ddf8', 
@@ -484,7 +484,7 @@ function search() {
                }
             }
             );\n".
-           "  new Ajax.InPlaceEditor('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
               {
 			  clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			  highlightcolor: '#a5ddf8',  
@@ -499,7 +499,7 @@ function search() {
                }
             }
             );\n".
-            "  new Ajax.InPlaceEditor('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
+            "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
               {
 			  clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			  highlightcolor: '#a5ddf8',  

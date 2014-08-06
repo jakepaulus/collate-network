@@ -104,7 +104,7 @@ function add_static(){
   
   if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
     echo "<script type=\"text/javascript\"><!--\n".
-           "  new Ajax.InPlaceEditor('guidance', '_statics.php?op=edit_guidance&subnet_id=$subnet_id',
+           "  new Ajax.InPlaceEditorWithEmptyText('guidance', '_statics.php?op=edit_guidance&subnet_id=$subnet_id',
               {
               clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
               highlightcolor: '#a5ddf8', rows: '7', cols: '49',
@@ -298,7 +298,7 @@ function list_statics(){
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=      
              "<script type=\"text/javascript\"><!--\n".
-             "  new Ajax.InPlaceEditor('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
+             "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=name',
               {
                clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
                highlightcolor: '#a5ddf8', 
@@ -313,7 +313,7 @@ function list_statics(){
               }
             }
             );\n".
-           "  new Ajax.InPlaceEditor('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_contact_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=contact',
               {
               clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
               highlightcolor: '#a5ddf8',  
@@ -328,7 +328,7 @@ function list_statics(){
               }
             }
             );\n".
-            "  new Ajax.InPlaceEditor('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
+            "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
               {
               clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
               highlightcolor: '#a5ddf8',  
@@ -400,7 +400,7 @@ function list_statics(){
     if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
       $javascript .= 
            "<script type=\"text/javascript\"><!-- \n".
-           "  new Ajax.InPlaceEditor('edit_acl_name_".$acl_id."', '_statics.php?op=edit_acl&acl_id=$acl_id',
+           "  new Ajax.InPlaceEditorWithEmptyText('edit_acl_name_".$acl_id."', '_statics.php?op=edit_acl&acl_id=$acl_id',
               {
                clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
                highlightcolor: '#a5ddf8', 

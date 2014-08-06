@@ -73,6 +73,7 @@ function validate_text($text,$fieldtype){
 	case "guidance";
 	$length = '255';
 	$error = 'guidancelengtherror';
+	$canbeempty = true;
 	break;
 	
 	case "phone";
@@ -90,11 +91,13 @@ function validate_text($text,$fieldtype){
 	case "domain";
 	$length = '128';
 	$error = 'domainlengtherror';
+	$canbeempty = true;
 	break;
 	
 	case "dnshelper";
 	$length = '128';
 	$error = 'dnshelperlengtherror';
+	$canbeempty = true;
 	break;
 	
 	case "apidescription";

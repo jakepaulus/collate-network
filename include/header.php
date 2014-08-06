@@ -4,54 +4,10 @@
 <head>
     <title>Collate:Network</title>
     
-    <meta http-equiv="content-type" content="application/xhtml+xml; charset=iso-8859-1" />
-    
 	<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
-	<script src="javascripts/scriptaculous.shrunk.js" type="text/javascript" charset="ISO-8859-1"></script>
-	<script type="text/javascript"><!--
-	/*
-     * InPlaceEditor extension that adds a 'click to edit' text when the field is 
-     * empty. Taken from http://wiki.script.aculo.us/scriptaculous/show/Ajax.InPlaceEditor
-     */
-    Ajax.InPlaceEditor.prototype.__initialize = Ajax.InPlaceEditor.prototype.initialize;
-    Ajax.InPlaceEditor.prototype.__getText = Ajax.InPlaceEditor.prototype.getText;
-    Ajax.InPlaceEditor.prototype.__onComplete = Ajax.InPlaceEditor.prototype.onComplete;
-    Ajax.InPlaceEditor.prototype = Object.extend(Ajax.InPlaceEditor.prototype, {
-    
-        initialize: function(element, url, options){
-            this.__initialize(element,url,options)
-            this.setOptions(options);
-            this._checkEmpty();
-        },
-    
-        setOptions: function(options){
-            this.options = Object.extend(Object.extend(this.options,{
-                emptyText: '<?php echo $COLLATE['languages']['selected']['clicktoedit']; ?>',
-                emptyClassName: 'inplaceeditor-empty'
-            }),options||{});
-        },
-    
-        _checkEmpty: function(){
-            if( this.element.innerHTML.length == 0 ){
-                this.element.appendChild(
-                    Builder.node('span',{className:this.options.emptyClassName},this.options.emptyText));
-            }
-        },
-    
-        getText: function(){
-            document.getElementsByClassName(this.options.emptyClassName,this.element).each(function(child){
-                this.element.removeChild(child);
-            }.bind(this));
-            return this.__getText();
-        },
-    
-        onComplete: function(transport){
-            this._checkEmpty();
-            this.__onComplete(transport);
-        }
-    });
-	--></script>
-
+	<script src="javascripts/prototype.js" type="text/javascript"></script>
+    <script src="javascripts/scriptaculous.js" type="text/javascript"></script>
+    <script src="javascripts/InPlaceEditorWithEmptyText.js" type="text/javascript"></script>
 </head>
 <body id="collate-network">
 

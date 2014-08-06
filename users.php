@@ -179,7 +179,7 @@ function edit_user_form(){
        "<br />\n".
        "<p><b>".$COLLATE['languages']['selected']['Telephone'].":</b> <span id=\"phone\">$phone</span></p>\n".
 	   "<script type=\"text/javascript\"><!--
-          new Ajax.InPlaceEditor('phone', '_users.php?op=editphone&username=$username',
+          new Ajax.InPlaceEditorWithEmptyText('phone', '_users.php?op=editphone&username=$username',
             {
 			clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			 highlightcolor: '#a5ddf8',  
@@ -197,7 +197,7 @@ function edit_user_form(){
 		--></script>".
        "<p><b>".$COLLATE['languages']['selected']['Email'].":</b> <span id=\"email\">$email</span></p>\n".
 	   "<script type=\"text/javascript\"><!--
-          new Ajax.InPlaceEditor('email', '_users.php?op=editemail&username=$username',
+          new Ajax.InPlaceEditorWithEmptyText('email', '_users.php?op=editemail&username=$username',
             {
 			 clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			 highlightcolor: '#a5ddf8',  
@@ -260,7 +260,7 @@ function edit_user_form(){
   elseif ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
     echo "<p><b>".$COLLATE['languages']['selected']['SetTempPass'].":</b> <span id=\"tmppasswd\"></span></p>\n".
 	     "<script type=\"text/javascript\"><!--
-               new Ajax.InPlaceEditor('tmppasswd', '_users.php?op=resetpasswd&username=$username',
+               new Ajax.InPlaceEditorWithEmptyText('tmppasswd', '_users.php?op=resetpasswd&username=$username',
                  {
 				 clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 	     		 highlightcolor: '#a5ddf8',  

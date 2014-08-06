@@ -411,7 +411,7 @@ function list_blocks(){
 	if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
 	  $javascript .=
 		   "<script type=\"text/javascript\"><!--\n".
-	       "  new Ajax.InPlaceEditor('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
+	       "  new Ajax.InPlaceEditorWithEmptyText('edit_name_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=name',
 		      {
 			   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			   highlightcolor: '#a5ddf8', 
@@ -426,7 +426,7 @@ function list_blocks(){
 			    }
 			  }
 			  );\n".
-		   "  new Ajax.InPlaceEditor('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
+		   "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$block_id."', '_blocks.php?op=edit&block_id=$block_id&edit=note',
 		      {
 			   clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			   highlightcolor: '#a5ddf8',  
