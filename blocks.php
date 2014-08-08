@@ -296,7 +296,7 @@ function submit_block() {
   }
   else{
     $sql = "INSERT INTO blocks (name, start_ip, end_ip, note, modified_by, modified_at, parent_id, type) 
-	       VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now(), $parent_id, $block_type)";
+	       VALUES('$name', '$long_start_ip', '$long_end_ip', '$note', '$username', now(), $parent_id, '$block_type')";
   }
   
   $accesslevel = "4";
