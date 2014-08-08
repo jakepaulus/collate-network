@@ -802,8 +802,9 @@ function build_search_sql(){
     if($when == "dates"){
       if($second == "ip"){
         $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE 
-		CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF  AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF  AS UNSIGNED) AND
-        modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
+		  ((CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF  AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF  AS UNSIGNED)) OR
+		  (CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED))) AND
+          modified_at > '$fromdate 00:00:00' AND modified_at < '$todate 23:59:59' ORDER BY `$order` ASC";
         }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE $second LIKE '%$search%' AND
@@ -812,10 +813,10 @@ function build_search_sql(){
     }
     else{
       if($second == "ip"){
-        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE 
-               CAST(start_ip & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) & 
-			   CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED AS UNSIGNED) 
-			   ORDER BY `$order` ASC";
+        $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE
+          (CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)) OR
+          (CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED))
+           ORDER BY `$order` ASC";
         }
       else{
         $sql = "SELECT id, name, start_ip, end_ip, mask, note, block_id FROM subnets WHERE $second LIKE '%$search%' ORDER BY `$order` ASC";
