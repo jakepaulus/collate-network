@@ -9,17 +9,15 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
 	case "add";
-	AccessControl('5', null);
-	add_user_form();
+	user_form();
 	break;
 		
-	case "submit"; 
-	AccessControl('5', null);
+	case "submit";
 	submit_user();
 	break;
 		
 	case "edit"; 
-	edit_user_form();
+	user_form();
 	break;
 		
 	default:
@@ -80,7 +78,7 @@ function list_users(){
 
 } // Ends list_users function
 
-function add_user_form(){
+function user_form(){
   global $COLLATE;
   global $op;
   
@@ -91,14 +89,44 @@ function add_user_form(){
   $accesslevel = '0';
   $loginattempts = '';
   $language = $COLLATE['languages']['selected']['isocode'];
+ 
+  if(isset($COLLATE['user']['username']) && $COLLATE['user']['username'] == $username){
+    AccessControl('0', null); # users can edit their own profile
+  }
+  else{
+    AccessControl('5', null);
+  }
   
+  if($op == 'edit'){
+    $sql = "SELECT accesslevel, phone, email, loginattempts, ldapexempt, language FROM users WHERE username='$username'";
+    $result = mysql_query($sql);
+    if(mysql_num_rows($result) != '1'){
+      $notice = $COLLATE['languages']['selected']['invalidrequest'];
+      header("Location: users.php?notice=$notice");
+      exit();
+    }
+    list($accesslevel,$phone,$email,$loginattempts,$ldapexempt,$current_language) = mysql_fetch_row($result);
+	$title = $COLLATE['languages']['selected']['EditUser'].": $username";
+	$action_url = 'users.php?op=submit&edit=true';
+  }
+  else{
+    $title = $COLLATE['languages']['selected']['AddaUser'];
+	$action_url = 'users.php?op=submit';
+  }
   
   require_once('./include/header.php');
   
-  echo "<h1>".$COLLATE['languages']['selected']['AddaUser']."</h1>\n".
-       "<br />\n<form action=\"users.php?op=submit\" method=\"post\">\n".
-       "<p><b>".$COLLATE['languages']['selected']['Username'].":</b> <input name=\"username\" type=\"text\" value=\"$username\" /></p>\n".
-       "<p><b>".$COLLATE['languages']['selected']['Telephone'].":</b> <input name=\"phone\" type=\"text\" value=\"$phone\" /></p>\n".
+  echo "<h1>$title</h1>\n".
+       "<br />\n<form action=\"$action_url\" method=\"post\">\n";
+	   
+  if($op !== 'edit'){
+    echo "<p><b>".$COLLATE['languages']['selected']['Username'].":</b> <input name=\"username\" type=\"text\" value=\"$username\" /></p>\n";
+  }
+  else{
+    echo "<input type=\"hidden\" name=\"username\" value=\"$username\">";
+  }
+  
+  echo "<p><b>".$COLLATE['languages']['selected']['Telephone'].":</b> <input name=\"phone\" type=\"text\" value=\"$phone\" /></p>\n".
        "<p><b>".$COLLATE['languages']['selected']['Email'].":</b> <input name=\"email\" type=\"text\" value=\"$email\" /></p>\n";
 	   
   foreach (glob("languages/*.php") as $filename){
@@ -107,7 +135,7 @@ function add_user_form(){
   echo "<p><b>".$COLLATE['languages']['selected']['PreferredLanguage'].":</b> <select name=\"languages\" onchange=\"
         new Ajax.Updater('generalnotice', '_settings.php?op=updatelanguage&amp;language=' + this.value);\">";
   foreach ($languages as $language){
-    if($COLLATE['languages']['selected']['isocode'] == $language['isocode']){
+    if($current_language == $language['isocode']){
       $selected = "selected=\"selected\"";
     }
     else {
@@ -115,124 +143,11 @@ function add_user_form(){
     }
     echo "<option value=\"".$language['isocode']."\" $selected/> ".$language['languagename']." </option>\n";
   }
-  echo "</select></p>";
+  echo "</select></p>";  
   
-  echo "<p><b>".$COLLATE['languages']['selected']['UserAccessLevel'].":</b><br />\n";
-  
-  $checked0 = ($accesslevel == '0') ? "checked=\"checked\"" : '';
-  $checked1 = ($accesslevel == '1') ? "checked=\"checked\"" : '';
-  $checked2 = ($accesslevel == '2') ? "checked=\"checked\"" : '';
-  $checked3 = ($accesslevel == '3') ? "checked=\"checked\"" : '';
-  $checked4 = ($accesslevel == '4') ? "checked=\"checked\"" : '';
-  $checked5 = ($accesslevel == '5') ? "checked=\"checked\"" : '';
-   
-  echo "<input type=\"radio\" name=\"perms\" $checked0 value=\"0\" />".$COLLATE['languages']['selected']['None']."<br />\n".
-       "<input type=\"radio\" name=\"perms\" $checked1 value=\"1\" />".$COLLATE['languages']['selected']['ReadOnly']."<br />\n".
-	   "<input type=\"radio\" name=\"perms\" $checked2 value=\"2\" />".$COLLATE['languages']['selected']['ReserveIPs']."<br />\n".
-       "<input type=\"radio\" name=\"perms\" $checked3 value=\"3\" />".$COLLATE['languages']['selected']['AllocateSubnets']."<br />\n".
-	   "<input type=\"radio\" name=\"perms\" $checked4 value=\"4\" />".$COLLATE['languages']['selected']['AllocateBlocks']."<br />\n".
-	   "<input type=\"radio\" name=\"perms\" $checked5 value=\"5\" />".$COLLATE['languages']['selected']['Admin']."<br />\n".
-       "</p>\n";
-  
-  echo "<p><b>".$COLLATE['languages']['selected']['SetTempPass'].":</b><input id=\"tmppasswd\" name=\"tmppasswd\" type=\"text\" size=\"15\" /></p>\n";
-
-  $ldapexempt = ($ldapexempt) ? "checked=\"checked\"" : "";
-  $locked = ($loginattempts >= $COLLATE['settings']['loginattempts']) ? "checked=\"checked\"" : "";
-
-  echo "<p><input type=\"checkbox\" name=\"ldapexempt\" $ldapexempt /> ".$COLLATE['languages']['selected']['Forcedbauth']."</p>\n".
-       "<p><input type=\"checkbox\" name=\"locked\" $locked /> ".$COLLATE['languages']['selected']['Lockaccount']."<br /></p>".
-       "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
-       "</form>";
-
-} // Ends add_user_form function
-
-function edit_user_form(){
-  global $COLLATE;
-  global $op;
-  
-  $username = (isset($_GET['username'])) ? $_GET['username'] : '';  
-  if(empty($username)){
-    $notice = 'invalidrequest';
-    header("Location: users.php?notice=$notice");
-    exit();
-  }  
-  
-  if(isset($COLLATE['user']['username']) && $COLLATE['user']['username'] == $username){
-    AccessControl('0', null); # users can edit their own profile
-  }
-  else {
-    AccessControl('5', null); #admins can edit anyone's profile
-  }
-   
-  $sql = "SELECT passwd, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt, language FROM users WHERE username='$username'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '1'){
-    $notice = $COLLATE['languages']['selected']['invalidrequest'];
-    header("Location: users.php?notice=$notice");
-    exit();
-  }
-  list($passwd,$tmppasswd,$accesslevel,$phone,$email,$loginattempts,$ldapexempt,$current_language) = mysql_fetch_row($result);
-  
-  require_once('./include/header.php');
-  
-  echo "<h1>".$COLLATE['languages']['selected']['EditUser'].": $username</h1>\n".
-       "<br />\n".
-       "<p><b>".$COLLATE['languages']['selected']['Telephone'].":</b> <span id=\"phone\">$phone</span></p>\n".
-	   "<script type=\"text/javascript\"><!--
-          new Ajax.InPlaceEditorWithEmptyText('phone', '_users.php?op=editphone&username=$username',
-            {
-			clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
-			 highlightcolor: '#a5ddf8',  
-             callback:
-               function(form) {
-                 new Element.update('notice', '');
-                 return Form.serialize(form);
-               },
-             onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
-               }
-            }
-          );
-		--></script>".
-       "<p><b>".$COLLATE['languages']['selected']['Email'].":</b> <span id=\"email\">$email</span></p>\n".
-	   "<script type=\"text/javascript\"><!--
-          new Ajax.InPlaceEditorWithEmptyText('email', '_users.php?op=editemail&username=$username',
-            {
-			 clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
-			 highlightcolor: '#a5ddf8',  
-             callback:
-               function(form) {
-                 new Element.update('notice', '');
-                 return Form.serialize(form);
-               },
-             onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
-               }
-            }
-          );
-		--></script>";
-
-  foreach (glob("languages/*.php") as $filename){
-    include $filename;
-  }
-  echo "<p><b>".$COLLATE['languages']['selected']['PreferredLanguage'].":</b> <select name=\"languages\" onchange=\"
-        new Ajax.Updater('notice', '_users.php?op=editlanguage&username={$username}&amp;language=' + this.value);\">";
-  foreach ($languages as $language){
-    if($languages[$current_language]['isocode'] == $language['isocode']){
-      $selected = "selected=\"selected\"";
-    }
-    else {
-      $selected = "";
-    }
-    echo "<option value=\"".$language['isocode']."\" $selected /> ".$language['languagename']." </option>\n";
-  }
-  echo "</select></p>";
-  
-  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {  
+  if($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
     echo "<p><b>".$COLLATE['languages']['selected']['UserAccessLevel'].":</b><br />\n";
-    
+	
     $checked0 = ($accesslevel == '0') ? "checked=\"checked\"" : '';
     $checked1 = ($accesslevel == '1') ? "checked=\"checked\"" : '';
     $checked2 = ($accesslevel == '2') ? "checked=\"checked\"" : '';
@@ -240,63 +155,44 @@ function edit_user_form(){
     $checked4 = ($accesslevel == '4') ? "checked=\"checked\"" : '';
     $checked5 = ($accesslevel == '5') ? "checked=\"checked\"" : '';
      
-    echo "<input type=\"radio\" name=\"accesslevel\" $checked0 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=0&username=$username');\" />".
-		  $COLLATE['languages']['selected']['None']."<br />\n".
-         "<input type=\"radio\" name=\"accesslevel\" $checked1 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=1&username=$username');\" />".
-		 $COLLATE['languages']['selected']['ReadOnly']."<br />\n".
-	     "<input type=\"radio\" name=\"accesslevel\" $checked2 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=2&username=$username');\" />".
-		 $COLLATE['languages']['selected']['ReserveIPs']."<br />\n".
-         "<input type=\"radio\" name=\"accesslevel\" $checked3 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=3&username=$username');\" />".
-		 $COLLATE['languages']['selected']['AllocateSubnets']."<br />\n".
-	     "<input type=\"radio\" name=\"accesslevel\" $checked4 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=4&username=$username');\" />".
-		 $COLLATE['languages']['selected']['AllocateBlocks']."<br />\n".
-	     "<input type=\"radio\" name=\"accesslevel\" $checked5 onchange=\"new Ajax.Updater('notice', '_users.php?op=editperms&amp;accesslevel=5&username=$username');\" />".
-		 $COLLATE['languages']['selected']['Admin']."<br />\n".
+    echo "<input type=\"radio\" name=\"perms\" $checked0 value=\"0\" />".$COLLATE['languages']['selected']['None']."<br />\n".
+         "<input type=\"radio\" name=\"perms\" $checked1 value=\"1\" />".$COLLATE['languages']['selected']['ReadOnly']."<br />\n".
+         "<input type=\"radio\" name=\"perms\" $checked2 value=\"2\" />".$COLLATE['languages']['selected']['ReserveIPs']."<br />\n".
+         "<input type=\"radio\" name=\"perms\" $checked3 value=\"3\" />".$COLLATE['languages']['selected']['AllocateSubnets']."<br />\n".
+         "<input type=\"radio\" name=\"perms\" $checked4 value=\"4\" />".$COLLATE['languages']['selected']['AllocateBlocks']."<br />\n".
+         "<input type=\"radio\" name=\"perms\" $checked5 value=\"5\" />".$COLLATE['languages']['selected']['Admin']."<br />\n".
          "</p>\n";
   }
+	   
   if (isset($COLLATE['user']['username']) && $COLLATE['user']['username'] == $username){ // change password
     echo "<p><b><a href=\"login.php?op=changepasswd\">".$COLLATE['languages']['selected']['changeyourpassword']."</a></b></p>\n"; 
   }
   elseif ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
-    echo "<p><b>".$COLLATE['languages']['selected']['SetTempPass'].":</b> <span id=\"tmppasswd\"></span></p>\n".
-	     "<script type=\"text/javascript\"><!--
-               new Ajax.InPlaceEditorWithEmptyText('tmppasswd', '_users.php?op=resetpasswd&username=$username',
-                 {
-				 clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
-	     		 highlightcolor: '#a5ddf8',  
-                  callback:
-                    function(form) {
-                      new Element.update('notice', '');
-                      return Form.serialize(form);
-                    },
-                  onFailure: 
-                    function(transport) {
-                      new Element.update('notice', transport.responseText.stripTags());
-                    }
-                 }
-               );
-	     	--></script>";
-  }
-  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
-	
-	$ldapexempt = ($ldapexempt) ? "checked=\"checked\"" : "";
-    $locked = ($loginattempts >= $COLLATE['settings']['loginattempts']) ? "checked=\"checked\"" : "";
+    echo "<p><b>".$COLLATE['languages']['selected']['SetTempPass'].":</b>
+	     <input id=\"tmppasswd\" name=\"tmppasswd\" type=\"text\" size=\"15\" /></p>\n";
 
-    echo "<p><input type=\"checkbox\" value=\"ldapexempt\" $ldapexempt onchange=\"
-	      new Ajax.Updater('notice', '_users.php?op=ldapexempt&username={$username}&amp;ldapexempt=' + this.checked);\"/> ".
-		  $COLLATE['languages']['selected']['Forcedbauth']."</p>\n".
-         "<p><input type=\"checkbox\" value=\"locked\" $locked onchange=\"
-		  new Ajax.Updater('notice', '_users.php?op=lock&username={$username}&amp;locked=' + this.checked);\"/> ".
-		  $COLLATE['languages']['selected']['Lockaccount']."<br /></p>";
+    $ldapexempt = ($ldapexempt) ? "checked=\"checked\"" : "";
+    $locked = ($loginattempts >= $COLLATE['settings']['loginattempts']) ? "checked=\"checked\"" : "";
+    
+    echo "<p><input type=\"checkbox\" name=\"ldapexempt\" $ldapexempt /> ".$COLLATE['languages']['selected']['Forcedbauth']."</p>\n".
+         "<p><input type=\"checkbox\" name=\"locked\" $locked /> ".$COLLATE['languages']['selected']['Lockaccount']."<br /></p>";
   }
-} // Ends edit_user_form function
+  
+  echo "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
+       "</form>";
+
+} // Ends add_user_form function
 
 function submit_user(){
   global $COLLATE;
   include 'include/validation_functions.php';
   
+ 
+  # validations are organized by all checks that don't require db lookups, then all that do
+  # in the order that the vars are listed below
+  
   $username = (isset($_POST['username'])) ? $_POST['username'] : '';
-  $tmppasswd = sha1(clean($_POST['tmppasswd']));
+  $tmppasswd = (isset($_POST['tmppasswd']) && !empty($_POST['tmppasswd'])) ? sha1(clean($_POST['tmppasswd'])) : '';
   $phone = (isset($_POST['phone'])) ? $_POST['phone'] : '';
   $email = (isset($_POST['email'])) ? $_POST['email'] : '';
   $language = (isset($_POST['languages'])) ? $_POST['languages'] : '';
@@ -304,13 +200,24 @@ function submit_user(){
   $locked = (isset($_POST['locked'])) ? 'on' : 'off';
   $loginattempts = ($locked == 'on') ? '9' : '0';
   $ldapexempt = (isset($_POST['ldapexempt']) && $_POST['ldapexempt'] == "on") ? true : false;
-
+  $edit = (isset($_GET['edit']) && preg_match("/true|false/", $_GET['edit'])) ? true : false;
   
-  $return = validate_text($username,'username');
-  if ($return['0'] === false){ 
-    $notice = $return['error']; 
-    header("Location: users.php?op=$action&username=$username&phone=$phone&email=$email&notice=$notice");
-	exit();
+  $logged_in_user = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : '';
+  if($logged_in_user != $username){
+    AccessControl('5', null);
+  }
+
+  if($edit === false){
+    $return = validate_text($username,'username');
+    if ($return['0'] === false){ 
+      $notice = $return['error']; 
+      header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
+      exit();
+    }
+	$action = 'add';
+  }
+  else{
+    $action = 'edit';
   }
   
   $return = validate_text($phone,'phone');
@@ -342,22 +249,53 @@ function submit_user(){
   } 
 
   $test = mysql_query("SELECT id FROM users WHERE username='$username'");
-  if(mysql_num_rows($test) > "0") {
+  if(mysql_num_rows($test) > "0" && $edit === false) { #duplicate user
     $notice = "nameconflict-notice";
     header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
     exit();
   }
-
-  $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt, language) 
-         VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$loginattempts', '$ldapexempt', '$language')";
+  elseif(mysql_num_rows($test) !== 1 && $edit !== false){ #can't edit a user that doesn't exist
+    $notice = "invalidrequest";
+    header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
+    exit();
+  }
   
-  $message = "User added: $username";  
-  collate_log('5', $message); // We only want to generate logs if something is actually happening...not each time the user is tossed back to the user add form.
+  if($edit === false){
+    $sql = "INSERT INTO users (username, tmppasswd, accesslevel, phone, email, loginattempts, ldapexempt, language) 
+           VALUES('$username', '$tmppasswd', '$perms', '$phone', '$email', '$loginattempts', '$ldapexempt', '$language')";
+  }
+  else{
+    if($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') { #can update all vars
+	  if(empty($tmppasswd)){
+	    $sql = "UPDATE users SET accesslevel='$perms', phone='$phone', email='$email', loginattempts='$loginattempts', 
+		        ldapexempt='$ldapexempt', language='$language' 
+	            WHERE username='$username'";
+	  }
+	  else{
+        $sql = "UPDATE users SET tmppasswd='$tmppasswd', accesslevel='$perms', phone='$phone',
+	            email='$email', loginattempts='$loginattempts', ldapexempt='$ldapexempt', language='$language' 
+	            WHERE username='$username'";
+	  }
+	}
+	else{ # can only update basic info
+	  $sql = "UPDATE users SET username='$username', phone='$phone', email='$email', language='$language' 
+	          WHERE username='$username'";
+	}
+  }
   
-  mysql_query($sql);
+  if($edit === false){
+    $message = "User added: $username";
+	$notice = "useradded-notice";
+  }
+  else{
+    $message = "User updated: $username";
+	$notice = "userupdated-notice";
+  }
+  collate_log('5', $message); // adds and modifications are always logged
   
-  $notice = "useradded-notice";
-  header("Location: users.php?notice=$notice");
+  mysql_query($sql);  
+  
+  header("Location: users.php?op=edit&username=$username&notice=$notice");
   exit();
 
 } // Ends process_new_user function

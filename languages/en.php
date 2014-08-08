@@ -314,6 +314,7 @@ $languages["en"] = array(
   "Lockaccount"         => "Lock account",
   "nameconflict-notice" => "That username is already in use. Please choose a unique name.",
   "useradded-notice"    => "The user has been added to the database",
+  "userupdated-notice"  => "The user account has been updated",
   
 // _statics.php
   "staticdeleted"         => "The static IP has been deleted.",
