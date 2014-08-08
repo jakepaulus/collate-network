@@ -145,7 +145,7 @@ function user_form(){
   }
   echo "</select></p>";  
   
-  if($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
+  if(($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') && $username !== $_SESSION['username']) {
     echo "<p><b>".$COLLATE['languages']['selected']['UserAccessLevel'].":</b><br />\n";
 	
     $checked0 = ($accesslevel == '0') ? "checked=\"checked\"" : '';
