@@ -536,6 +536,8 @@ function submit_move_subnet (){
 } // Ends submit_move_subnet function
 
 function resize_subnet() {
+  global $COLLATE;
+  include 'include/validation_functions.php';
 
   $subnet_id = (isset($_POST['subnet_id']) && is_numeric($_POST['subnet_id'])) ? $_POST['subnet_id'] : '';
   $new_subnet = (isset($_POST['new_subnet'])) ? $_POST['new_subnet'] : '';
@@ -553,8 +555,8 @@ function resize_subnet() {
   
   $original_cidr=subnet2cidr($original_long_start_ip,$original_long_mask);
 
-  $result = validate_network($new_subnet);
-  if($result['0'] === false){
+  $return = validate_network($new_subnet,'subnet',null,true); #last parameter is saying it's ok if the subnet overlaps another
+  if($return['0'] === false){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
@@ -589,15 +591,19 @@ function resize_subnet() {
 
     #  * list static IP addresses that would be lost
     if($confirm != 'true') {
-      $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ". 
-             "CAST(ip AS UNSIGNED) & CAST('$original_long_mask' AS UNSIGNED) = CAST('$original_long_start_ip' AS UNSIGNED) ".
-             "AND CAST(ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED) ".
-             "ORDER BY `ip` ASC";
+      $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE 
+             CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$original_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+			 CAST('$original_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+             AND CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
+			 CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+             ORDER BY `ip` ASC";
     }
     else {
-      $sql = "DELETE FROM statics WHERE ". 
-             "CAST(ip AS UNSIGNED) & CAST('$original_long_mask' AS UNSIGNED) = CAST('$original_long_start_ip' AS UNSIGNED) ".
-             "AND CAST(ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED)";
+      $sql = "DELETE FROM statics WHERE
+             CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$original_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+			 CAST('$original_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+             AND CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
+			 CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)";
     }
     
     $result = mysql_query($sql);
@@ -626,9 +632,11 @@ function resize_subnet() {
 
     #  * show how ACLs would be adjusted
     # Find acls matching original subnet_id and see if start and end fall within new subnet
-    $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id' AND ( ".
-           "CAST(start_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED) ".
-           "OR CAST(end_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) != CAST('$new_long_start_ip' AS UNSIGNED))";
+    $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id' AND (
+           CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
+		   CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+           OR CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
+		   CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED))";
     $result = mysql_query($sql);
     if($confirm != 'true'){
       $aclstobechanged = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['aclstobechanged']);
@@ -692,8 +700,9 @@ function resize_subnet() {
       exit();
     }
     #  * list all subnets that new network overlaps
-    $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` WHERE ". 
-         "CAST(start_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) = CAST('$new_long_start_ip' AS UNSIGNED) ORDER BY `start_ip` ASC";
+    $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` WHERE
+            CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+		    CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED) ORDER BY `start_ip` ASC";
     $results = mysql_query($sql);
     
     $subnetstomerge = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['subnetstomerge']);
@@ -728,8 +737,9 @@ function resize_subnet() {
       }
       if($confirm != 'true'){ echo "</table>"; }
       else {
-        $sql = "DELETE FROM `subnets` WHERE CAST(start_ip AS UNSIGNED) & CAST('$new_long_mask' AS UNSIGNED) = CAST('$new_long_start_ip' AS UNSIGNED) ".
-               "AND id != '$subnet_id'";
+        $sql = "DELETE FROM `subnets` WHERE CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+		        CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+                AND id != '$subnet_id'";
         $result = mysql_query($sql);
       
         $sql = "UPDATE statics SET subnet_id='$subnet_id' WHERE ip & $new_long_mask = $new_long_start_ip";
@@ -745,7 +755,7 @@ function resize_subnet() {
          "<input type=\"hidden\" name=\"confirm\" value=\"true\" />".
          "<input type=\"hidden\" name=\"new_subnet\" value=\"$new_subnet\" />".
          "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go'].
-         " \" /> | <a href=\"subnets.php?block_id=$original_block_id\">".$COLLATE['languages']['selected']['Cancel']."</a></p>".
+         " \" /> | <a href=\"subnets.php?block_id=$original_block_id\">".$COLLATE['languages']['selected']['altcancel']."</a></p>".
          "</form>";
   }
   else {

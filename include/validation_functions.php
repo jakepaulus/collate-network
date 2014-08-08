@@ -239,7 +239,7 @@ function validate_static_ip($ip){
   return $function_return;  
 }
 
-function validate_network($subnet,$network_type="subnet",$table_id=null){
+function validate_network($subnet,$network_type="subnet",$table_id=null,$overlapok=false){
 
   $function_return = array();
   
@@ -300,7 +300,7 @@ function validate_network($subnet,$network_type="subnet",$table_id=null){
       return $function_return;
     }
   }
-  else{
+  elseif($overlapok === false){
     # make sure we don't overlap other subnets
 	$sql = "SELECT id FROM subnets WHERE 
 	  CAST('$long_start_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) OR 
