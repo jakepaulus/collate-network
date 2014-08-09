@@ -28,6 +28,7 @@ CREATE TABLE `blocks` (
   `modified_by` varchar(100) NOT NULL,
   `modified_at` datetime NOT NULL,
   `parent_id` int(9) UNSIGNED,
+  `type` ENUM('container','ipv4','ipv6') DEFAULT 'ipv4',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=latin1;
