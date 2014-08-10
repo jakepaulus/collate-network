@@ -377,10 +377,10 @@ $languages["en"] = array(
   "furtherpromptsahead"   => "You will be prompted on the next page with more information about how this will affect other
                               subnets and static IP reservations.",
   "subnetmoved-notice"    => "The subnet has been moved as requested.",
-  "invalidshrink-notice"  => "The new subnet you specified is smaller than the old one, but not part of the old one. You may want to allocate a
+  "invalidshrink-notice"  => "The new subnet you specified is smaller than the old one, but not part of the old one. You should allocate a
                               new subnet instead.",
   "staticstodelete"       => "Static IPs in %original_subnet_name% that will be deleted",
-  "nostaticsdeleted"      => "No static IP address reservations will be purged by this subnet shrink.",
+  "nostaticsdeleted"      => "No static IP address reservations will be deleted by resizing this subnet.",
   "aclstobechanged"       => "ACLs in %original_subnet_name% will be modified as follows",
   "noaclschanged"         => "No ACL entries would be affected.",
   "Modification"          => "Modification",

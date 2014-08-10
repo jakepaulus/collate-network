@@ -583,7 +583,8 @@ function resize_subnet() {
   if (substr_count($original_binary_mask, '1') < substr_count($new_binary_mask, '1')){
     # if smaller:
     #  * validate new network falls within the old one
-    if ($new_long_start_ip & $original_long_mask != $original_long_start_ip) {
+	$test = $new_long_start_ip & $original_long_mask;
+    if ($test != $original_long_start_ip) {
       $notice = "invalidshrink-notice";
       header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
       exit();
@@ -591,44 +592,44 @@ function resize_subnet() {
 
     #  * list static IP addresses that would be lost
     if($confirm === false) {
-      $sql = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE 
-             CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$original_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
-             CAST('$original_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
-             AND CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
-             CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
-             ORDER BY `ip` ASC";
+      $sql_action = "SELECT id, ip, name, contact, note, failed_scans FROM statics WHERE ";
+	  $sql_sort = ' ORDER BY `ip` ASC';
     }
     else {
-      $sql = "DELETE FROM statics WHERE
-             CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$original_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
-             CAST('$original_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
-             AND CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
-             CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)";
+      $sql_action = "DELETE FROM statics WHERE ";
     }
+	
+	# in old subnet, but not in new one
+	$sql_selection = " CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$original_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+	                  CAST('$original_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
+                      AND CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
+                      CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED) ";
+					  
+	$sql = $sql_action.$sql_selection;
+	$sql = (isset($sql_sort)) ? $sql.$sql_sort : $sql;	
     
     $result = mysql_query($sql);
-    $totalrows = mysql_num_rows($result);
     if($confirm === false){
       $staticstobedeleted = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['staticstodelete']);
       echo "<h1>$staticstobedeleted:</h1><br />\n";
-    }
-    
-    if ($totalrows != '0' && $confirm != 'true'){
-      echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
-           "</th><th>".$COLLATE['languages']['selected']['Name']."</th><th>".
-           $COLLATE['languages']['selected']['Contact']."</th><th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>".
-         "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
-      while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($result)){
+
+      if(mysql_num_rows($result) != '0'){
+        echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
+             "</th><th>".$COLLATE['languages']['selected']['Name']."</th><th>".
+             $COLLATE['languages']['selected']['Contact']."</th><th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>".
+             "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
+        while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($result)){
           $ip = long2ip($ip);
           echo "<tr><td>$ip</td><td>$name</td><td>$contact</td><td>$failed_scans</td><td></td></tr>\n";
           echo "<tr><td colspan=\"5\">$note</td></tr>\n";
           echo "<tr><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
         }
-      echo "</table><br /><br />";
-    }
-    elseif($confirm === false){
-      echo "<p>".$COLLATE['languages']['selected']['nostaticsdeleted']."</p><br /><br />";
-    }  
+        echo "</table><br /><br />";
+      }
+      else{
+        echo "<p>".$COLLATE['languages']['selected']['nostaticsdeleted']."</p><br /><br />";
+      }
+	}
 
     #  * show how ACLs would be adjusted
     # Find acls matching original subnet_id and see if start and end fall within new subnet
@@ -689,7 +690,7 @@ function resize_subnet() {
         echo "<tr><td>$acl_name</td><td>$new_acl_start_ip</td><td>$new_acl_end_ip</td><td>$note</td></tr>\n";
       }
       elseif(!empty($sql)) {
-        $result = mysql_query($sql);
+        mysql_query($sql);
       }
     }
     if($confirm === false){
