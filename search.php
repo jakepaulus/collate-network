@@ -173,6 +173,8 @@ function search() {
   $search = (isset($_GET['search'])) ? $_GET['search'] : '';
   $fromdate = (isset($_GET['fromdate'])) ? $_GET['fromdate'] : '';
   $todate = (isset($_GET['todate'])) ? $_GET['todate'] : '';
+  $when = ($fromdate == $todate) ? 'all' : 'dates';
+  $sort = (isset($_GET['sort'])) ? $_GET['sort'] : '';
   
   if($export == "on"){ // The download function is a separate page
     $uri = $_SERVER['REQUEST_URI'];
