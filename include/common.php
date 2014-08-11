@@ -130,11 +130,11 @@ function ip2decimal($ip) {
 }
 
 function subnet2cidr($ip,$mask){
-  # this function takes a subnet number and mask in decimal and returns
+  # this function takes a subnet number and mask in decimal (32-bit signed int) and returns
   # a subnet number and mask in cidr notation. E.g.: 
   # $ip = 167772160 and $mask = -256 is returned as "10.0.0.0/24"
   $ip=long2ip($ip);
-  $mask=substr_count(decbin($mask), '1');
+  $mask=substr_count(decbin($mask & 0xFFFFFFFF), '1'); # logical AND with 2^32-1 to get a 32-bit long number
   return "$ip/$mask";
 }
 

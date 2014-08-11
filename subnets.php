@@ -711,15 +711,15 @@ function resize_subnet() {
     $results = mysql_query($sql);
     
     $subnetstomerge = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['subnetstomerge']);
-    if($confirm != 'true'){
+    if($confirm === false){
       echo "<h1>$subnetstomerge:</h1><br />\n";
     }
     
-    if(mysql_num_rows($results) < '1' && $confirm != 'true'){
+    if(mysql_num_rows($results) < '1' && $confirm === false){
       echo "<p>".$COLLATE['languages']['selected']['nosubnetsoverlap']."</p>";
     }
     else{
-      if($confirm != 'true'){
+      if($confirm === false){
       echo "<table width=\"100%\">".
            "<tr><th align=\"left\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
            "<th align=\"left\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
@@ -728,7 +728,7 @@ function resize_subnet() {
       }           
        
       while(list($affected_subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($results)){
-        if($confirm != 'true'){
+        if($confirm === false){
           $start_ip = long2ip($long_start_ip);
           $mask = long2ip($long_mask);
           echo "<tr><td><b>$name</b></td><td>$start_ip</td><td>$mask</td></tr>\n";
@@ -740,20 +740,24 @@ function resize_subnet() {
           $result = mysql_query($sql);
         }
       }
-      if($confirm != 'true'){ echo "</table>"; }
-      else {
+      if($confirm === false){
+	    echo "</table>";
+      }
+      else{
         $sql = "DELETE FROM `subnets` WHERE CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
                 CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
                 AND id != '$subnet_id'";
         $result = mysql_query($sql);
       
-        $sql = "UPDATE statics SET subnet_id='$subnet_id' WHERE ip & $new_long_mask = $new_long_start_ip";
+        $sql = "UPDATE statics SET subnet_id='$subnet_id' WHERE 
+		       CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
+			   CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)";
         $result = mysql_query($sql);
       }
     }
   }
   
-  if ($confirm != 'true') {
+  if ($confirm === false) {
     echo "<br /><br /><h3>".$COLLATE['languages']['selected']['confirmproceed']."</h3><hr /><br />\n".
          "<form action=\"subnets.php?op=resize\" method=\"post\">\n".
          "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
