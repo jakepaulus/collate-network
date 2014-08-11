@@ -167,6 +167,13 @@ function search() {
   global $COLLATE;
   $export = (!isset($_GET['export'])) ? 'off' : $_GET['export'];
   
+  # set these for hidden forms. They'll be reset by return data from build_search_sql()  
+  $first = (isset($_GET['first'])) ? $_GET['first'] : '';
+  $second = (isset($_GET['second'])) ? $_GET['second'] : '';
+  $search = (isset($_GET['search'])) ? $_GET['search'] : '';
+  $fromdate = (isset($_GET['fromdate'])) ? $_GET['fromdate'] : '';
+  $todate = (isset($_GET['todate'])) ? $_GET['todate'] : '';
+  
   if($export == "on"){ // The download function is a separate page
     $uri = $_SERVER['REQUEST_URI'];
 	$uri = str_replace("op=search", "op=download", $uri);
@@ -176,17 +183,7 @@ function search() {
 
   $tmparray = build_search_sql();
   $sql = $tmparray["sql"];
-  $searchdescription=$tmparray["searchdescription"];
-  $first = $tmparray["first"];
-  $First = $tmparray["First"];
-  $second = $tmparray["second"];
-  $Second = $tmparray["Second"];
-  $search = $tmparray["search"];
-  $when = $tmparray["when"];
-  $todate = $tmparray["todate"];
-  $fromdate = $tmparray["fromdate"];
-  $sort = $tmparray["sort"];
-  
+   
   $unsortedrequesturl = "search.php?op=search&amp;first=$first&amp;second=$second&amp;".
                         "search=$search&amp;when=$when&amp;fromdate=$fromdate&amp;".
 						"todate=$todate&amp;page=1&amp;";
@@ -204,6 +201,17 @@ function search() {
   $updatedsql = pageselector($sql,$hiddenformvars);
   $row = mysql_query($updatedsql);
   $rows = mysql_num_rows($row);
+  
+  $searchdescription=$tmparray["searchdescription"];
+  $first = $tmparray["first"];
+  $First = $tmparray["First"];
+  $second = $tmparray["second"];
+  $Second = $tmparray["Second"];
+  $search = $tmparray["search"];
+  $when = $tmparray["when"];
+  $todate = $tmparray["todate"];
+  $fromdate = $tmparray["fromdate"];
+  $sort = $tmparray["sort"];
      
 
   echo $COLLATE['languages']['selected']['SearchResults'];

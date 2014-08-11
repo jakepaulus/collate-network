@@ -138,11 +138,12 @@ function subnet2cidr($ip,$mask){
   return "$ip/$mask";
 }
 
-function pageselector($sql,$hiddenformvars){
+function pageselector($sql,$hiddenformvars=''){     
+  # Input is SQL selection include sort
+  # Output is HTML with buttons and drop down to select a page
+  # Returns updated SQL with limits to reflect page selection
+  
   global $COLLATE;
-     
-  #Note: If you have no hidden variables to pass to the page select form
-  #such as is done on the search page, just pass an empty string
   
   $result = mysql_query($sql);
   $totalrows = mysql_num_rows($result);
@@ -169,8 +170,7 @@ function pageselector($sql,$hiddenformvars){
     $limit = "10";
   }
   
-  $_SESSION['show'] = $limit;
-  
+  $_SESSION['show'] = $limit; 
   
   $numofpages = ceil($totalrows/$limit);
   if($page > $numofpages){

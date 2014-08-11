@@ -347,7 +347,6 @@ ALTER TABLE `blocks` ENGINE = INNODB;
 ALTER TABLE `subnets` ENGINE = INNODB;
 ALTER TABLE `acl` ENGINE = INNODB;
 ALTER TABLE `statics` ENGINE = INNODB
-
 ";
 
 $upgrade_from_two_dot_one =
@@ -355,7 +354,7 @@ $upgrade_from_two_dot_one =
 ALTER TABLE blocks ADD `parent_id` int(9) UNSIGNED;
 ALTER TABLE blocks ADD `type` ENUM('container','ipv4','ipv6') DEFAULT 'ipv4';
 ALTER TABLE subnets ADD stalescan_enabled BOOL NOT NULL default true; 
-UPDATE settings SET value='2.2' WHERE name='version';
+UPDATE settings SET value='2.2' WHERE name='version'
 ";
 
 $sql = "select value from settings where name='version'";
