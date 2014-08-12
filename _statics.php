@@ -48,14 +48,14 @@ function edit_static(){
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($static_id) || !is_numeric($static_id) || !preg_match('/staticname|contact|note/', $edit)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
   
   $return = validate_text($value,$edit);
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
     exit();
   }
@@ -95,14 +95,14 @@ function edit_acl(){
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
   
   if(empty($acl_id)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
   
   $result = validate_text($value,'aclname');
   if($result['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$result['error']];
     exit();
   }
@@ -114,7 +114,7 @@ function edit_acl(){
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -135,7 +135,7 @@ function ping_host(){
   if(empty($ip)){ exit(); }
   
   if(!ip2decimal($ip)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -158,7 +158,7 @@ function ip_guidance(){
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   
   if(empty($subnet_id)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -206,7 +206,7 @@ function edit_guidance(){
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($subnet_id)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -215,7 +215,7 @@ function edit_guidance(){
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -244,7 +244,7 @@ function delete_static(){
   $long_ip = (isset($_GET['static_ip'])) ? ip2decimal($_GET['static_ip']) : '';
   
   if(empty($long_ip) || $long_ip === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -259,8 +259,9 @@ function delete_static(){
   
   $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
-    
-  echo $COLLATE['languages']['selected']['staticdeleted'];
+  
+  // no success message. the user sees the static entry in the table fade away as feedback
+   
   exit();  
   
 } // Ends delete_static function
@@ -272,7 +273,7 @@ function delete_acl(){
   $acl_id = (isset($_GET['acl_id']) && is_numeric($_GET['acl_id'])) ? $_GET['acl_id'] : '';
   
   if(empty($acl_id)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
@@ -281,7 +282,7 @@ function delete_acl(){
   $result = mysql_query($sql);
   
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit(); 
   }
@@ -314,7 +315,7 @@ function toggle_stalescan(){
   $referer=$referer.'&notice=';
 
   if(empty($long_ip) || $long_ip === false || empty($toggle)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     $notice = 'invalidrequest';
     header("Location: $referer"."$notice");
     exit();

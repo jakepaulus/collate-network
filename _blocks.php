@@ -7,7 +7,7 @@ if(isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])){
   $block_id = $_GET['block_id'];
 }
 else{
-  header("HTTP/1.1 500 Internal Error"); // Tells Ajax.InPlaceEditor that an error has occured.
+  header("HTTP/1.1 400 Bad Request"); // Tells Ajax.InPlaceEditor that an error has occured.
   echo $COLLATE['languages']['selected']['selectblock'];
   exit();
 }
@@ -36,16 +36,21 @@ function edit_block(){
   if($edit == 'name'){
     $return = validate_text($value,'blockname');
 	if($return['0'] === false){
-	  header("HTTP/1.1 500 Internal Error");
+	  header("HTTP/1.1 400 Bad Request");
 	  echo $COLLATE['languages']['selected'][$return['error']];
 	  exit();
 	}
 	else{
 	  $value = $return['1'];
 	}
-	$result = mysql_query("SELECT id from blocks where name='$value'");
+	$result = mysql_query("SELECT name from blocks where name='$value'");
 	if(mysql_num_rows($result) != '0'){
-	  header("HTTP/1.1 500 Internal Error");
+	  $old_name = mysql_result($result, 0);
+	  if($value == $old_name){
+	    echo $value;
+		exit();
+	  }
+	  header("HTTP/1.1 400 Bad Request");
 	  echo $COLLATE['languages']['selected']['duplicatename'];
 	  exit();
 	}
@@ -57,7 +62,7 @@ function edit_block(){
   elseif($edit == 'note'){
     $return = validate_text($value,'note');
 	if($return['0'] === false){
-	  header("HTTP/1.1 500 Internal Error");
+	  header("HTTP/1.1 400 Bad Request");
 	  echo $COLLATE['languages']['selected'][$return['error']];
 	  exit();
 	}
@@ -70,7 +75,7 @@ function edit_block(){
 	$sql = "UPDATE blocks SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   else{
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -93,7 +98,7 @@ function delete_block(){
   $result = mysql_query($sql);
 	
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['selectblock'];
 	exit();
   }
@@ -124,8 +129,7 @@ function delete_block(){
     mysql_query($sql);
   }
   
-  $message=str_replace("%name%", "$name", $COLLATE['languages']['selected']['blockdeleted']);
-  echo $message;
+  # we don't output to the user on success. The row fades on the page to provide feedback.
   
 } // Ends delete_block function
 ?>

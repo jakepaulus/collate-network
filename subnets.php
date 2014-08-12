@@ -358,12 +358,13 @@ function list_subnets(){
            $COLLATE['languages']['selected']['modifysubnet']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
            "<a href=\"#\" onclick=\"
            if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
-             new Element.update('notice', ''); 
-             new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ 
+             new Element.update('subnet_".$subnet_id."_notice', ''); 
+             new Ajax.Updater('subnet_".$subnet_id."_notice', '_subnets.php?op=delete&subnet_id=$subnet_id', {onSuccess:function(){ 
                new Effect.Parallel( [
                  new Effect.Fade('subnet_".$subnet_id."_row_1'), 
                  new Effect.Fade('subnet_".$subnet_id."_row_2'), 
-                 new Effect.Fade('subnet_".$subnet_id."_row_3')
+                 new Effect.Fade('subnet_".$subnet_id."_row_3'), 
+                 new Effect.Fade('subnet_".$subnet_id."_row_4')
                ]); 
              }}); 
            };
@@ -374,7 +375,8 @@ function list_subnets(){
          </tr>\n";
          
     echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
-    echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+    echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><span id=\"subnet_".$subnet_id."_notice\" class=\"tip\"></span></td></tr>\n";
+    echo "<tr id=\"subnet_".$subnet_id."_row_4\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
     if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
            
@@ -386,12 +388,12 @@ function list_subnets(){
                highlightcolor: '#a5ddf8', 
                callback:
                 function(form) {
-                  new Element.update('notice', '');
+                  new Element.update('subnet_".$subnet_id."_notice', '');
                   return Form.serialize(form);
                 },
                onFailure: 
-                function(transport) {
-                  new Element.update('notice', transport.responseText.stripTags());
+                function(transport, ipe) {
+                  new Element.update('subnet_".$subnet_id."_notice', ipe.responseText.stripTags());
                 }
               }
               );\n".
@@ -401,12 +403,12 @@ function list_subnets(){
                highlightcolor: '#a5ddf8',  
                callback:
                 function(form) {
-                  new Element.update('notice', '');
+                  new Element.update('subnet_".$subnet_id."_notice', '');
                   return Form.serialize(form);
                 },
                onFailure: 
-                function(transport) {
-                  new Element.update('notice', transport.responseText.stripTags());
+                function(transport, ipe) {
+                  new Element.update('subnet_".$subnet_id."_notice', ipe.responseText.stripTags());
                 }
               }
               );\n".

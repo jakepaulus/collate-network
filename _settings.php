@@ -83,7 +83,7 @@ function update_language(){
     include $filename;
   }
   if(!isset($languages[$language]['isocode']) || $language != $languages[$language]['isocode'] || empty($language)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	exit(); 
   } 
 
@@ -109,7 +109,7 @@ function update_authorization(){
     $perms = $_GET['perms'];
   }
   else {
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -120,7 +120,7 @@ function update_authorization(){
   $sql = "SELECT id FROM users WHERE accesslevel='5'";
   $result = mysql_query($sql);
   if(mysql_num_rows($result) < '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['needadmin'];
     exit();
   }
@@ -138,14 +138,14 @@ function update_authentication(){
     $auth_type = $_GET['auth_type'];
   }
   else {
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   
   if($COLLATE['settings']['auth_type'] != $auth_type) {
     if($auth_type == 'ldap' && !function_exists('ldap_connect')){
-	  header("HTTP/1.1 500 Internal Error");
+	  header("HTTP/1.1 400 Bad Request");
       echo $COLLATE['languages']['selected']['noldapsupport'];
       exit();
 	}
@@ -241,7 +241,7 @@ function delete_ldap_server(){
   
   $server_id = (isset($_GET['ldap_server_id']) && is_numeric($_GET['ldap_server_id'])) ? $_GET['ldap_server_id'] : '';  
   if(empty($server_id)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	exit();
   }
   
@@ -249,7 +249,7 @@ function delete_ldap_server(){
   $result = mysql_query($sql);
 	
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	exit();
   }
   
@@ -274,7 +274,7 @@ function edit_ldap(){
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
   
   if(empty($id) || empty($object) || empty($value)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -287,7 +287,7 @@ function edit_ldap(){
   if($object == 'domain'){
     $return = validate_text($value,'domain');
     if($return['0'] === false){
-      header("HTTP/1.1 500 Internal Error");
+      header("HTTP/1.1 400 Bad Request");
       echo $COLLATE['languages']['selected'][$return['error']];
     exit();
     }
@@ -296,7 +296,7 @@ function edit_ldap(){
   $sql = "select count(*) from `ldap-servers` where id='$id'";
   $result = mysql_query($sql);
   if(mysql_result($result, 0) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -316,7 +316,7 @@ function edit_domain(){
   
   $return = validate_text($value,'domain');
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -345,7 +345,7 @@ function update_accountexpire(){
      $accountexpire != "90" &&
      $accountexpire != "120" &&
 	 $accountexpire != "180"){
-	header("HTTP/1.1 500 Internal Error");
+	header("HTTP/1.1 400 Bad Request");
 	exit(); 
   }
   
@@ -372,7 +372,7 @@ function update_passwdlength(){
      $passwdlength != "8" &&
      $passwdlength != "9" &&
      $passwdlength != "10"){
-	header("HTTP/1.1 500 Internal Error");
+	header("HTTP/1.1 400 Bad Request");
 	exit();
   }
   
@@ -404,7 +404,7 @@ function update_loginattempts(){
      $loginattempts != "7" &&
      $loginattempts != "8" &&
 	 $loginattempts != "9"){
-	header("HTTP/1.1 500 Internal Error");
+	header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit(); 
   }
@@ -431,7 +431,7 @@ function edit_guidance(){
   
   $return = validate_text($value,'guidance');
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -454,7 +454,7 @@ function edit_dns(){
   
   $return = validate_text($value,'dnshelper');
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -567,7 +567,7 @@ function delete_api_key(){
 
   $return = validate_api_key($apikey);
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -593,7 +593,7 @@ function edit_api_key_description(){
   
   $return = validate_api_key($apikey);
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -603,7 +603,7 @@ function edit_api_key_description(){
   
   $return = validate_text($value,'apidescription');
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -626,14 +626,14 @@ function change_api_key_status(){
   $status = (isset($_GET['status'])) ? $_GET['status'] : '';
   
   if(empty($apikey) || empty($status) || !preg_match("/active|revoked/", $status)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
   
   $return = validate_api_key($apikey);
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }

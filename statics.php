@@ -264,12 +264,13 @@ function list_statics(){
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
         echo "<a href=\"#\" onclick=\"
                if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
-                 new Element.update('notice', ''); 
-                 new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
+                 new Element.update('static_".$static_id."_notice', ''); 
+                 new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
                    new Effect.Parallel( [
                      new Effect.Fade('static_".$static_id."_row_1'), 
                      new Effect.Fade('static_".$static_id."_row_2'), 
-                     new Effect.Fade('static_".$static_id."_row_3')
+                     new Effect.Fade('static_".$static_id."_row_3'), 
+                     new Effect.Fade('static_".$static_id."_row_4')
                    ]); 
                  }}); 
                };
@@ -293,7 +294,8 @@ function list_statics(){
       }
       
       echo "</tr>\n";
-      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
+	  echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><span id=\"static_".$static_id."_notice\" class=\"tip\"></span></td></tr>\n";
+      echo "<tr id=\"static_".$static_id."_row_4\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=      
@@ -304,12 +306,12 @@ function list_statics(){
                highlightcolor: '#a5ddf8', 
                callback:
                 function(form) {
-                  new Element.update('notice', '');
-                        return Form.serialize(form);
+                  new Element.update('static_".$static_id."_notice', '');
+                  return Form.serialize(form);
                 },
                onFailure: 
-                function(transport) {
-                        new Element.update('notice', transport.responseText.stripTags());
+                function(transport, ipe) {
+                new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
               }
             }
             );\n".
@@ -319,14 +321,14 @@ function list_statics(){
               highlightcolor: '#a5ddf8',  
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
-               },
-              onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
-              }
-            }
+                  new Element.update('static_".$static_id."_notice', '');
+                  return Form.serialize(form);
+                },
+               onFailure: 
+                function(transport, ipe) {
+                  new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
+                }
+               }
             );\n".
             "  new Ajax.InPlaceEditorWithEmptyText('edit_note_".$static_id."', '_statics.php?op=edit&static_id=$static_id&edit=note',
               {
@@ -334,13 +336,13 @@ function list_statics(){
               highlightcolor: '#a5ddf8',  
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
-               },
-              onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
-               }
+                  new Element.update('static_".$static_id."_notice', '');
+                  return Form.serialize(form);
+                },
+               onFailure: 
+                function(transport, ipe) {
+                  new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
+                }
             }
             );\n".
            "--></script>\n";

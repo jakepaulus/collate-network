@@ -204,7 +204,7 @@ function submit_block() {
   if($update_block === false){ # checking for duplicate block name
     $result = mysql_query("SELECT id from blocks where name='$name'");
 	if(mysql_num_rows($result) != '0'){
-  	  header("HTTP/1.1 500 Internal Error");
+  	  header("HTTP/1.1 400 Bad Request");
    	  $notice = 'duplicatename';
    	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
    	  exit();
@@ -213,7 +213,7 @@ function submit_block() {
   else{ # checking that we're updating a block that actually exists
     $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	if(mysql_num_rows($result) != '1'){
-      header("HTTP/1.1 500 Internal Error");
+      header("HTTP/1.1 400 Bad Request");
       $notice = 'selectblock';
 	  header("Location: blocks.php?notice=$notice");
    	  exit();
@@ -393,11 +393,12 @@ function list_blocks(){
            $COLLATE['languages']['selected']['modifyblock']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
 		   " <a href=\"#\" onclick=\"
 	         if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
-			   new Element.update('notice', ''); 
-			   new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
+			   new Element.update('block_".$block_id."_notice', ''); 
+			   new Ajax.Updater('block_".$block_id."_notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
 			     new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), 
 				 new Effect.Fade('block_".$block_id."_row_2'), 
-				 new Effect.Fade('block_".$block_id."_row_3')]); 
+				 new Effect.Fade('block_".$block_id."_row_3'), 
+				 new Effect.Fade('block_".$block_id."_row_4')]); 
                }}); 
 			 };
 			 return false;\">
@@ -406,7 +407,8 @@ function list_blocks(){
     echo "</td>
 		 </tr>\n";
 	echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
-    echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
+	echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><span id=\"block_".$block_id."_notice\" class=\"tip\"></span>\n";
+    echo "<tr id=\"block_".$block_id."_row_4\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
 	
 	if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
 	  $javascript .=
@@ -417,12 +419,12 @@ function list_blocks(){
 			   highlightcolor: '#a5ddf8', 
 			   callback:
 			    function(form) {
-			      new Element.update('notice', '');
+			      new Element.update('block_".$block_id."_notice', '');			  
 				  return Form.serialize(form);
 			    },
 			   onFailure: 
-			    function(transport) {
-			      new Element.update('notice', transport.responseText.stripTags());
+			    function(transport, ipe) {
+			        new Element.update('block_".$block_id."_notice', ipe.responseText);
 			    }
 			  }
 			  );\n".
@@ -432,12 +434,12 @@ function list_blocks(){
 			   highlightcolor: '#a5ddf8',  
 			   callback:
 			    function(form) {
-			      new Element.update('notice', '');
+			      new Element.update('block_".$block_id."_notice', '');
 				  return Form.serialize(form);
 			    },
 			   onFailure: 
-			    function(transport) {
-			      new Element.update('notice', transport.responseText.stripTags());
+			    function(transport, ipe) {
+			        new Element.update('block_".$block_id."_notice', ipe.responseText);
 			    }
 			  }
 			  );\n".

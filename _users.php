@@ -8,7 +8,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 $username = (isset($_GET['username'])) ? $_GET['username'] : '';
 $result = validate_text($username,'username');
 if($result['0'] === false){
-  header("HTTP/1.1 500 Internal Error");
+  header("HTTP/1.1 400 Bad Request");
   echo $COLLATE['languages']['selected'][$result['error']];
   exit();
 }
@@ -19,7 +19,7 @@ else{
 $sql = "select count(*) from users where username='$username'";
 $count = mysql_result(mysql_query($sql), 0);
 if($count != '1'){ 
-  header("HTTP/1.1 500 Internal Error");  
+  header("HTTP/1.1 400 Bad Request");  
   echo $COLLATE['languages']['selected']['invalidrequest'];
   exit();
 }

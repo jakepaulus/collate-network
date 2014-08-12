@@ -35,7 +35,7 @@ function edit_subnet(){
   $username = (isset($COLLATE['user']['username'])) ? $COLLATE['user']['username'] : 'unknown';
   
   if(empty($subnet_id) || !is_numeric($subnet_id) || !preg_match('/name|note/', $edit)){ 
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -46,7 +46,7 @@ function edit_subnet(){
     $return = validate_text($value,'note');
   }
   if($return['0'] === false){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected'][$return['error']];
 	exit();
   }
@@ -67,7 +67,7 @@ function edit_subnet(){
 	$sql = "UPDATE subnets SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   else{
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
@@ -84,7 +84,7 @@ function delete_subnet(){
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
   
   if(empty($subnet_id)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
@@ -92,7 +92,7 @@ function delete_subnet(){
   $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
 	
   if(mysql_num_rows($result) != '1'){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
@@ -116,10 +116,7 @@ function delete_subnet(){
   $sql = "DELETE FROM subnets WHERE id='$subnet_id'";
   mysql_query($sql);
   
-  $message = str_replace("%name%", "$name", $COLLATE['languages']['selected']['subnetdeleted']);
-  $message = str_replace("%cidr%", "$cidr", $message);
-  
-  echo $message;
+  // The user is informed of success by the fading away of the subnet in the UI
   exit();
   
 } // Ends delete_subnet function
@@ -234,7 +231,7 @@ function toggle_stalescan(){
   $toggle = (isset($_GET['toggle']) && preg_match("/on|off/", $_GET['toggle'])) ? $_GET['toggle'] : '';
   
   if(empty($subnet_id) || empty($toggle)){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     $notice = 'invalidrequest';
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
@@ -243,7 +240,7 @@ function toggle_stalescan(){
   $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
   $query_result = mysql_query($sql);
   if(mysql_num_rows($query_result) !== 1){
-    header("HTTP/1.1 500 Internal Error");
+    header("HTTP/1.1 400 Bad Request");
     $notice = 'invalidrequest';
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();

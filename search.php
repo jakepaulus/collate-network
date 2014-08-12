@@ -264,11 +264,12 @@ function search() {
                $COLLATE['languages']['selected']['modifyblock']."\" src=\"images/modify.gif\" /></a> &nbsp; ".
       	   " <a href=\"#\" onclick=\"
                if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
-      		   new Element.update('notice', ''); 
-      		   new Ajax.Updater('notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
+      		   new Element.update('block_".$block_id."_notice', ''); 
+      		   new Ajax.Updater('block_".$block_id."_notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
       		     new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), 
       			 new Effect.Fade('block_".$block_id."_row_2'), 
-      			 new Effect.Fade('block_".$block_id."_row_3')]); 
+      			 new Effect.Fade('block_".$block_id."_row_3'), 
+      			 new Effect.Fade('block_".$block_id."_row_4')]); 
                    }}); 
       		 };
       		 return false;\">
@@ -276,8 +277,9 @@ function search() {
       }
       echo "</td>
             </tr>\n";
-      echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
-      echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
+      echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"2\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
+      echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"3\"><span id=\"block_".$block_id."_notice\" class=\"tip\"></span></td></tr>\n";
+      echo "<tr id=\"block_".$block_id."_row_4\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
       
       if($COLLATE['user']['accesslevel'] >= '4' || $COLLATE['settings']['perms'] > '4'){
         $javascript .=
@@ -288,12 +290,12 @@ function search() {
       		   highlightcolor: '#a5ddf8', 
       		   callback:
       		    function(form) {
-      		      new Element.update('notice', '');
+      		      new Element.update('block_".$block_id."_notice', '');
       			  return Form.serialize(form);
       		    },
       		   onFailure: 
-      		    function(transport) {
-      		      new Element.update('notice', transport.responseText.stripTags());
+      		    function(transport, ipe) {
+      		      new Element.update('block_".$block_id."_notice', ipe.responseText.stripTags());
       		    }
       		  }
       		  );\n".
@@ -303,12 +305,12 @@ function search() {
       		   highlightcolor: '#a5ddf8',  
       		   callback:
       		    function(form) {
-      		      new Element.update('notice', '');
+      		      new Element.update('block_".$block_id."_notice', '');
       			  return Form.serialize(form);
       		    },
       		   onFailure: 
-      		    function(transport) {
-      		      new Element.update('notice', transport.responseText.stripTags());
+      		    function(transport, ipe) {
+      		      new Element.update('block_".$block_id."_notice', ipe.responseText.stripTags());
       		    }
       		  }
       		  );\n".
@@ -353,13 +355,14 @@ function search() {
              "src=\"images/modify.gif\" /></a> &nbsp; ".
              "<a href=\"#\" onclick=\"
 			 if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) {
-               new Element.update('notice', ''); 
-			   new Ajax.Updater('notice', '_subnets.php?op=delete&subnet_id=$subnet_id', 
+               new Element.update('subnet_".$subnet_id."_notice', ''); 
+			   new Ajax.Updater('subnet_".$subnet_id."_notice', '_subnets.php?op=delete&subnet_id=$subnet_id', 
 			   {onSuccess:function(){ 
 			     new Effect.Parallel( [
 				   new Effect.Fade('subnet_".$subnet_id."_row_1'), 
 				   new Effect.Fade('subnet_".$subnet_id."_row_2'), 
-                   new Effect.Fade('subnet_".$subnet_id."_row_3')]);
+				   new Effect.Fade('subnet_".$subnet_id."_row_3'), 
+                   new Effect.Fade('subnet_".$subnet_id."_row_4')]);
                }}); 
 			 }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".
 		     $COLLATE['languages']['selected']['deletesubnet']."\" /></a>";
@@ -367,7 +370,8 @@ function search() {
       echo "</td></tr>\n";
          
       echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"5\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
-      echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
+      echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"6\"><span id=\"subnet_".$subnet_id."_notice\" class=\"tip\"></span></td></tr>\n";
+      echo "<tr id=\"subnet_".$subnet_id."_row_4\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
       
       if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
              
@@ -379,12 +383,12 @@ function search() {
 			  highlightcolor: '#a5ddf8', 
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
+                 new Element.update('subnet_".$subnet_id."_notice', '');
+                 return Form.serialize(form);
                },
               onFailure: 
-               function(transport) {
-                       new Element.update('notice', transport.responseText.stripTags());
+               function(transport, ipe) {
+                 new Element.update('subnet_".$subnet_id."_notice', ipe.responseText.stripTags());
                }
             }
             );\n".
@@ -394,12 +398,12 @@ function search() {
 			  highlightcolor: '#a5ddf8',  
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
+                 new Element.update('subnet_".$subnet_id."_notice', '');
+                 return Form.serialize(form);
                },
               onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
+               function(transport, ipe) {
+                 new Element.update('subnet_".$subnet_id."_notice', ipe.responseText.stripTags());
                }
             }
             );\n".
@@ -448,12 +452,13 @@ function search() {
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
         echo " <a href=\"#\" onclick=\"
 		      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
-			    new Element.update('notice', ''); 
-				new Ajax.Updater('notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
+			    new Element.update('static_".$static_id."_notice', ''); 
+				new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
 				  new Effect.Parallel( [
 				    new Effect.Fade('static_".$static_id."_row_1'), 
 				    new Effect.Fade('static_".$static_id."_row_2'), 
-					new Effect.Fade('static_".$static_id."_row_3')]); 
+				    new Effect.Fade('static_".$static_id."_row_3'), 
+					new Effect.Fade('static_".$static_id."_row_4')]); 
 				}}); 
                }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['deletestatic']."\" /></a>";
       }
@@ -474,7 +479,8 @@ function search() {
       }
       
       echo "</tr>\n";
-      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
+      echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"6\"><span id=\"static_".$static_id."_notice\" class=\"tip\"></span></td>\n";
+      echo "<tr id=\"static_".$static_id."_row_4\"><td colspan=\"6\"><hr class=\"division\" /></td></tr>\n";
     
       if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
           $javascript .=	  
@@ -485,12 +491,12 @@ function search() {
 			  highlightcolor: '#a5ddf8', 
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
+                 new Element.update('static_".$static_id."_notice', '');
+                 return Form.serialize(form);
                },
               onFailure: 
-               function(transport) {
-                       new Element.update('notice', transport.responseText.stripTags());
+               function(transport, ipe) {
+                 new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
                }
             }
             );\n".
@@ -500,12 +506,12 @@ function search() {
 			  highlightcolor: '#a5ddf8',  
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
+                 new Element.update('static_".$static_id."_notice', '');
+                 return Form.serialize(form);
                },
               onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
+               function(transport, ipe) {
+                 new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
                }
             }
             );\n".
@@ -515,12 +521,12 @@ function search() {
 			  highlightcolor: '#a5ddf8',  
               callback:
                function(form) {
-                 new Element.update('notice', '');
-                       return Form.serialize(form);
+                 new Element.update('static_".$static_id."_notice', '');
+                 return Form.serialize(form);
                },
               onFailure: 
-               function(transport) {
-                 new Element.update('notice', transport.responseText.stripTags());
+               function(transport, ipe) {
+                 new Element.update('static_".$static_id."_notice', ipe.responseText.stripTags());
                }
             }
             );\n".
