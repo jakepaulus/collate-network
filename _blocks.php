@@ -43,19 +43,21 @@ function edit_block(){
 	else{
 	  $value = $return['1'];
 	}
-	$result = mysql_query("SELECT name from blocks where name='$value'");
-	if(mysql_num_rows($result) != '0'){
-	  $old_name = mysql_result($result, 0);
-	  if($value == $old_name){
-	    echo $value;
-		exit();
-	  }
-	  header("HTTP/1.1 400 Bad Request");
-	  echo $COLLATE['languages']['selected']['duplicatename'];
-	  exit();
-	}
+	
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
+	
+	if(mysql_num_rows($result) != '0'){	  
+	  if($value == $name){
+	    echo $name;
+		exit();
+	  }
+	  else{
+	    header("HTTP/1.1 400 Bad Request");
+	    echo $COLLATE['languages']['selected']['duplicatename'];
+	    exit();
+	  }
+	}	
     AccessControl('4', "Block $name has been updated to $value");
 	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
