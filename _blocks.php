@@ -44,12 +44,13 @@ function edit_block(){
 	  $value = $return['1'];
 	}
 	
-	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
-	$name = mysql_result($result, 0);
+	$result = mysql_query("SELECT id FROM blocks WHERE name='$value'");
+	if(mysql_num_rows($result) != '0'){
 	
-	if(mysql_num_rows($result) != '0'){	  
-	  if($value == $name){
-	    echo $name;
+      $old_id = mysql_result($result, 0);
+	  
+	  if($old_id == $block_id){
+	    echo $value;
 		exit();
 	  }
 	  else{
@@ -57,7 +58,10 @@ function edit_block(){
 	    echo $COLLATE['languages']['selected']['duplicatename'];
 	    exit();
 	  }
-	}	
+	}
+	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
+	$name = mysql_result($result, 0);
+	
     AccessControl('4', "Block $name has been updated to $value");
 	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
