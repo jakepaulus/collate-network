@@ -49,15 +49,16 @@ function list_users(){
 	     "<th>".$COLLATE['languages']['selected']['Username']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Telephone']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Email']."</th>".
-		 "<th>".$COLLATE['languages']['selected']['LastLogin']."</th>".
-		 "<th>".$COLLATE['languages']['selected']['Actions']."</th></tr>".
+		 "<th>".$COLLATE['languages']['selected']['LastLogin']."</th></tr>".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
 	     
     while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
       echo "<tr id=\"user_${username}_row_1\"><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
-	       <td>";
+	       <td style=\"text-align: right;>";
 	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
-	    echo "<a href=\"#\" onclick=\"
+	    echo "<a href=\"users.php?op=edit&amp;username=$username\">".
+			 "<img src=\"./images/modify.gif\" alt=\"edit\" title=\"".$COLLATE['languages']['selected']['EditUser']."\" /></a>
+			 &nbsp; <a href=\"#\" onclick=\"
 		      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) {
                 new Element.update('notice', ''); 
 				new Ajax.Updater('notice', '_users.php?op=deleteuser&amp;username=$username', {
@@ -65,9 +66,7 @@ function list_users(){
 				});
                };
 			   return false;
-			   \"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['DeleteUser']."\" /></a> &nbsp".
-	  	     "&nbsp;<a href=\"users.php?op=edit&amp;username=$username\">".
-			 "<img src=\"./images/modify.gif\" alt=\"edit\" title=\"".$COLLATE['languages']['selected']['EditUser']."\" /></a>";
+			   \"><img src=\"./images/remove.gif\" alt=\"X\" title=\"".$COLLATE['languages']['selected']['DeleteUser']."\" /></a>";
 	  }
 	  echo "</td></tr>".
 	       "<tr id=\"user_${username}_row_2\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>";
