@@ -770,10 +770,10 @@ function build_search_sql(){
     if(!strstr($search, '/')){
       $ip = $search;
       $mask = '32';
-	  }
-	  else{
+	}
+	else{
       list($ip,$mask) = explode('/', $search);
-	  }
+	}
   
     if(ip2decimal($ip) == FALSE){
       $notice = "invalidip";
@@ -813,7 +813,7 @@ function build_search_sql(){
     $First = "IP Blocks";
 	
 	if($second == 'ip'){
-	  if(empty($long_mask)){
+	  if($mask == '255.255.255.255'){
 	    # IP falls within block range
 	    $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE type='ipv4' AND
 	            CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) AND
