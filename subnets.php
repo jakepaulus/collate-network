@@ -433,7 +433,7 @@ function modify_subnet (){
     exit();
   }
   
-  $sql = "SELECT id, name, start_ip, mask, stalescan_enabled FROM subnets WHERE id='$subnet_id'";
+  $sql = "SELECT id, name, start_ip, mask, block_id, stalescan_enabled FROM subnets WHERE id='$subnet_id'";
   $query_result = mysql_query($sql);
   if(mysql_num_rows($query_result) !== 1){
     $notice = "invalidrequest";
@@ -442,7 +442,7 @@ function modify_subnet (){
   }
   require_once('./include/header.php'); 
   
-  list($subnet_id,$subnet_name,$long_start_ip,$long_mask,$stalescan_enabled) = mysql_fetch_row($query_result); 
+  list($subnet_id,$subnet_name,$long_start_ip,$long_mask,$current_block_id,$stalescan_enabled) = mysql_fetch_row($query_result); 
   $start_ip = long2ip($long_start_ip);
   $mask = long2ip($long_mask);
   
@@ -472,7 +472,6 @@ function modify_subnet (){
   $sql = "SELECT id, name, parent_id FROM blocks WHERE type='ipv4'";
   $result = mysql_query($sql);
   while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
-    #$block_paths[$select_block_id]['name']=$select_block_name;
     $block_paths[$select_block_id]="$select_block_name";
     while($select_block_parent !== null){ #this has the potential to be really slow and awful...
       $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
@@ -484,7 +483,7 @@ function modify_subnet (){
   }
   natcasesort($block_paths);
   foreach ($block_paths as $select_id => $select_text){
-    if($select_block_parent == $select_id){
+    if($current_block_id == $select_id){
       echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
     }
     else{
