@@ -83,10 +83,12 @@ function add_block(){
 	   "<br />\n".
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
-	   "  <p><input type=\"radio\" name=\"block_type\" $containerblock_html value=\"container\" 
+	   "  <p><label for=\"container_block\"><img src=\"images/container_block.png\"></label>
+	         <input type=\"radio\" name=\"block_type\" id=\"container_block\" $containerblock_html value=\"container\" 
 	          onchange=\"new Effect.Fade('iprangefields', {duration: 0.2}); return false;\"> ".$COLLATE['languages']['selected']['iscontainerblock'].
        "<br />\n".
-	   "     <input type=\"radio\" name=\"block_type\" $ipv4block_html value=\"ipv4\" 
+	   "     <label for=\"ip_block\"><img src=\"images/ip_block.png\"></label>
+	         <input type=\"radio\" name=\"block_type\" id=\"ip_block\" $ipv4block_html value=\"ipv4\" 
 	          onchange=\"new Effect.Appear('iprangefields'); return false;\"> ".
 	      $COLLATE['languages']['selected']['isipv4block'].
 	   "  </p>\n".
@@ -383,8 +385,9 @@ function list_blocks(){
 	}
     
 	
-    echo "<tr id=\"block_".$block_id."_row_1\">
-	     <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
+    echo "<tr id=\"block_".$block_id."_row_1\"><td><a href=\"$link_target\">";
+	echo ($block_type == 'container') ? "<img src=\"images/container_block.png\">" :  "<img src=\"images/ip_block.png\">";	
+	echo "</a> &nbsp; <b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
 		 <td><a href=\"$link_target\">$start_ip</a></td>
 		 <td>$end_ip</td>
 		 <td style=\"text-align: right;\">";
