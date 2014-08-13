@@ -253,8 +253,9 @@ function search() {
         $end_ip = long2ip($long_end_ip);
       }   
       
-      echo "<tr id=\"block_".$block_id."_row_1\">
-            <td><b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
+      echo "<tr id=\"block_".$block_id."_row_1\"><td><a href=\"$link_target\">";
+	  echo ($block_type == 'container') ? "<img src=\"images/container_block.png\">" :  "<img src=\"images/ip_block.png\">";	
+	  echo "</a> &nbsp; <b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
             <td><a href=\"$link_target\">$start_ip</a></td>
             <td>$end_ip</td>
             <td style=\"text-align: right;\">";
@@ -812,9 +813,18 @@ function build_search_sql(){
     $First = "IP Blocks";
 	
 	if($second == 'ip'){
-	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE
-	          CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) AND
-	          CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)";
+	  if(empty($long_mask)){
+	    # IP falls within block range
+	    $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE type='ipv4' AND
+	            CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) AND
+	            CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)";
+	  }
+	  else{
+	    # block range falls within supernet given in search
+	    $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE type='ipv4' AND (
+		        CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) OR
+		        CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED))";
+	  }
 	}
 	else{
 	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%'";
