@@ -53,12 +53,13 @@ function add_block(){
 	  header("Location: blocks.php?notice=$notice");
 	  exit();
 	}
-	list($name,$long_start_ip,$long_end_ip,$note,$parent_block,$block_type) = mysql_fetch_row($result);
+	list($name,$long_start_ip,$long_end_ip,$note,$old_parent_block,$block_type) = mysql_fetch_row($result);
 	$ip = (empty($long_start_ip)) ? '' : long2ip($long_start_ip);
 	$end_ip = (empty($long_end_ip)) ? '' : long2ip($long_end_ip);
 	$hidden_form_inputs = '<input type="hidden" name="update_block" value="true">'.
 	                      "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\">";
 	$block_action_text = str_replace("%block_name%", $name, $COLLATE['languages']['selected']['ModifyBlock']);
+	$parent_block = (empty($parent_block)) ? $old_parent_block : $parent_block;
   }
   else{
     $block_action_text = $COLLATE['languages']['selected']['AddaBlock'];
@@ -174,7 +175,7 @@ function submit_block() {
    
   if(empty($name) || (!empty($end_ip) && empty($ip)) || empty($block_type)){
     $notice = "missingfield-notice";
-    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
+    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
 	exit();
   }
   
@@ -187,7 +188,7 @@ function submit_block() {
   $return = validate_text($name,'blockname');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
 	exit();
   }
   else{
@@ -197,7 +198,7 @@ function submit_block() {
   
   if(!preg_match('/^container$|^ipv4$/', $block_type)){
     $notice = 'invalidrequest';
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&parent_block=$parent_block&notice=$notice");
 	exit();
   }
 
@@ -206,7 +207,7 @@ function submit_block() {
 	if(mysql_num_rows($result) != '0'){
   	  header("HTTP/1.1 400 Bad Request");
    	  $notice = 'duplicatename';
-   	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
+   	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
    	  exit();
 	}
   }
@@ -224,7 +225,7 @@ function submit_block() {
   $return = validate_text($note,'note');
   if($return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
 	exit();
   }
   else{
@@ -241,7 +242,7 @@ function submit_block() {
   
   if(isset($return) && $return['0'] === false){
     $notice = $return['error'];
-	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&notice=$notice");
+	header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
 	exit();
   }
   elseif(isset($return)){
@@ -284,7 +285,7 @@ function submit_block() {
 	  $sql = "SELECT count(*) FROM subnets where block_id='$block_id'";
 	  if(mysql_result(mysql_query($sql), 0) != '0'){
 	    $notice = 'wouldorphansubnets';
-	    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&notice=$notice");
+	    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&parent_block=$parent_block&notice=$notice");
 	    exit();
 	  }
 	}
