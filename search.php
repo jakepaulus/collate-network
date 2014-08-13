@@ -578,6 +578,7 @@ function show_form()  {
   var store = new Array();
   
   store[0] = new Array(
+  	'<?php echo $COLLATE['languages']['selected']['IP']; ?>', 'ip',
   	'<?php echo $COLLATE['languages']['selected']['name']; ?>', 'name',
   	'<?php echo $COLLATE['languages']['selected']['note']; ?>', 'note');
   
@@ -650,6 +651,7 @@ function show_form()  {
   </select>
   <?php echo $COLLATE['languages']['selected']['withaan']; ?>
   <select name="second">
+	<option value="ip"><?php echo $COLLATE['languages']['selected']['IP']; ?></option>
 	<option value="name"><?php echo $COLLATE['languages']['selected']['name']; ?></option>
 	<option value="note"><?php echo $COLLATE['languages']['selected']['note']; ?></option>
   </select> matching: <input name="search" type="text" /> &nbsp;
@@ -691,7 +693,7 @@ function build_search_sql(){
   
   if($first === '0'){
     // block search
-	$pattern = "/^name$|^note$/";
+	$pattern = "/^ip$|^name$|^note$/";
 	$invalidrequest = (preg_match($pattern, $second)) ? false : true;
   }
   elseif($first === '1'){
@@ -762,7 +764,7 @@ function build_search_sql(){
   }
   //-----------------------------------------------------------------------------------------------------------------------------
   
-  if(($first == '1' || $first == '2') && $second == "ip"){
+  if(($first == '0' || $first == '1' || $first == '2') && $second == "ip"){
   
     if(!strstr($search, '/')){
       $ip = $search;
@@ -809,7 +811,14 @@ function build_search_sql(){
     $first = "blocks";
     $First = "IP Blocks";
 	
-	$sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%'";
+	if($second == 'ip'){
+	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE
+	          CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) AND
+	          CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)";
+	}
+	else{
+	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%'";
+    }
   }
   if($first == "1") { // Subnet search
     $first = "subnets";
