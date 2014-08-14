@@ -1,6 +1,7 @@
 <?php
 
 require_once('include/common.php');
+AccessControl('4', null, false); # null means no log, false means don't redirect
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 if(isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])){
@@ -62,7 +63,7 @@ function edit_block(){
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
 	
-    AccessControl('4', "Block $name has been updated to $value");
+    collate_log('4', "Block $name has been updated to $value");
 	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   elseif($edit == 'note'){
@@ -77,7 +78,7 @@ function edit_block(){
 	}
     $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
     $name = mysql_result($result, 0);
-    AccessControl('4', "Block $name note edited");
+    collate_log('4', "Block $name note edited");
 	$sql = "UPDATE blocks SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
   else{
@@ -111,7 +112,7 @@ function delete_block(){
   
   $name = mysql_result($result, 0, 0);
 
-  AccessControl("4", "Block $name has been deleted!");
+  collate_log("4", "Block $name has been deleted!");
   
   if(find_child_blocks($block_id) !== false){ # this is a recursive function
     $block_ids = array_merge($block_ids, find_child_blocks($block_id));

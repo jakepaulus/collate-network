@@ -1,6 +1,9 @@
 <?php
 
 require_once('include/common.php');
+
+AccessControl('5', null, false); # null means no log, false means don't redirect
+
 include 'include/validation_functions.php';
 
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
@@ -27,7 +30,6 @@ if($count != '1'){
 switch($op){
 	
 	case "deleteuser";
-	AccessControl('5', null);
 	delete_user();
 	break;
 		

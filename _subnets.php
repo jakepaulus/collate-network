@@ -1,6 +1,14 @@
 <?php
 
 require_once('include/common.php');
+
+$authorization = AccessControl('3', null, false); # null means no log, false means don't redirect
+if($authorization === false){ 
+  header("HTTP/1.1 401 Unauthorized");
+  echo $COLLATE['languages']['selected'][$authorization['error']];
+  exit();
+}
+
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
@@ -14,12 +22,10 @@ switch($op){
 	break;
 	
 	case "search";
-	AccessControl('1', null);
 	search_subnets();
 	break;
 	
 	case "toggle_stale-scan";
-	AccessControl('3', null);
 	toggle_stalescan();
 	break;
 }
@@ -59,11 +65,11 @@ function edit_subnet(){
   $cidr=subnet2cidr($subnet,$mask);
 	
   if($edit == 'name'){
-    AccessControl('3', "Subnet $name ($cidr) name changed to $value");
+    collate_log('3', "Subnet $name ($cidr) name changed to $value");
 	$sql = "UPDATE subnets SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   elseif($edit == 'note'){
-    AccessControl('3', "Subnet $name ($cidr) note edited");
+    collate_log('3', "Subnet $name ($cidr) note edited");
 	$sql = "UPDATE subnets SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   }
   else{
@@ -100,9 +106,7 @@ function delete_subnet(){
   list($name,$subnet,$mask) = mysql_fetch_row($result);
   $cidr=subnet2cidr($subnet,$mask);
   
-  $accesslevel = "3";
-  $message = "Subnet $name ($cidr) has been deleted";
-  AccessControl($accesslevel, $message); 
+  collate_log('3', "Subnet $name ($cidr) has been deleted"); 
   
   // First delete all static IPs
   $sql = "DELETE FROM statics WHERE subnet_id='$subnet_id'";
@@ -249,9 +253,7 @@ function toggle_stalescan(){
   list($subnet_name,$long_start_ip,$long_mask) = mysql_fetch_row($query_result);
   $cidr = subnet2cidr($long_start_ip,$long_mask); 
   
-  $accesslevel = "3";
-  $message = "Stale Scan toggled $toggle for Subnet: $subnet_name ($cidr)";
-  AccessControl($accesslevel, $message); 
+  collate_log('3', "Stale Scan toggled $toggle for Subnet: $subnet_name ($cidr)"); 
 
   if($toggle == 'on'){
     $stalescan_enabled='1';

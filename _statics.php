@@ -1,5 +1,10 @@
 <?php
 require_once('include/common.php');
+
+# Some functions in this script require higher privileges, but this 
+# should catch users not logged in for many cases.
+AccessControl('2', null, false); # null means no log, false means don't redirect
+
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
@@ -9,6 +14,7 @@ switch($op){
     break;
     
     case "edit_acl";
+	AccessControl('3', null, false); # null means no log, false means don't redirect
     edit_acl();
     break;
     
@@ -21,6 +27,7 @@ switch($op){
     break;
     
     case "edit_guidance";
+	AccessControl('3', null, false); # null means no log, false means don't redirect
     edit_guidance();
     break;
     
@@ -29,6 +36,7 @@ switch($op){
     break;
     
     case "delete_acl";
+	AccessControl('3', null, false); # null means no log, false means don't redirect
     delete_acl();
     break;
   
@@ -69,15 +77,15 @@ function edit_static(){
   $static_ip = long2ip($long_ip);
   
   if($edit == 'staticname'){
-    AccessControl('2', "static IP $static_ip name changed from $name to $value");
+    collate_log('2', "static IP $static_ip name changed from $name to $value");
     $sql = "UPDATE statics SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   elseif($edit == 'contact'){
-    AccessControl('2', "static IP $static_ip ($name) contact edited");
+    collate_log('2', "static IP $static_ip ($name) contact edited");
     $sql = "UPDATE statics SET contact='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
   else{
-    AccessControl('2', "static IP $static_ip ($name) note edited");
+    collate_log('2', "static IP $static_ip ($name) note edited");
     $sql = "UPDATE statics SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
  
@@ -121,7 +129,7 @@ function edit_acl(){
   
   $subnet_name = mysql_result($result, 0, 0);
   
-  AccessControl('3', "ACL statement name updated in $subnet_name subnet");
+  collate_log('3', "ACL statement name updated in $subnet_name subnet");
   $sql = "UPDATE acl SET name='$value' where id='$acl_id'";
   
   mysql_query($sql);  
@@ -222,7 +230,7 @@ function edit_guidance(){
   
   $name = mysql_result($result, 0, 0);
   
-  AccessControl('3', "IP Guidance edited for $name subnet");  
+  collate_log('3', "IP Guidance edited for $name subnet");  
     
   $sql = "UPDATE subnets SET guidance='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   
@@ -250,13 +258,9 @@ function delete_static(){
   }
   
   $static_ip = long2ip($long_ip);
-  
-  $accesslevel = "2";
-  $message = "Static IP deleted: $static_ip";
-  AccessControl($accesslevel, $message); 
-
   $long_ip = ip2decimal($static_ip);
   
+  collate_log('2', "Static IP deleted: $static_ip");
   $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
   
@@ -289,14 +293,11 @@ function delete_acl(){
   
   $subnet_name = mysql_result($result, 0, 0);
   
-  AccessControl('3', "ACL Statement #$acl_id deleted in $subnet_name subnet");
+  collate_log('3', "ACL Statement #$acl_id deleted in $subnet_name subnet");
   
-  $sql = "DELETE FROM acl WHERE id='$acl_id'";
-  
+  $sql = "DELETE FROM acl WHERE id='$acl_id'";  
   mysql_query($sql);
-  
-  echo $COLLATE['languages']['selected']['acldeleted'];
-
+  exit();
 } // Ends delete_acl function
 
 
@@ -321,9 +322,7 @@ function toggle_stalescan(){
     exit();
   }
   
-  $accesslevel = "2";
-  $message = "Stale Scan toggled $toggle for IP: $static_ip";
-  AccessControl($accesslevel, $message); 
+  collate_log('2', "Stale Scan toggled $toggle for IP: $static_ip"); 
 
   if($toggle == 'on'){
     $count='0';

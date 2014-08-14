@@ -3,7 +3,7 @@
 require_once('include/common.php');
 $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
-AccessControl('5', null);
+AccessControl('5', null, false); # null means no log, false means don't redirect
 
 switch($op){
 

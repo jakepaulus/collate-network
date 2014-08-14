@@ -50,7 +50,7 @@ else{
 
 
 
-function AccessControl($accesslevel, $message) {
+function AccessControl($accesslevel, $message, $redirect=true) {
   /**
    * The goal of this section is to compare $_SESSION['accesslevel'] with the $accesslevel
    * parameter and allow or deny access. Each function has a hard-coded value 
@@ -63,39 +63,59 @@ function AccessControl($accesslevel, $message) {
    * Access Level 3 = Can make changes to subnets table + level 2
    * Access Level 4 = Can make changes to blocks table + level 3
    * Access Level 5 = Full control of the application including setting changes, user's access level modifications, and user password resets.
+   *
+   * $message is the message to be logged on success
+   * $redirect is whether to redirect the user on access failure or output the error message and exit
    */
   global $COLLATE;
    
-  if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring loggin or logging
-    return;
+  if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring log-in or logging
+    return true;
   }
   elseif(!isset($_SESSION['username'])) { // the user isn't logged in.
-    $returnto = urlencode($_SERVER['REQUEST_URI']); // return the user to where they came from with this var
     $notice = "login-notice";
-    header("Location: login.php?notice=$notice&returnto=$returnto");
-    exit();
+	if($redirect === true){
+      $returnto = urlencode($_SERVER['REQUEST_URI']); // return the user to where they came from with this var    
+      header("Location: login.php?notice=$notice&returnto=$returnto");
+      exit();
+	}
+	else{
+	  header("HTTP/1.1 401 Unauthorized");
+      echo $COLLATE['languages']['selected'][$notice];
+      exit();
+	}
   }
   elseif($_SESSION['accesslevel'] >= $accesslevel){
     if($accesslevel > "1"){
       collate_log($accesslevel, $message);
 	}
-    return; // Access is allowed
+    return true; // Access is allowed
   }
   // if we've gotten this far in the function, we've not met any condition to allow access so access is denied.
   $notice = "perms-notice";
-  $referer = $_SERVER['HTTP_REFERER'];
-  if(stristr($referer, "?") == TRUE){ 
-    header("Location: $referer&notice=$notice");
-  } 
-  else {
-    header("Location: $referer?notice=$notice");
+  if($redirect === false){
+    header("HTTP/1.1 401 Unauthorized");
+    echo $COLLATE['languages']['selected'][$notice];
+    exit();
+  }
+  else{
+    $referer = $_SERVER['HTTP_REFERER'];
+    if(stristr($referer, "?") == TRUE){ 
+      header("Location: $referer&notice=$notice");
+    } 
+    else {
+      header("Location: $referer?notice=$notice");
+    }
   }
   exit();  
-  
 } // Ends AccessControl function
 
 function collate_log($accesslevel, $message){
   if ($message == null){ return; }
+  
+  if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring log-in or logging
+    return true;
+  }
     
   global $COLLATE;
   $ipaddress = $_SERVER['REMOTE_ADDR'];
