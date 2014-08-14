@@ -344,7 +344,8 @@ function search() {
 	  $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
       
       echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-           <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"subnets.php?block_id=$block_id\">".
+           <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\"></a> &nbsp;
+		   <b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"subnets.php?block_id=$block_id\">".
 		   $block_name[$block_id]."</a>".
 		   "</td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
            <td>$mask</td>$percent_subnet_used
@@ -445,7 +446,7 @@ function search() {
 	
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
-           "<td>$ip</td><td>".$path[$subnet_id]." </td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td><img src=\"images/static.png\" /> &nbsp; $ip</td><td>".$path[$subnet_id]." </td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
            "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
            "<td>$failed_scans</td>".
            "<td>";

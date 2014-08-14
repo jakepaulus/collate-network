@@ -256,7 +256,7 @@ function list_statics(){
   while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
-           "<td>$ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td><img src=\"images/static.png\" /> &nbsp; $ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
            "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
            "<td>$failed_scans</td>".
            "<td>";

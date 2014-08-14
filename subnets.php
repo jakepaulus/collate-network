@@ -349,7 +349,8 @@ function list_subnets(){
     $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
     
     echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-         <td><b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
+         <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\"></a> &nbsp; 
+		 <b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
          <td>$mask</td>$percent_subnet_used
          <td style=\"text-align: right;\">";
          
