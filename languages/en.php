@@ -405,7 +405,7 @@ $languages["en"] = array(
 # http://de.wikipedia.org/wiki/MIT-Lizenz
 # http://nl.wikipedia.org/wiki/MIT-licentie
 #
- "footertext" => "Collate:Network &copy; 2007 - 2013 by its <a href=\"http://collate.info/\">developers</a><br />
+ "footertext" => "Collate:Network &copy; 2006 - 2014 by its <a href=\"http://collate.info/\">developers</a><br />
 	              This software is licensed under the terms of  <a href=\"license.txt\">The MIT License</a><br />
 	              Version: %version_number%",
 
