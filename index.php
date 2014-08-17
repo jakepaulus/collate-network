@@ -1,6 +1,6 @@
 <?php 
 require_once('./include/common.php');
-if(!isset($COLLATE['settings']['version']) || $COLLATE['settings']['version'] != '2.2'){
+if(!isset($COLLATE['settings']['version']) || $COLLATE['settings']['version'] != '2.2.1'){
   header("Location: install.php");
   exit();
 }
