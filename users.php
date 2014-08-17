@@ -54,9 +54,9 @@ function list_users(){
 	     
     while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
       echo "<tr id=\"user_${username}_row_1\"><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
-	       <td style=\"text-align: right;>";
+	       <td style=\"text-align: right;\">\n";
 	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
-	    echo "<a href=\"users.php?op=edit&amp;username=$username\">".
+	    echo "<a href=\"users.php?op=edit&username=$username\">".
 			 "<img src=\"./images/modify.gif\" alt=\"edit\" title=\"".$COLLATE['languages']['selected']['EditUser']."\" /></a>
 			 &nbsp; <a href=\"#\" onclick=\"
 		      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) {
