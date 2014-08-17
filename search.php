@@ -235,8 +235,8 @@ function search() {
   
   if($first == "blocks"){
     echo "<table width=\"100%\">\n". // Here we actually build the HTML table
-       "<tr><th align=\"left\"><a href=\"blocks.php\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
-       "<th align=\"left\"><a href=\"blocks.php?sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
+       "<tr><th align=\"left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
+       "<th align=\"left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
        "<th align=\"left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
        "</tr>\n".
        "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
@@ -743,7 +743,7 @@ function build_search_sql(){
   }
   
   // -----------------------------------------------Build our sort variable---------------------------------------------
-  if($first == '1'){ // subnet search
+  if($first == '0' || $first == '1'){ // block or subnet search
     // use what they ask for or default to what they searched by
     // $sort is what the URI uses, $order and $full_order go into the SQL query - $full_order includes ASC or DESC
     if(!empty($_GET['sort']) && ( $_GET['sort'] == 'network' || $_GET['sort'] == 'name' )){
@@ -818,17 +818,19 @@ function build_search_sql(){
 	    # IP falls within block range
 	    $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE type='ipv4' AND
 	            CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) <= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) AND
-	            CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)";
+	            CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) >= CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED)
+				ORDER BY `$order` ASC";
 	  }
 	  else{
 	    # block range falls within supernet given in search
 	    $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE type='ipv4' AND (
 		        CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) OR
-		        CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED))";
+		        CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$long_mask' & 0xFFFFFFFF AS UNSIGNED) = CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED))
+				ORDER BY `$order` ASC";
 	  }
 	}
 	else{
-	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%'";
+	  $sql = "SELECT id, name, start_ip, end_ip, note, type FROM blocks WHERE $second like '%$search%' ORDER BY `$order` ASC";
     }
   }
   if($first == "1") { // Subnet search
