@@ -364,7 +364,7 @@ function list_statics(){
   echo "<h1>".$COLLATE['languages']['selected']['ACL']."</h1>\n";
   
   if($COLLATE['user']['accesslevel'] >= '3' || $COLLATE['settings']['perms'] > '3'){
-    echo  "<p style=\"text-align: right;\"><a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">\n".
+    echo  "<p style=\"text-align: right;\"><a href=\"#\" onclick=\"Effect.toggle($('add_acl'),'appear',{duration:0}); return false;\">\n".
           "<img src=\"./images/add.gif\" alt=\"Add\" /> ".$COLLATE['languages']['selected']['AddACL']." </a></p>\n";
   }
   else{
@@ -424,7 +424,7 @@ function list_statics(){
          <td>
            <input type=\"text\" name=\"acl_name\" /><br />
            <input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" />
-           <a href=\"javascript:Effect.toggle($('add_acl'),'appear',{duration:0})\">".$COLLATE['languages']['selected']['altcancel']."</a>
+           <a href=\"#\" onclick=\"Effect.toggle($('add_acl'),'appear',{duration:0}); return false;\">".$COLLATE['languages']['selected']['altcancel']."</a>
          </td>
          <td style=\"vertical-align: top\"><input type=\"text\" name=\"acl_start\" /></td>
          <td style=\"vertical-align: top\"><input type=\"text\" name=\"acl_end\" /></td>
