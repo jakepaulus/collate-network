@@ -232,7 +232,7 @@ $languages["en"] = array(
   "Exportresults"         => "Export Results as XML (Compatable with most spreadsheet applications.)",
   "searchdatedesc"        => "and the record was last modified between %fromdate% and %todate%",
   "IPblocks"              => "IP blocks",
-  "nostaticsfound-notice" => "No static IP addresses were found in the database that matched your query. Below are the matching subnets.",
+  "nostaticsfound-notice" => "No static IP addresses matching your query were found. Below are the matching subnets.",
   
 // common.php
   "login-notice" => "The administrator of this application requires you to log in to use this feature.",
