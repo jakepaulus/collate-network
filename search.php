@@ -227,10 +227,16 @@ function search() {
       $SearchResultsText=str_replace("%searchdescription%", "$searchdescription", $SearchResultsText);
     }
 	echo "$SearchResultsText</p>\n<hr class=\"head\" />\n";
-  if($rows < "1"){
-    echo "<p><b>".$COLLATE['languages']['selected']['nosearchresults']."</b></p>";
-    require_once('./include/footer.php');
-    exit();
+  if($rows == 0){
+	if($first == 'static IPs'){
+      header("Location: search.php?op=search&first=1&second=ip&search=$search&notice=nostaticsfound-notice");
+      exit();
+    }
+	else{
+	  echo "<p><b>".$COLLATE['languages']['selected']['nosearchresults']."</b></p>";
+      require_once('./include/footer.php');
+      exit();
+	}
   }
   
   if($first == "blocks"){
