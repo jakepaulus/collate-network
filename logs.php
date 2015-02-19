@@ -19,6 +19,8 @@ switch($op){
 function log_truncate(){
   global $COLLATE;
   
+  include "include/validation_functions.php";
+  
   if(isset($_GET['action'])){
     $action = clean($_GET['action']);
   }
@@ -39,7 +41,7 @@ function log_truncate(){
   $sql = "SELECT MAX(id) FROM logs";
   $maxid = mysql_result(mysql_query($sql), 0);
   $id = $maxid - 500;
-  
+    
   $sql = "DELETE FROM logs WHERE id<'$id'";
   mysql_query($sql);
   
