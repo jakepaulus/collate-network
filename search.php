@@ -228,7 +228,7 @@ function search() {
     }
 	echo "$SearchResultsText</p>\n<hr class=\"head\" />\n";
   if($rows == 0){
-	if($first == 'static IPs'){
+    if($first == 'static IPs' && $second == 'ip'){
       header("Location: search.php?op=search&first=1&second=ip&search=$search&notice=nostaticsfound-notice");
       exit();
     }
