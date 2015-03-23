@@ -24,7 +24,7 @@ function show_panel(){
 	<br /><b><?php echo $COLLATE['languages']['selected']['ManageUsers']; ?></b>
   </td>
   <td align="center" style="width: 25%">
-    <a href="http://code.google.com/p/collate-network/w/list"><img height="48" width="48" alt="[?]" src="./images/help_large.gif" /></a>
+    <a href="http://www.collate.info/"><img height="48" width="48" alt="[?]" src="./images/help_large.gif" /></a>
 	<br /><b><?php echo $COLLATE['languages']['selected']['Documentation']; ?></b>
   </td>
   <td align="center" style="width: 25%">
