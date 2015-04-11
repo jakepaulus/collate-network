@@ -46,20 +46,17 @@ function edit_block(){
 	}
 	
 	$result = mysql_query("SELECT id FROM blocks WHERE name='$value'");
-	if(mysql_num_rows($result) != '0'){
-	
-      $old_id = mysql_result($result, 0);
+	if(mysql_num_rows($result) != '0'){ 
+	  # a block by this name exists already
+      $existing_block_id = mysql_result($result, 0);
 	  
-	  if($old_id == $block_id){
-	    echo $value;
-		exit();
-	  }
-	  else{
+	  if($existing_block_id !== $block_id){
 	    header("HTTP/1.1 400 Bad Request");
 	    echo $COLLATE['languages']['selected']['duplicatename'];
 	    exit();
 	  }
 	}
+	
 	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
 	$name = mysql_result($result, 0);
 	
