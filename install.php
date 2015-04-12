@@ -61,7 +61,7 @@ CREATE TABLE `settings` (
 INSERT INTO `settings` VALUES ('passwdlength', '5');
 INSERT INTO `settings` VALUES ('accountexpire', '60');
 INSERT INTO `settings` VALUES ('loginattempts', '4');
-INSERT INTO `settings` VALUES ('version', '2.2.1');
+INSERT INTO `settings` VALUES ('version', '2.3');
 INSERT INTO `settings` VALUES ('perms', '6');
 INSERT INTO `settings` VALUES ('guidance', '');
 INSERT INTO `settings` VALUES ('dns', '');
@@ -115,7 +115,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
-INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.2 Installed!')
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network Version 2.3 Installed!')
 ";
 
 $upgrade_from_one_dot_zero = 
@@ -358,6 +358,11 @@ UPDATE settings SET value='2.2.1' WHERE name='version';
 INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.2.1!')
 ";
 
+$upgrade_from_two_dot_two_dot_one =
+"
+UPDATE settings SET value='2.3' WHERE name='version';
+INSERT INTO logs (occuredat, username, level, message) VALUES (NOW(), 'system', 'high', 'Collate:Network upgraded to version 2.3!')
+";
 
 $sql = "select value from settings where name='version'";
 $result = mysql_query($sql);
@@ -376,6 +381,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.2'){
     $results = multiple_query("$upgrade_from_one_dot_two");
@@ -388,6 +394,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.3' || $version == '1.4'){
     $results .= multiple_query("$upgrade_from_one_dot_four");
@@ -399,6 +406,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.5'){
     $results .= multiple_query("$upgrade_from_one_dot_five");
@@ -409,6 +417,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.6'){
 	$results = upgrade_from_one_dot_six();
@@ -418,6 +427,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.7'){
     $results = multiple_query("$upgrade_from_one_dot_seven");
@@ -426,6 +436,7 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.7.1'){
     $results = multiple_query($upgrade_from_one_dot_seven_dot_one);
@@ -433,26 +444,34 @@ if($result != FALSE) { // See what version we're on
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '1.7.2'){
 	$results = multiple_query($upgrade_from_one_dot_seven_dot_two);
 	$results .= multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '2.0'){
     $results = multiple_query($upgrade_from_two_dot_zero);
 	$results .= multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '2.1'){
 	$results = multiple_query($upgrade_from_two_dot_one);
 	$results .= multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '2.2'){
 	$results = multiple_query($upgrade_from_two_dot_two);
+	$results .= multiple_query($upgrade_from_two_dot_two_dot_one);
   }
   elseif($version == '2.2.1'){
+    $results = multiple_query($upgrade_from_two_dot_two_dot_one);
+  }
+  elseif($version == '2.3'){
     // We're at the current version!
     echo '<html>';
 	echo "<head>
@@ -460,7 +479,7 @@ if($result != FALSE) { // See what version we're on
          </head>
          <body>
            <h1>You're already up to date</h1>
-           <p>You're already running the latest version of Collate:Network this script is able to upgrade you to. To see if a newer version is availabe, 
+           <p>You're already running the latest version of Collate:Network this script is able to upgrade you to. To see if a newer version is available, 
   		 please visit <a href=\"http://collate.info\">Collate.info</a></p>
          </body>";
 	echo '</html>';
