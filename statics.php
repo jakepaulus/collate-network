@@ -279,21 +279,34 @@ function list_statics(){
       }
       echo "</td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_2\">".
-           "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>";
+           "  <td colspan=\"3\"><span id=\"edit_note_".$static_id."\">$note</span></td>".
+		   "  <td>";
 
-      if($stalescan_enabled == false){
-	    echo "  <td><img src=\"./images/skipping_disabled.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['StaleScandisabled']."\" /></td>";
+      if($stalescan_enabled == false){ # disabled at the subnet level
+	    echo "<img src=\"./images/skipping_disabled.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['StaleScandisabled']."\" /></td>";
 	  }
-	  elseif($failed_scans == '-1'){
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=on\" \">".
-             "<img src=\"./images/skipping.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['enablestalescan']."\" /></a></td>";
+	  elseif($failed_scans == '-1'){ # disabled at the static ip level
+	    if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+          echo "<a href=\"#\" onclick=\"new Ajax.Updater('stalescan_status_icon".$static_id."', '_statics.php?op=toggle_stale-scan&amp;static_ip=$ip')\">";
+		  echo "<span id=\"stalescan_status_icon".$static_id."\">";
+		}
+        echo "<img src=\"./images/skipping.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['enablestalescan']."\" />";
+		if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+		  echo "</span></a>";
+		}
       }
-      else{
-        echo "  <td><a href=\"_statics.php?op=toggle_stale-scan&amp;static_ip=$ip&amp;toggle=off\" \">".
-             "<img src=\"./images/scanning.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['disablestalescan']."\" /></a></td>";
+      else{ # currently enabled
+	    if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+          echo "<a href=\"#\" onclick=\"new Ajax.Updater('stalescan_status_icon".$static_id."', '_statics.php?op=toggle_stale-scan&amp;static_ip=$ip')\">";
+		  echo "<span id=\"stalescan_status_icon".$static_id."\">";
+		}
+		echo "<img src=\"./images/scanning.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['disablestalescan']."\" />";
+		if($COLLATE['user']['accesslevel'] >= '2' || $COLLATE['settings']['perms'] > '2'){
+		  echo "</span></a>";
+		}
       }
       
-      echo "</tr>\n";
+      echo "</td></tr>\n";
 	  echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><span id=\"static_".$static_id."_notice\" class=\"tip\"></span></td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_4\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     

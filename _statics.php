@@ -306,7 +306,6 @@ function toggle_stalescan(){
   
   $static_ip = (isset($_GET['static_ip'])) ? $_GET['static_ip'] : '';
   $long_ip = ip2decimal($static_ip);
-  $toggle = (isset($_GET['toggle']) && preg_match("/on|off/", $_GET['toggle'])) ? $_GET['toggle'] : '';
   $referer = (isset($_SERVER['HTTP_REFERER'])) ? $_SERVER['HTTP_REFERER'] : './search.php?notice=';
   
 
@@ -315,28 +314,42 @@ function toggle_stalescan(){
   }
   $referer=$referer.'&notice=';
 
-  if(empty($long_ip) || $long_ip === false || empty($toggle)){
+  if(empty($long_ip) || $long_ip === false){
     header("HTTP/1.1 400 Bad Request");
-    $notice = 'invalidrequest';
-    header("Location: $referer"."$notice");
+	echo "test1";
     exit();
   }
   
-  collate_log('2', "Stale Scan toggled $toggle for IP: $static_ip"); 
-
-  if($toggle == 'on'){
-    $count='0';
-    $notice='staletoggleon-notice';
-  }
-  else{
-    $count='-1';
-    $notice='staletoggleoff-notice';
+  # make sure we aren't being asked to toggle for a subnet that has stale scan disabled:
+  $sql = "SELECT stalescan_enabled FROM subnets WHERE 
+    CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED)";
+  $subnet_status = mysql_result(mysql_query($sql), 0);
+  if($subnet_status == false){
+	header("HTTP/1.1 400 Bad Request");
+    exit();
   }
   
-  $sql = "UPDATE statics SET failed_scans='$count' WHERE ip='$long_ip' LIMIT 1";
+  $sql = "SELECT failed_scans from statics where ip='$long_ip'";
+  $current_count = mysql_result(mysql_query($sql), 0);
+  if($current_count == -1){
+	$new_status = 'on';
+	$new_count = 0;
+	$new_icon = 'scanning.png';
+	$new_icon_text = $COLLATE['languages']['selected']['disablestalescan'];
+  }
+  else{
+    $new_status = 'off';
+	$new_count = -1;
+	$new_icon = 'skipping.png';
+	$new_icon_text = $COLLATE['languages']['selected']['enablestalescan'];
+  }
+  
+  collate_log('2', "Stale Scan toggled $new_status for IP: $static_ip"); 
+  
+  $sql = "UPDATE statics SET failed_scans='$new_count' WHERE ip='$long_ip' LIMIT 1";
   mysql_query($sql);
 
-  header("Location: $referer"."$notice");
+  echo "<img src=\"./images/$new_icon\" alt=\"\" title=\"$new_icon_text\" />";
   exit();
   
 } // Ends delete_static function
