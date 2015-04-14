@@ -199,7 +199,7 @@ function search_subnets(){
   if(!$input_error){
     echo "<h4>".$COLLATE['languages']['selected']['Results'].":</h4>";
     
-    echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+    echo "<table style=\"width: 100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
          "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
        
     while(!empty($ipspace)){

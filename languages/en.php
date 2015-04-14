@@ -194,7 +194,7 @@ $languages["en"] = array(
   "numericfailedscans"    => "You can only search by Failed Scans count if you supply a number.",
   "SearchResults"         => "<h1>Search Results</h1>
                              <p><b>You searched for:</b><br />",
-  "generalsearchterm"     => "All %first% where \"%second%\" is like \"%search%\" %searchdescription%</p>",
+  "generalsearchterm"     => "All %first% where \"%second%\" is like \"%search%\" %searchdescription%",
   "failedscansearch"      => "All static IPs where the number of failed stale scans is greater than or equal to %search%",
   "nosearchresults"       => "No results were found that matched your search.",
   "SubnetName"            => "Subnet Name",

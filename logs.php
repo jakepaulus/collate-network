@@ -75,7 +75,7 @@ function view_logs() {
        <a href=\"logs.php?op=truncate\"><img src=\"images/remove.gif\" alt=\"X\" />".$COLLATE['languages']['selected']['TruncateLogs']."
 	   </a></div><p style=\"clear: left; display: done;\">";
  
-  echo "<table width=\"100%\"><tr><td><b>".$COLLATE['languages']['selected']['Timestamp']."</b></td>\n
+  echo "<table style=\"width: 100%\"><tr><td><b>".$COLLATE['languages']['selected']['Timestamp']."</b></td>\n
         <td><b>".$COLLATE['languages']['selected']['Username']."</b></td>\n
 		<td><b>".$COLLATE['languages']['selected']['IPAddress']."</b></td>\n
         <td><b>".$COLLATE['languages']['selected']['Severity']."</b></td>\n

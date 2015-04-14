@@ -61,7 +61,7 @@ function add_static(){
        $COLLATE['languages']['selected']['IPGuidance']."</a></p>\n".
        "<form action=\"statics.php?op=submit\" method=\"post\">\n".
        "<div style=\"float: left; width: 28%;\">\n".
-       "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" /></p>\n".
+       "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" required minlength=\"3\" maxlength=\"25\" /></p>\n".
        "  <p><b>".$COLLATE['languages']['selected']['IPAddress'].":</b><br /><select id=\"ip\" name=\"ip_addr\">\n";
     
   while(!empty($ipspace)){
@@ -79,9 +79,10 @@ function add_static(){
        new Element.update('helper', '&lt;p&gt;&lt;img src=&quot;images/loading.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;'); 
        new Ajax.Updater('helper', '_statics.php?op=ping&amp;ip=' + document.forms[0].ip.value); return false;\">[".$COLLATE['languages']['selected']['Ping']."]</a>\n".
        "  </p> \n".
-       "  <p><b>".$COLLATE['languages']['selected']['ContactPerson'].":</b><br /><input type=\"text\" name=\"contact\" value=\"$contact\"/></p>\n".
+       "  <p><b>".$COLLATE['languages']['selected']['ContactPerson'].":</b><br />".
+	   "  <input type=\"text\" name=\"contact\" value=\"$contact\" required minlength=\"3\" maxlength=\"100\" /></p>\n".
        "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional']."<br />".
-       "  <input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
+       "  <input type=\"text\" name=\"note\" value=\"$note\" maxlength=\"80\" /></p>\n".
        "  </div>\n".
        "  <div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n";
   
@@ -245,18 +246,18 @@ function list_statics(){
        "<img src=\"./images/add.gif\" alt=\"\" /> ".$COLLATE['languages']['selected']['ReserveIP'].
        "</a></div><p style=\"clear: left; display: done;\">\n";
 
-  echo "<table width=\"100%\">".
+  echo "<table style=\"width: 100%\">".
        "<tr><th><a href=\"statics.php?subnet_id=$subnet_id\">".$COLLATE['languages']['selected']['IPAddress']."</a></th>".
        "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=name\">".$COLLATE['languages']['selected']['Name']."</a></th>".
        "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=contact\">".$COLLATE['languages']['selected']['Contact']."</a></th>".
-       "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=failed_scans\">".$COLLATE['languages']['selected']['FailedScans']."</a></th></tr>".
+       "<th><a href=\"statics.php?subnet_id=$subnet_id&amp;sort=failed_scans\">".$COLLATE['languages']['selected']['FailedScans']."</a></th><th></th></tr>".
        "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
    
   $javascript = ''; # this gets concatenated to below 
   while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
-           "<td><img src=\"images/static.png\" /> &nbsp; $ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td><img src=\"images/static.png\" alt=\"\" /> &nbsp; $ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
            "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
            "<td>$failed_scans</td>".
            "<td>";
@@ -265,7 +266,7 @@ function list_statics(){
         echo "<a href=\"#\" onclick=\"
                if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
                  new Element.update('static_".$static_id."_notice', ''); 
-                 new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
+                 new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&amp;static_ip=$ip', {onSuccess:function(){ 
                    new Effect.Parallel( [
                      new Effect.Fade('static_".$static_id."_row_1'), 
                      new Effect.Fade('static_".$static_id."_row_2'), 
@@ -306,7 +307,7 @@ function list_statics(){
 		}
       }
       
-      echo "</td></tr>\n";
+      echo "</td><td></td></tr>\n";
 	  echo "<tr id=\"static_".$static_id."_row_3\"><td colspan=\"5\"><span id=\"static_".$static_id."_notice\" class=\"tip\"></span></td></tr>\n";
       echo "<tr id=\"static_".$static_id."_row_4\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
@@ -384,10 +385,10 @@ function list_statics(){
     echo "<p></p>";
   }
   
-  echo "<form action=\"statics.php?op=submit_acl&amp;subnet_id=$subnet_id\" method=\"post\"><table width=\"100%\">".
+  echo "<form action=\"statics.php?op=submit_acl&amp;subnet_id=$subnet_id\" method=\"post\"><table style=\"width: 100%\">".
         "<tr><th>".$COLLATE['languages']['selected']['Name'].
         "</th><th>".$COLLATE['languages']['selected']['StartingIPAddress']."</th>".
-        "<th>".$COLLATE['languages']['selected']['EndingIPAddress']."</th></tr>".
+        "<th>".$COLLATE['languages']['selected']['EndingIPAddress']."</th><th></th></tr>".
         "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
     
   while(list($acl_id,$acl_name, $long_acl_start, $long_acl_end) = mysql_fetch_row($result)){
@@ -404,7 +405,7 @@ function list_statics(){
       echo " <a href=\"#\" onclick=\"
             if (confirm('Are you sure you want to delete this object?')) { 
               new Element.update('notice', ''); 
-              new Ajax.Updater('notice', '_statics.php?op=delete_acl&acl_id=$acl_id', {onSuccess:function(){ 
+              new Ajax.Updater('notice', '_statics.php?op=delete_acl&amp;acl_id=$acl_id', {onSuccess:function(){ 
                 new Effect.Fade('acl_".$acl_id."'); 
               }});
             }; return false;\"><img src=\"./images/remove.gif\" alt=\"X\" /></a>";

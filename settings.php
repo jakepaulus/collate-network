@@ -97,7 +97,7 @@ global $COLLATE;
 		}
 	  ); return false;" <?php 
 	  echo (empty($checked2) ? "" : $checked2);
-	  echo "/><span id=\"authorization2\">".$COLLATE['languages']['selected']['ReserveIPs']; ?></li>
+	  echo "/><span id=\"authorization2\">".$COLLATE['languages']['selected']['ReserveIPs']; ?></span></li>
     <li>
 	  <input type="radio" name="perms" onchange="
 	  new Ajax.Updater(
@@ -110,7 +110,7 @@ global $COLLATE;
 		}
 	  ); return false;" <?php 
 	  echo (empty($checked3) ? "" : $checked3);
-	  echo "/><span id=\"authorization3\">".$COLLATE['languages']['selected']['AllocateSubnets']; ?></li>
+	  echo "/><span id=\"authorization3\">".$COLLATE['languages']['selected']['AllocateSubnets']; ?></span></li>
 	<li>
 	  <input type="radio" name="perms" onchange="
 	  new Ajax.Updater(
@@ -123,7 +123,7 @@ global $COLLATE;
 		}
 	  ); return false;" <?php 
 	  echo (empty($checked4) ? "" : $checked4);
-	  echo "/><span id=\"authorization4\">".$COLLATE['languages']['selected']['AllocateBlocks']; ?></li>
+	  echo "/><span id=\"authorization4\">".$COLLATE['languages']['selected']['AllocateBlocks']; ?></span></li>
 	<li>
 	  <input type="radio" name="perms" onchange="
 	  new Ajax.Updater(
@@ -136,7 +136,7 @@ global $COLLATE;
 		}
 	  ); return false;" <?php 
 	  echo (empty($checked5) ? "" : $checked5);
-	  echo "/><span id=\"authorization5\">".$COLLATE['languages']['selected']['Admin']; ?></li>
+	  echo "/><span id=\"authorization5\">".$COLLATE['languages']['selected']['Admin']; ?></span></li>
 	<li>
 	  <input type="radio" name="perms" onchange="
 	  new Ajax.Updater(
@@ -149,7 +149,7 @@ global $COLLATE;
 		}
 	  ); return false;" <?php 
 	  echo (empty($checked0) ? "" : $checked0);
-	  echo "/><span id=\"authorization6\">".$COLLATE['languages']['selected']['noauthentication']; ?></li>
+	  echo "/><span id=\"authorization6\">".$COLLATE['languages']['selected']['noauthentication']; ?></span></li>
   </ul>
   </div>
   <br />
@@ -185,15 +185,15 @@ global $COLLATE;
 	    echo "/><span id=\"ldapauth\">".$COLLATE['languages']['selected']['LDAP']; ?></span></li>
     </ul>
   
-	<table width="90%">
+	<table style="width: 90%">
 	<tr>
-	  <th width="33%"><?php echo $COLLATE['languages']['selected']['Domain']; ?></th>
-	  <th width="33%"><?php echo $COLLATE['languages']['selected']['LDAPServer']; ?></th>
-	  <td width="33%"><a href="#" onclick="
+	  <th style="width: 33%"><?php echo $COLLATE['languages']['selected']['Domain']; ?></th>
+	  <th style="width: 33%"><?php echo $COLLATE['languages']['selected']['LDAPServer']; ?></th>
+	  <td style="width: 33%"><a href="#" onclick="
 	    new Element.update('authenticationnotice', '');
 	    new Ajax.Updater({ success: 'ldap_servers', failure: 'authenticationnotice' }, '_settings.php?op=addldapserver', {onSuccess:function(){
-		  new Ajax.Request('_settings.php?op=addldapserver&javascript=true', {evalJS: 'force'});
-		}}); return false;"
+		  new Ajax.Request('_settings.php?op=addldapserver&amp;javascript=true', {evalJS: 'force'});
+		}}); return false;">
 	    <img src="./images/add.gif" alt="" /> <?php echo $COLLATE['languages']['selected']['AddLDAPServer']; ?> </a></td>
 	</tr>
 	</table>
@@ -212,7 +212,7 @@ global $COLLATE;
 	  echo "<tr id=\"ldap_server_$id\"><td width=\"33%\"><span id=\"edit_domain_$id\">$domain</span></td><td width=\"33%\"><span id=\"edit_server_$id\">$server</span></td><td width=\"33%\"><a href=\"#\" onclick=\"
       if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
         new Element.update('authenticationnotice', ''); 
-        new Ajax.Request('_settings.php?op=delete_ldap_server&ldap_server_id=$id', {onSuccess:function(){ 
+        new Ajax.Request('_settings.php?op=delete_ldap_server&amp;ldap_server_id=$id', {onSuccess:function(){ 
           new Effect.Fade('ldap_server_".$id."') 
         }}); 
       }; return false;\"
@@ -220,7 +220,7 @@ global $COLLATE;
       
       $javascript .=	  
 
-         "  new Ajax.InPlaceEditorWithEmptyText('edit_domain_$id', '_settings.php?op=editldap&object=domain&id=$id',
+         "  new Ajax.InPlaceEditorWithEmptyText('edit_domain_$id', '_settings.php?op=editldap&amp;object=domain&id=$id',
               {
 			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			    highlightcolor: '#a5ddf8', 
@@ -235,7 +235,7 @@ global $COLLATE;
                   }
               }
             );\n".
-         "  new Ajax.InPlaceEditorWithEmptyText('edit_server_$id', '_settings.php?op=editldap&object=server&id=$id',
+         "  new Ajax.InPlaceEditorWithEmptyText('edit_server_$id', '_settings.php?op=editldap&amp;object=server&id=$id',
               {
 			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			    highlightcolor: '#a5ddf8',  
@@ -342,12 +342,12 @@ global $COLLATE;
   <hr />
   <div id="apinotice" class="tip"></div>
   <div style="margin-left: 20px;">
-	<table width="90%">
+	<table style="width: 90%">
 	<tr>
-	  <th width="30%"><?php echo $COLLATE['languages']['selected']['APIKeyDescript']; ?></th>
-	  <th width="15%"><?php echo $COLLATE['languages']['selected']['Status']; ?></th>
-	  <th width="30%"><?php echo $COLLATE['languages']['selected']['APIKey']; ?></th>
-	  <td width="25%"><a href="#" onclick="
+	  <th style="width: 30%"><?php echo $COLLATE['languages']['selected']['APIKeyDescript']; ?></th>
+	  <th style="width: 15%"><?php echo $COLLATE['languages']['selected']['Status']; ?></th>
+	  <th style="width: 30%"><?php echo $COLLATE['languages']['selected']['APIKey']; ?></th>
+	  <td style="width: 25%"><a href="#" onclick="
 	    new Element.update('apinotice', '');
 	    new Ajax.Updater({ success: 'api_keys', failure: 'apinotice' }, '_settings.php?op=addapikey', {onSuccess:function(){
 		  new Ajax.Request('_settings.php?op=addapikey&javascript=true', {evalJS: 'force'});
@@ -452,7 +452,7 @@ global $COLLATE;
     <span id="dns"><?php echo $COLLATE['settings']['dns']; ?></span>
   </div>
   <br />
-  </p>
+
   <script type="text/javascript"><!--
     new Ajax.InPlaceEditorWithEmptyText('dns', '_settings.php?op=editdns',
             {

@@ -10,7 +10,7 @@ function show_panel(){
   
 ?>
 <h1><?php echo $COLLATE['languages']['selected']['ControlPanel']; ?></h1>
-<table width="100%">
+<table style="width: 100%">
 <tr><td><br /></td></tr>
 <tr>
   <?php if(isset($COLLATE['user']['username'])){ ?>

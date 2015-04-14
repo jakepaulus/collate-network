@@ -1,14 +1,12 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Collate:Network</title>
+   
+<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
+<script src="javascripts/prototype.js" type="text/javascript"></script>
+<script src="javascripts/scriptaculous.js" type="text/javascript"></script>
+<script src="javascripts/InPlaceEditorWithEmptyText.js" type="text/javascript"></script>
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-    <title>Collate:Network</title>
-    
-	<link rel="stylesheet" type="text/css" href="css/bluesky.css" />
-	<script src="javascripts/prototype.js" type="text/javascript"></script>
-    <script src="javascripts/scriptaculous.js" type="text/javascript"></script>
-    <script src="javascripts/InPlaceEditorWithEmptyText.js" type="text/javascript"></script>
-</head>
 <body id="collate-network">
 
 <div id="page">
@@ -18,8 +16,8 @@
     </div>
         <div id="content">
 <div id="path" class="path">
-  <table width="100%">
-    <tr><td align="left">
+  <table style="width: 100%">
+    <tr><td style="text-align: left">
       <?php 
 	// Here we construct the current path links.
 	if(stristr($_SERVER['REQUEST_URI'], "blocks") ||
@@ -71,7 +69,7 @@
 	  }
 	}
 	
-    echo "</td>\n<td align=\"right\"><a href=\"search.php\">".$COLLATE['languages']['selected']['AdvancedSearch']."</a></td></tr>";
+    echo "</td>\n<td style=\"text-align: right\"><a href=\"search.php\">".$COLLATE['languages']['selected']['AdvancedSearch']."</a></td></tr>";
 	?>
 </table>
     </div>

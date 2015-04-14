@@ -240,10 +240,10 @@ function search() {
   }
   
   if($first == "blocks"){
-    echo "<table width=\"100%\">\n". // Here we actually build the HTML table
-       "<tr><th align=\"left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
-       "<th align=\"left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
-       "<th align=\"left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
+    echo "<table style=\"width: 100%\">\n". // Here we actually build the HTML table
+       "<tr><th style=\"text-align: left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
+       "<th style=\"text-align: left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
+       "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
        "</tr>\n".
        "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
     
@@ -260,7 +260,7 @@ function search() {
       }   
       
       echo "<tr id=\"block_".$block_id."_row_1\"><td><a href=\"$link_target\">";
-	  echo ($block_type == 'container') ? "<img src=\"images/container_block.png\">" :  "<img src=\"images/ip_block.png\">";	
+	  echo ($block_type == 'container') ? "<img src=\"images/container_block.png\" alt=\"\">" :  "<img src=\"images/ip_block.png\" alt=\"\">";	
 	  echo "</a> &nbsp; <b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
             <td><a href=\"$link_target\">$start_ip</a></td>
             <td>$end_ip</td>
@@ -272,7 +272,7 @@ function search() {
       	   " <a href=\"#\" onclick=\"
                if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
       		   new Element.update('block_".$block_id."_notice', ''); 
-      		   new Ajax.Updater('block_".$block_id."_notice', '_blocks.php?op=delete&block_id=$block_id', {onSuccess:function(){ 
+      		   new Ajax.Updater('block_".$block_id."_notice', '_blocks.php?op=delete&amp;block_id=$block_id', {onSuccess:function(){ 
       		     new Effect.Parallel( [new Effect.Fade('block_".$block_id."_row_1'), 
       			 new Effect.Fade('block_".$block_id."_row_2'), 
       			 new Effect.Fade('block_".$block_id."_row_3'), 
@@ -327,12 +327,12 @@ function search() {
     echo "</table>";
   }
   elseif($first == "subnets"){
-    echo "<table width=\"100%\">\n". 
-	     "<tr><th align=\"left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
-		 "<th align=\"left\">".$COLLATE['languages']['selected']['Block']."</th>".
-	     "<th align=\"left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
-	     "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
-	     "<th align=\"left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th></tr>\n".
+    echo "<table style=\"width: 100%\">\n". 
+	     "<tr><th style=\"text-align: left\"><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
+		 "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['Block']."</th>".
+	     "<th style=\"text-align: left\"><a href=\"".$unsortedrequesturl."sort=network\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
+	     "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
+	     "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th></tr>\n".
 	     "<tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 		 
     $javascript=''; # this gets appended to in the following while loop
@@ -350,7 +350,7 @@ function search() {
 	  $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
       
       echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-           <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\"></a> &nbsp;
+           <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\" alt=\"\"></a> &nbsp;
 		   <b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"subnets.php?block_id=$block_id\">".
 		   $block_name[$block_id]."</a>".
 		   "</td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
@@ -364,7 +364,7 @@ function search() {
              "<a href=\"#\" onclick=\"
 			 if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) {
                new Element.update('subnet_".$subnet_id."_notice', ''); 
-			   new Ajax.Updater('subnet_".$subnet_id."_notice', '_subnets.php?op=delete&subnet_id=$subnet_id', 
+			   new Ajax.Updater('subnet_".$subnet_id."_notice', '_subnets.php?op=delete&amp;subnet_id=$subnet_id', 
 			   {onSuccess:function(){ 
 			     new Effect.Parallel( [
 				   new Effect.Fade('subnet_".$subnet_id."_row_1'), 
@@ -421,7 +421,7 @@ function search() {
     echo "</table>\n";
   }
   elseif($first == "static IPs"){
-    echo "<table width=\"100%\"><tr>".
+    echo "<table style=\"width: 100%\"><tr>".
          "<th><a href=\"".$unsortedrequesturl."sort=ip\">".$COLLATE['languages']['selected']['IPAddress']."</a></th>".
 		 "<th>".$COLLATE['languages']['selected']['Path']."</th>".
          "<th><a href=\"".$unsortedrequesturl."sort=name\">".$COLLATE['languages']['selected']['Name']."</a></th>".
@@ -452,7 +452,7 @@ function search() {
 	
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
-           "<td><img src=\"images/static.png\" /> &nbsp; $ip</td><td>".$path[$subnet_id]." </td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
+           "<td><img src=\"images/static.png\" alt=\"\" /> &nbsp; $ip</td><td>".$path[$subnet_id]." </td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
            "<td><span id=\"edit_contact_".$static_id."\">$contact</span></td>".
            "<td>$failed_scans</td>".
            "<td>";
@@ -461,7 +461,7 @@ function search() {
         echo " <a href=\"#\" onclick=\"
 		      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
 			    new Element.update('static_".$static_id."_notice', ''); 
-				new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&static_ip=$ip', {onSuccess:function(){ 
+				new Ajax.Updater('static_".$static_id."_notice', '_statics.php?op=delete&amp;static_ip=$ip', {onSuccess:function(){ 
 				  new Effect.Parallel( [
 				    new Effect.Fade('static_".$static_id."_row_1'), 
 				    new Effect.Fade('static_".$static_id."_row_2'), 
@@ -557,7 +557,7 @@ function search() {
     echo "</table>\n";
   }
   elseif($first == "logs"){
-    echo "<table width=\"100%\">".
+    echo "<table style=\"width: 100%\">".
 	     "<tr><th>".$COLLATE['languages']['selected']['Timestamp']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Username']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['IPAddress']."</th>".
@@ -651,11 +651,11 @@ function show_form()  {
   // -->
   </script>
   <script type="text/javascript" src="javascripts/calendarDateInput.php">
-  /***********************************************
-  * Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm
-  * Script featured on and available at http://www.dynamicdrive.com
-  * Keep this notice intact for use.
-  ***********************************************/
+  // ***********************************************
+  // * Jason's Date Input Calendar- By Jason Moon http://calendar.moonscript.com/dateinput.cfm
+  // * Script featured on and available at http://www.dynamicdrive.com
+  // * Keep this notice intact for use.
+  // ***********************************************/
   </script>
   <script type="text/javascript">
     window.onload = init();
@@ -675,7 +675,7 @@ function show_form()  {
 	<option value="ip"><?php echo $COLLATE['languages']['selected']['IP']; ?></option>
 	<option value="name"><?php echo $COLLATE['languages']['selected']['name']; ?></option>
 	<option value="note"><?php echo $COLLATE['languages']['selected']['note']; ?></option>
-  </select> matching: <input name="search" type="text" /> &nbsp;
+  </select> matching: <input name="search" type="search" /> &nbsp;
   <br />
   <br />
   <input type="radio" name="when" value="all" checked="checked" onclick="new Effect.Fade('extraforms', {duration: 0.2});" /> 
@@ -694,7 +694,7 @@ function show_form()  {
   <br />
   <input type="checkbox" name="export" /> <?php echo $COLLATE['languages']['selected']['Exportresults']; ?><br />
   <br />
-  <input type="submit" value=" <?php echo $COLLATE['languages']['selected']['Go']; ?> " /></p>
+  <p><input type="submit" value=" <?php echo $COLLATE['languages']['selected']['Go']; ?> " /></p>
   </form>
   <br />
   <?php

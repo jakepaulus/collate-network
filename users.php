@@ -45,18 +45,18 @@ function list_users(){
   }
   else {  
 	   
-    echo "<table width=\"100%\"><tr>".
+    echo "<table style=\"width: 100%\"><tr>".
 	     "<th>".$COLLATE['languages']['selected']['Username']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Telephone']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Email']."</th>".
-		 "<th>".$COLLATE['languages']['selected']['LastLogin']."</th></tr>".
+		 "<th>".$COLLATE['languages']['selected']['LastLogin']."</th><th></th></tr>".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
 	     
     while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
       echo "<tr id=\"user_${username}_row_1\"><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
 	       <td style=\"text-align: right;\">\n";
 	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
-	    echo "<a href=\"users.php?op=edit&username=$username\">".
+	    echo "<a href=\"users.php?op=edit&amp;username=$username\">".
 			 "<img src=\"./images/modify.gif\" alt=\"edit\" title=\"".$COLLATE['languages']['selected']['EditUser']."\" /></a>
 			 &nbsp; <a href=\"#\" onclick=\"
 		      if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) {
@@ -106,7 +106,7 @@ function user_form(){
     }
     list($accesslevel,$phone,$email,$loginattempts,$ldapexempt,$current_language) = mysql_fetch_row($result);
 	$title = $COLLATE['languages']['selected']['EditUser'].": $username";
-	$action_url = 'users.php?op=submit&edit=true';
+	$action_url = 'users.php?op=submit&amp;edit=true';
   }
   else{
     $title = $COLLATE['languages']['selected']['AddaUser'];
@@ -119,14 +119,14 @@ function user_form(){
        "<br />\n<form action=\"$action_url\" method=\"post\">\n";
 	   
   if($op !== 'edit'){
-    echo "<p><b>".$COLLATE['languages']['selected']['Username'].":</b> <input name=\"username\" type=\"text\" value=\"$username\" /></p>\n";
+    echo "<p><b>".$COLLATE['languages']['selected']['Username'].":</b> <input name=\"username\" type=\"text\" value=\"$username\" required minlength=\"3\" maxlength=\"100\" /></p>\n";
   }
   else{
     echo "<input type=\"hidden\" name=\"username\" value=\"$username\">";
   }
   
   echo "<p><b>".$COLLATE['languages']['selected']['Telephone'].":</b> <input name=\"phone\" type=\"text\" value=\"$phone\" /></p>\n".
-       "<p><b>".$COLLATE['languages']['selected']['Email'].":</b> <input name=\"email\" type=\"text\" value=\"$email\" /></p>\n";
+       "<p><b>".$COLLATE['languages']['selected']['Email'].":</b> <input name=\"email\" type=\"email\" value=\"$email\" /></p>\n";
 	   
   foreach (glob("languages/*.php") as $filename){
     include $filename;
@@ -140,7 +140,7 @@ function user_form(){
     else {
       $selected = "";
     }
-    echo "<option value=\"".$language['isocode']."\" $selected/> ".$language['languagename']." </option>\n";
+    echo "<option value=\"".$language['isocode']."\" $selected> ".$language['languagename']." </option>\n";
   }
   echo "</select></p>";  
   
@@ -177,7 +177,7 @@ function user_form(){
          "<p><input type=\"checkbox\" name=\"locked\" $locked /> ".$COLLATE['languages']['selected']['Lockaccount']."<br /></p>";
   }
   
-  echo "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
+  echo "<p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
        "</form>";
 
 } // Ends add_user_form function

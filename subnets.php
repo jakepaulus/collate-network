@@ -71,14 +71,14 @@ function add_subnet (){
        "<form action=\"subnets.php?op=submit\" method=\"post\">\n".
        "<div style=\"float: left; width: 45%; \">\n".
        "<p><b>".$COLLATE['languages']['selected']['Name'].":</b><br />\n".
-       "<input type=\"text\" name=\"name\" value=\"$name\" />\n".
+       "<input type=\"text\" name=\"name\" value=\"$name\" required minlength=\"3\" maxlength=\"25\"/>\n".
        "<a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
        "</p>\n".
-       "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\"/>\n".
+       "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b><br /><input type=\"text\" name=\"ip\" value=\"$ip\" required />\n".
        "<a href=\"#\" onclick=\"new Effect.toggle($('iptip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
        "</p>\n".
        "<p><b>".$COLLATE['languages']['selected']['Gateway'].":</b><br /><input type=\"text\" value=\"$gateway\" name=\"gateway\" /></p>\n".
-       "<p><b>".$COLLATE['languages']['selected']['ACLName'].":</b><br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" />\n".
+       "<p><b>".$COLLATE['languages']['selected']['ACLName'].":</b><br /><input type=\"text\" name=\"acl_name\" value=\"$acl_name\" minlength=\"3\" maxlength=\"25\" />\n".
        "<p><b>".$COLLATE['languages']['selected']['ACLRange'].":</b><br /><input type=\"text\" name=\"acl_start\" value=\"$acl_start\" size=\"15\" />\n".
        "- <input type=\"text\" name=\"acl_end\" value=\"$acl_end\" size=\"15\" />\n".
        "</p>\n".
@@ -86,9 +86,9 @@ function add_subnet (){
        "<input type=\"text\" name=\"note\" value=\"$note\" /></p>\n".
        "<p><b>".$COLLATE['languages']['selected']['IPGuidance'].":</b> ".$COLLATE['languages']['selected']['Optional']. 
        "<a href=\"#\" onclick=\"new Effect.toggle($('guidance'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
-       "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\">$guidance</textarea></p>\n".
+       "<br /><textarea name=\"guidance\" rows=\"10\" cols=\"33\" maxlength=\"255\">$guidance</textarea></p>\n".
        "<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />\n".
-       "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
+       "<input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" />\n".
        "</div>\n".
        "</form>";
     
@@ -123,7 +123,7 @@ function add_subnet (){
            "   new Effect.toggle('spacesearch', 'blind', { delay: 0.1 }); return false;\">".
            $COLLATE['languages']['selected']['Showsearchinstead']."</a></p>\n".
            "<h3>$availableipspaceinblock:</h3><br />\n".
-           "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
+           "<table style=\"width: 100%\"><tr><th>".$COLLATE['languages']['selected']['StartingIP'].
            "</th><th>".$COLLATE['languages']['selected']['EndIP']."</th></tr>";
       
       while(!empty($ipspace)){
@@ -159,7 +159,7 @@ function add_subnet (){
 
     echo "<h3>".$COLLATE['languages']['selected']['SearchIPSpace']."</h3><br />\n".
          "<p><b>".$COLLATE['languages']['selected']['Subnet'].":</b> <input id=\"subnetsearch\" type=\"text\"><br />".
-         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search$searchonlyparam&amp;search=' + $('subnetsearch').value);\"); return false;\"> ".
+         "<button onclick=\"new Ajax.Updater('spacesearch', '_subnets.php?op=search$searchonlyparam&amp;search=' + $('subnetsearch').value); return false;\"> ".
          $COLLATE['languages']['selected']['Go']." </button></p></div>";
 
     echo "</div><p style=\"clear: left;\">\n";
@@ -329,13 +329,13 @@ function list_subnets(){
 
     
    
-  echo "<table width=\"100%\">\n". 
-         "<tr><th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=name\">".
+  echo "<table style=\"width: 100%\">\n". 
+         "<tr><th style=\"text-align: left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=name\">".
          $COLLATE['languages']['selected']['SubnetName']."</a></th>".
-         "<th align=\"left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=network\">".
+         "<th style=\"text-align: left\"><a href=\"subnets.php?block_id=$block_id&amp;sort=network\">".
          $COLLATE['languages']['selected']['NetworkAddress']."</a></th>".
-         "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
-         "<th align=\"left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th></tr>\n".
+         "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
+         "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th><th></th></tr>\n".
          "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
          
   $results = mysql_query($sql);  
@@ -349,7 +349,7 @@ function list_subnets(){
     $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
     
     echo "<tr id=\"subnet_".$subnet_id."_row_1\">
-         <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\"></a> &nbsp; 
+         <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\" alt=\"\"></a> &nbsp; 
 		 <b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
          <td>$mask</td>$percent_subnet_used
          <td style=\"text-align: right;\">";
@@ -375,7 +375,7 @@ function list_subnets(){
     echo "</td>
          </tr>\n";
          
-    echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td></tr>\n";
+    echo "<tr id=\"subnet_".$subnet_id."_row_2\"><td colspan=\"4\"><span id=\"edit_note_".$subnet_id."\">$note</span></td><td></td></tr>\n";
     echo "<tr id=\"subnet_".$subnet_id."_row_3\"><td colspan=\"5\"><span id=\"subnet_".$subnet_id."_notice\" class=\"tip\"></span></td></tr>\n";
     echo "<tr id=\"subnet_".$subnet_id."_row_4\"><td colspan=\"5\"><hr class=\"division\" /></td></tr>\n";
     
@@ -454,11 +454,11 @@ function modify_subnet (){
   
   echo "<h3>".$COLLATE['languages']['selected']['StaleScan'];
     if($stalescan_enabled == false){
-      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=on\" \">".
+      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=on\">".
            "<img src=\"./images/skipping.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['enablestalescan']."\" /></a>";
     }
     else{
-      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=off\" \">".
+      echo " <a href=\"_subnets.php?op=toggle_stale-scan&amp;subnet_id=$subnet_id&amp;toggle=off\">".
            "<img src=\"./images/scanning.png\" alt=\"\" title=\"".$COLLATE['languages']['selected']['disablestalescan']."\" /></a>";
     }
     echo "</h3><br /><br />";
@@ -468,7 +468,7 @@ function modify_subnet (){
        "<form action=\"subnets.php?op=submitmove\" method=\"post\">\n".
        "<input type=\"hidden\" name=\"subnet_id\" value=\"$subnet_id\" />".
        "<p>".$COLLATE['languages']['selected']['selectblock']."</p>".
-       "<select name=\"block_id\">";
+       "<p><select name=\"block_id\">";
 
   $sql = "SELECT id, name, parent_id FROM blocks WHERE type='ipv4'";
   $result = mysql_query($sql);
@@ -616,7 +616,7 @@ function resize_subnet() {
       echo "<h1>$staticstobedeleted:</h1><br />\n";
 
       if(mysql_num_rows($result) != '0'){
-        echo "<table width=\"100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
+        echo "<table style=\"width: 100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
              "</th><th>".$COLLATE['languages']['selected']['Name']."</th><th>".
              $COLLATE['languages']['selected']['Contact']."</th><th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>".
              "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
@@ -649,7 +649,7 @@ function resize_subnet() {
         echo "<p>".$COLLATE['languages']['selected']['noaclschanged']."</p><br /><br />"; 
       }
       else{
-        echo "<table width=\"100%\">\n".
+        echo "<table style=\"width: 100%\">\n".
              "<tr><th>".$COLLATE['languages']['selected']['Name']."
              </th><th>".$COLLATE['languages']['selected']['StartingIP']."</th><th>".
              $COLLATE['languages']['selected']['EndIP']."</th><th>".$COLLATE['languages']['selected']['Modification']."</th></tr>\n".
@@ -722,10 +722,10 @@ function resize_subnet() {
     }
     else{
       if($confirm === false){
-      echo "<table width=\"100%\">".
-           "<tr><th align=\"left\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
-           "<th align=\"left\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
-           "<th align=\"left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
+      echo "<table style=\"width: 100%\">".
+           "<tr><th style=\"text-align: left\">".$COLLATE['languages']['selected']['SubnetName']."</th>".
+           "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['NetworkAddress']."</th>".
+           "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['SubnetMask']."</th>".
            "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
       }           
        

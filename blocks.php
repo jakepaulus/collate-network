@@ -83,16 +83,16 @@ function add_block(){
 	   "<br />\n".
 	   "<div style=\"float: left\">\n".
 	   "<form action=\"blocks.php?op=submit\" method=\"POST\">\n".
-	   "  <p><label for=\"container_block\"><img src=\"images/container_block.png\"></label>
+	   "  <p><label for=\"container_block\"><img src=\"images/container_block.png\" alt=\"\"></label>
 	         <input type=\"radio\" name=\"block_type\" id=\"container_block\" $containerblock_html value=\"container\" 
 	          onchange=\"new Effect.Fade('iprangefields', {duration: 0.2}); return false;\"> ".$COLLATE['languages']['selected']['iscontainerblock'].
        "<br />\n".
-	   "     <label for=\"ip_block\"><img src=\"images/ip_block.png\"></label>
+	   "     <label for=\"ip_block\"><img src=\"images/ip_block.png\" alt=\"\"></label>
 	         <input type=\"radio\" name=\"block_type\" id=\"ip_block\" $ipv4block_html value=\"ipv4\" 
 	          onchange=\"new Effect.Appear('iprangefields'); return false;\"> ".
 	      $COLLATE['languages']['selected']['isipv4block'].
 	   "  </p>\n".
-	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" />\n".
+	   "  <p><b>".$COLLATE['languages']['selected']['Name'].":</b><br /><input type=\"text\" name=\"name\" value=\"$name\" required minlength=\"3\" maxlength=\"25\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('nametip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  </p>\n".
 	   "  <p id=\"nametip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknamehelp']."</p>\n".
@@ -109,7 +109,7 @@ function add_block(){
 	   "    <p id=\"endiptip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blockendiphelp']."</p>\n".
 	   "  </div>\n".
 	   "  <p><b>".$COLLATE['languages']['selected']['Note'].":</b> ".$COLLATE['languages']['selected']['Optional'].
-	   "    <br /><input type=\"text\" name=\"note\" value=\"$note\" />\n".
+	   "    <br /><input type=\"text\" name=\"note\" value=\"$note\" maxlength=\"80\" />\n".
 	   "    <a href=\"#\" onclick=\"new Effect.toggle($('notetip'),'appear'); return false;\"><img src=\"images/help.gif\" alt=\"[?]\" /></a>\n".
 	   "  $hidden_form_inputs</p>\n".
 	   "  <p id=\"notetip\" style=\"display: none;\" class=\"tip\">".$COLLATE['languages']['selected']['blocknotehelp']."</p>\n".
@@ -147,7 +147,7 @@ function add_block(){
   echo "</select></p>\n".
        "  <p><input type=\"submit\" value=\" ".$COLLATE['languages']['selected']['Go']." \" /></p>\n".
 	   "</form></div>\n".
-       "<p style=\"clear: both\" />\n";
+       "<p style=\"clear: both\">\n";
 
 } // Ends add_block function
 
@@ -363,10 +363,10 @@ function list_blocks(){
        
  echo "<img src=\"./images/add.gif\" alt=\"Add\" /> ".$COLLATE['languages']['selected']['AddaBlock']." </a></p>";
 	   
-  echo "<table width=\"100%\">\n". // Here we actually build the HTML table
-	     "<tr><th align=\"left\"><a href=\"blocks.php\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
-	     "<th align=\"left\"><a href=\"blocks.php?sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
-	     "<th align=\"left\">".$COLLATE['languages']['selected']['EndIP']."</th>".
+  echo "<table style=\"width: 100%\">\n". // Here we actually build the HTML table
+	     "<tr><th style=\"text-align: left\"><a href=\"blocks.php\">".$COLLATE['languages']['selected']['BlockName']."</a></th>".
+	     "<th style=\"text-align: left\"><a href=\"blocks.php?sort=network\">".$COLLATE['languages']['selected']['StartingIP']."</a></th>".
+	     "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['EndIP']."</th><th></th>".
 	     "</tr>\n".
 	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
 		 
@@ -386,7 +386,7 @@ function list_blocks(){
     
 	
     echo "<tr id=\"block_".$block_id."_row_1\"><td><a href=\"$link_target\">";
-	echo ($block_type == 'container') ? "<img src=\"images/container_block.png\">" :  "<img src=\"images/ip_block.png\">";	
+	echo ($block_type == 'container') ? "<img src=\"images/container_block.png\" alt=\"\">" :  "<img src=\"images/ip_block.png\" alt=\"\">";	
 	echo "</a> &nbsp; <b><span id=\"edit_name_".$block_id."\">$name</span></b></td>
 		 <td><a href=\"$link_target\">$start_ip</a></td>
 		 <td>$end_ip</td>
@@ -410,7 +410,7 @@ function list_blocks(){
 	}
     echo "</td>
 		 </tr>\n";
-	echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td></tr>\n";
+	echo "<tr id=\"block_".$block_id."_row_2\"><td colspan=\"3\"><span id=\"edit_note_".$block_id."\">$note</span></td><td></td></tr>\n";
 	echo "<tr id=\"block_".$block_id."_row_3\"><td colspan=\"4\"><span id=\"block_".$block_id."_notice\" class=\"tip\"></span>\n";
     echo "<tr id=\"block_".$block_id."_row_4\"><td colspan=\"4\"><hr class=\"division\" /></td></tr>\n";
 	

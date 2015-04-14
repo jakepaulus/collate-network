@@ -28,7 +28,7 @@
 		  <input type="hidden" name="op" value="search" />
 		  <input type="hidden" name="first" value="2" />
 		  <input type="hidden" name="second" value="name" />
-		  <input type="text" name="search" />
+		  <input type="search" name="search" />
 		</li>
 		<li><input type="submit" value=" <?php echo $COLLATE['languages']['selected']['Go']; ?> " /></li>
 	  </ul>
@@ -40,7 +40,7 @@
 		  <input type="hidden" name="op" value="search" />
 		  <input type="hidden" name="first" value="2" />
 		  <input type="hidden" name="second" value="ip" />
-		  <input type="text" name="search" />		  
+		  <input type="search" name="search" />		  
 		</li>
 		<li><input type="submit" value=" <?php echo $COLLATE['languages']['selected']['Go']; ?> " /></li>
 	  </ul>
