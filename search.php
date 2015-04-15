@@ -711,7 +711,7 @@ function build_search_sql(){
   $fromdate = (isset($_GET['fromdate'])) ? $_GET['fromdate'] : '';
   $todate = (isset($_GET['todate'])) ? $_GET['todate'] : '';
   $when = ($fromdate == $todate) ? 'all' : 'dates';
-  
+
   if($first === '0'){
     // block search
 	$pattern = "/^ip$|^name$|^note$/";
@@ -738,8 +738,8 @@ function build_search_sql(){
   
   if($when != 'all'){
     $starttime = strtotime($fromdate);
-	$endtime = strtotime($enddate);
-	if($starttime === false || $endtime === false || $endtime >= $starttime){
+	$endtime = strtotime($todate);
+	if($starttime === false || $endtime === false || $endtime <= $starttime){
 	  $invalidrequest = true;
 	}
   }
@@ -825,7 +825,7 @@ function build_search_sql(){
   
   if($when == "dates"){
     $searchdescription = str_replace("%fromdate%", "$fromdate", $COLLATE['languages']['selected']['searchdatedesc']);
-	$searchdescription = str_replace("%todate%", "$todate", $COLLATE['languages']['selected']['searchdatedesc']);
+    $searchdescription = str_replace("%todate%", "$todate", $searchdescription);
   }
   
   if($first == "0") { // Blocks search
