@@ -177,6 +177,18 @@ div.autocomplete ul li {
 	color: green;
 }
 
+.installwarn {
+	font-style: italic;
+    font-weight: bold;
+	color: orange;
+}
+
+.installfail {
+	font-style: italic;
+    font-weight: bold;
+	color: red;
+}
+
 #content {
     float: right; 
     width: 75%; 

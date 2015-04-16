@@ -24,10 +24,15 @@ $_SESSION['show'] = (!isset($_SESSION['show'])) ? '10' : $_SESSION['show'];
 
 
 //---------- Populate $COLLATE['settings'] with settings from db ----------------------------------
-require_once dirname(__FILE__).'/db_connect.php'; 
+require_once dirname(__FILE__).'/db_connect.php';
+$connection_result = connectToDB(); 
 
 $sql = "SELECT name, value FROM settings";
 $result = mysql_query($sql);
+if($result === false){ # probably an empty database
+  header("Location: install.php");
+  exit();
+}
   
 while ($column = mysql_fetch_assoc($result)) {
   // $COLLATE['settings']['setting_name'] will be set to the seting's value.
