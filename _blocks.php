@@ -29,6 +29,8 @@ function edit_block(){
   global $COLLATE;
   global $block_id;
   include 'include/validation_functions.php';
+  
+  $dbo = getdbo();
 
   $edit = (empty($_GET['edit'])) ? '' : clean($_GET['edit']);
   $value = (empty($_POST['value'])) ? '' : clean($_POST['value']);
@@ -45,10 +47,11 @@ function edit_block(){
 	  $value = $return['1'];
 	}
 	
-	$result = mysql_query("SELECT id FROM blocks WHERE name='$value'");
-	if(mysql_num_rows($result) != '0'){ 
+	$sql = "SELECT id FROM blocks WHERE name='$value'";
+	$result = $dbo -> query($sql);
+	if($result -> rowCount()!= '0'){ 
 	  # a block by this name exists already
-      $existing_block_id = mysql_result($result, 0);
+      $existing_block_id = $result -> fetchColumn();
 	  
 	  if($existing_block_id !== $block_id){
 	    header("HTTP/1.1 400 Bad Request");
@@ -57,8 +60,9 @@ function edit_block(){
 	  }
 	}
 	
-	$result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
-	$name = mysql_result($result, 0);
+	$sql = "SELECT name FROM blocks WHERE id='$block_id'";
+	$result = $dbo -> query($sql);
+	$name = $result -> fetchColumn();
 	
     collate_log('4', "Block $name has been updated to $value");
 	$sql = "UPDATE blocks SET name='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
@@ -73,8 +77,10 @@ function edit_block(){
 	else{
 	  $value = $return['1'];
 	}
-    $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
-    $name = mysql_result($result, 0);
+	
+	$sql = "SELECT name FROM blocks WHERE id='$block_id'";
+    $result = $dbo -> query($sql);
+    $name = $result -> fetchColumn();
     collate_log('4', "Block $name note edited");
 	$sql = "UPDATE blocks SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$block_id'";
   }
@@ -84,7 +90,7 @@ function edit_block(){
 	exit();
   }
  
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   echo $value;
 } // Ends edit_block function
@@ -94,20 +100,22 @@ function delete_block(){
   global $COLLATE;
   global $block_id;
   
+  $dbo = getdbo();
+  
   $block_ids = array();
   $block_ids[] = $block_id;
   
   
   $sql = "SELECT name FROM blocks WHERE id='$block_id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
 	
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount()!= '1'){
     header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['selectblock'];
 	exit();
   }
   
-  $name = mysql_result($result, 0, 0);
+  $name = $result -> fetchColumn();
 
   collate_log("4", "Block $name has been deleted!");
   
@@ -118,19 +126,19 @@ function delete_block(){
   foreach($block_ids as $block_id){
     // First delete all static IPs
     $sql = "DELETE FROM statics WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
-    mysql_query($sql);
+    $dbo -> query($sql);
     
     // Next, remove the DHCP ACLs
     $sql = "DELETE FROM acl WHERE subnet_id IN (SELECT id FROM subnets WHERE block_id='$block_id')";
-    mysql_query($sql);
+    $dbo -> query($sql);
     
     // Next, remove the subnets
     $sql = "DELETE FROM subnets WHERE block_id='$block_id'";
-    mysql_query($sql);
+    $dbo -> query($sql);
     
     // Lastly, delete the IP block
     $sql = "DELETE FROM blocks WHERE id='$block_id'";
-    mysql_query($sql);
+    $dbo -> query($sql);
   }
   
   # we don't output to the user on success. The row fades on the page to provide feedback.

@@ -77,6 +77,7 @@ switch($op){
 
 function update_language(){
   global $COLLATE;
+  $dbo = getdbo();
   $language = (isset($_GET['value'])) ? $_GET['value'] : '';
   
   foreach (glob("languages/*.php") as $filename){
@@ -96,7 +97,7 @@ function update_language(){
   collate_log('5', $message);
   
   $sql = "update settings set value='$language' where name='language'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo $languages[$language]['languagename'];
   exit();
 
@@ -104,6 +105,7 @@ function update_language(){
 
 function update_authorization(){
   global $COLLATE;
+  $dbo = getdbo();
   
   if (preg_match('/^[023456]{1}$/', $_GET['perms'])){
     $perms = $_GET['perms'];
@@ -118,14 +120,14 @@ function update_authorization(){
   // We need to make sure there is at least one administrator user 
   // so we know they don't lock themselves out of the application
   $sql = "SELECT id FROM users WHERE accesslevel='5'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) < '1'){
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() < '1'){
     header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['needadmin'];
     exit();
   }
   $sql = "UPDATE settings SET value='$perms' WHERE name='perms'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo ""; # this clears the notification div
   collate_log('5', "Settings Updated: authorization level changed");
   exit();
@@ -133,6 +135,7 @@ function update_authorization(){
 
 function update_authentication(){
   global $COLLATE;
+  $dbo = getdbo();
   
   if (preg_match('/db|ldap/', $_GET['auth_type'])){
     $auth_type = $_GET['auth_type'];
@@ -151,7 +154,7 @@ function update_authentication(){
 	}
 	else{
       $sql = "UPDATE settings SET value='$auth_type' WHERE name='auth_type'";
-	  mysql_query($sql);
+	  $dbo -> query($sql);
       exit();
 	}
   echo $COLLATE['languages']['selected']['nosettingupdated'];
@@ -162,23 +165,24 @@ function update_authentication(){
 
 function add_ldap_server(){
   global $COLLATE;
+  $dbo = getdbo();
   
   # We either output the HTML table or the javascript for in place editing depending on this GET variable
   $outputjavascript = (isset($_GET['javascript']) && $_GET['javascript'] == 'true') ? true : false;
   
   if(!$outputjavascript) {
     $sql = "INSERT INTO `ldap-servers` (domain, server) VALUES ('example.com', '127.0.0.1')";
-    mysql_query($sql);
+    $dbo -> query($sql);
 	collate_log('5', "Settings Updated: LDAP server added");
   }
   
   $sql = "select id,domain,server from `ldap-servers` order by domain ASC";
  
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '0'){
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() != '0'){
     if(!$outputjavascript){ echo "<table width=\"90%\">"; }
 	$javascript='';
-	while(list($id,$domain,$server) = mysql_fetch_row($result)){
+	while(list($id,$domain,$server) = $result -> fetch(PDO::FETCH_NUM)){
 	  if(!$outputjavascript){
 	    echo "<tr id=\"ldap_server_$id\"><td width=\"33%\"><span id=\"edit_domain_$id\">$domain</span></td><td width=\"33%\"><span id=\"edit_server_$id\">$server</span></td><td width=\"33%\"><a href=\"#\" onclick=\"
              if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
@@ -238,6 +242,7 @@ function add_ldap_server(){
 
 function delete_ldap_server(){
   global $COLLATE;
+  $dbo = getdbo();
   
   $server_id = (isset($_GET['ldap_server_id']) && is_numeric($_GET['ldap_server_id'])) ? $_GET['ldap_server_id'] : '';  
   if(empty($server_id)){
@@ -246,17 +251,17 @@ function delete_ldap_server(){
   }
   
   $sql = "SELECT domain, server FROM `ldap-servers` WHERE id='$server_id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
 	
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount() != '1'){
     header("HTTP/1.1 400 Bad Request");
 	exit();
   }
   
-  list($domain,$server) = mysql_fetch_row($result);
+  list($domain,$server) = $result -> fetch(PDO::FETCH_NUM);
 
   $sql = "DELETE FROM `ldap-servers` WHERE id='$server_id' LIMIT 1";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   $message=str_replace("%server%", "$server", $COLLATE['languages']['selected']['ldapdeleted']);
   $message=str_replace("%domain%", "$domain", $message);
@@ -267,6 +272,7 @@ function delete_ldap_server(){
 
 function edit_ldap(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $id = (isset($_GET['id']) && is_numeric($_GET['id'])) ? $_GET['id'] : '';
@@ -275,6 +281,8 @@ function edit_ldap(){
   
   if(empty($id) || empty($object) || empty($value)){
     header("HTTP/1.1 400 Bad Request");
+	echo "$id, $object, $value";
+	exit();
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
@@ -294,15 +302,15 @@ function edit_ldap(){
   }
 
   $sql = "select count(*) from `ldap-servers` where id='$id'";
-  $result = mysql_query($sql);
-  if(mysql_result($result, 0) != '1'){
+  $result = $dbo -> query($sql);
+  if($result -> fetchColumn() != '1'){
     header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
 	exit();
   }
     
   $sql = "update `ldap-servers` set $object='$value' where id='$id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   echo $value;
   collate_log('5', "Settings Updated: LDAP server entry modified");
   exit();  
@@ -310,6 +318,7 @@ function edit_ldap(){
 
 function edit_domain(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
@@ -330,13 +339,14 @@ function edit_domain(){
   collate_log('5', $message);
   
   $sql = "update settings set value='$value' where name='domain'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo $value;  
   exit();
 }
 
 function update_accountexpire(){
   global $COLLATE;
+  $dbo = getdbo();
   $accountexpire = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($accountexpire != "0" && 
      $accountexpire != "30" &&
@@ -358,13 +368,14 @@ function update_accountexpire(){
   collate_log('5', $message);
   
   $sql = "update settings set value='$accountexpire' where name='accountexpire'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo $accountexpire;
   exit();
 }
 
 function update_passwdlength(){
   global $COLLATE;
+  $dbo = getdbo();
   $passwdlength = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($passwdlength != "5" && 
      $passwdlength != "6" &&
@@ -386,13 +397,14 @@ function update_passwdlength(){
   collate_log('5', $message);
   
   $sql = "update settings set value='$passwdlength' where name='passwdlength'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo $passwdlength;
   exit();
 }
 
 function update_loginattempts(){
   global $COLLATE;
+  $dbo = getdbo();
   $loginattempts = (isset($_GET['value'])) ? $_GET['value'] : '';
   if($loginattempts != "0" && 
      $loginattempts != "1" &&
@@ -418,13 +430,14 @@ function update_loginattempts(){
   collate_log('5', $message);
   
   $sql = "update settings set value='$loginattempts' where name='loginattempts'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   echo $loginattempts;
   exit();
 }
 
 function edit_guidance(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
@@ -440,7 +453,7 @@ function edit_guidance(){
   }
     
   $sql = "update `settings` set value='$value' where name='guidance'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   echo $value;
   collate_log('5', "Settings Updated: default IP guidance modified");
   exit();
@@ -448,6 +461,7 @@ function edit_guidance(){
 
 function edit_dns(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $value = (isset($_POST['value'])) ? $_POST['value'] : '';
@@ -463,7 +477,7 @@ function edit_dns(){
   }
     
   $sql = "update `settings` set value='$value' where name='dns'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   echo $value;
   collate_log('5', "Settings Updated: DNS server guidance modified");
   exit();
@@ -471,6 +485,7 @@ function edit_dns(){
 
 function add_api_key(){
   global $COLLATE;
+  $dbo = getdbo();
   
   # We either output the HTML table or the javascript for in place editing depending on this GET variable
   $outputjavascript = (isset($_GET['javascript']) && $_GET['javascript'] == 'true') ? true : false;
@@ -482,8 +497,8 @@ function add_api_key(){
 	while($keygenerated === false && $tries < '3'){
 	  $newapikey = substr(str_shuffle('abcefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'), '0', '21');
       $sql = "INSERT INTO `api-keys` (description, apikey) VALUES ('example description', '$newapikey')";
-      $result = mysql_query($sql);
-	  if(mysql_affected_rows() == '1'){ // This should fail and allow retries if we somehow generate a duplicate key
+      $result = $dbo -> query($sql);
+	  if($result -> rowCount() == '1'){ // This should fail and allow retries if we somehow generate a duplicate key
 	    $keygenerated = true;
 	  }
 	  $tries++;
@@ -491,9 +506,9 @@ function add_api_key(){
 	collate_log('5', "Settings Updated: A new API key has been generated!");
   }
   $sql = "select description,active,apikey from `api-keys` order by description ASC";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   if(!$outputjavascript){	
-	if(mysql_num_rows($result) == '0'){
+	if($result -> rowCount() == '0'){
 	  echo $COLLATE['languages']['selected']['nokeysdefined'];
 	}
 	else{
@@ -501,7 +516,7 @@ function add_api_key(){
     }
   }
   $javascript='';
-  while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
+  while(list($apidescription,$apikeystatus,$apikey) = $result -> fetch(PDO::FETCH_NUM)){
 	if(!$outputjavascript){
 	  if($apikeystatus == '1'){
 		$activechecked="selected=\"selected\"";
@@ -561,6 +576,7 @@ function add_api_key(){
 
 function delete_api_key(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
@@ -576,7 +592,7 @@ function delete_api_key(){
   }
 
   $sql = "DELETE FROM `api-keys` WHERE apikey='$apikey' LIMIT 1";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   echo $COLLATE['languages']['selected']['APIkeydeleted'];
   collate_log('5', "Settings Updated: API key with description \"$keydescription\" deleted!");
@@ -586,6 +602,7 @@ function delete_api_key(){
 
 function edit_api_key_description(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
@@ -612,7 +629,7 @@ function edit_api_key_description(){
   }
        
   $sql = "update `api-keys` set description='$value' where apikey='$apikey'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   echo $value;
   collate_log('5', "Settings Updated: API key description changed from \"$old_description\" to \"$value\"");
   exit();  
@@ -620,6 +637,7 @@ function edit_api_key_description(){
 
 function change_api_key_status(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $apikey = (isset($_GET['apikey'])) ? $_GET['apikey'] : '';
@@ -649,7 +667,7 @@ function change_api_key_status(){
   if($status === $old_status){ exit(); }
   
   $sql = "update `api-keys` set active='$status' where apikey='$apikey'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   collate_log('5', "Settings Updated: API key with description \"$description\" has been $status_action");
   echo $message;

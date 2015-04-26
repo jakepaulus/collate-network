@@ -25,20 +25,20 @@ $_SESSION['show'] = (!isset($_SESSION['show'])) ? '10' : $_SESSION['show'];
 
 //---------- Populate $COLLATE['settings'] with settings from db ----------------------------------
 require_once dirname(__FILE__).'/db_connect.php';
-$connection_result = connectToDB(); 
+$dbo = getdbo(); 
 
 $sql = "SELECT name, value FROM settings";
-$result = mysql_query($sql);
+$result = $dbo->query($sql);
+
 if($result === false){ # probably an empty database
   header("Location: install.php");
   exit();
 }
   
-while ($column = mysql_fetch_assoc($result)) {
-  // $COLLATE['settings']['setting_name'] will be set to the seting's value.
-  $COLLATE['settings'][$column['name']] = $column['value'];
+while ($setting = $result->fetch(PDO::FETCH_ASSOC)) {
+  // $COLLATE['settings']['setting_name'] will be set to the setTing's value.
+  $COLLATE['settings'][$setting['name']] = $setting['value'];
 }  
-
 
 //------------- Set the language ------------------------------------------------------------
 $COLLATE['languages'] = array();
@@ -117,12 +117,13 @@ function AccessControl($accesslevel, $message, $redirect=true) {
 
 function collate_log($accesslevel, $message){
   if ($message == null){ return; }
+
+  global $COLLATE;
   
   if($accesslevel < $COLLATE['settings']['perms']) { // We're not requiring log-in or logging
     return true;
   }
-    
-  global $COLLATE;
+  
   $ipaddress = $_SERVER['REMOTE_ADDR'];
   
   if($accesslevel <= "2"){ $level = "low"; }
@@ -131,8 +132,9 @@ function collate_log($accesslevel, $message){
   
   $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   
+  $dbo = getdbo();
   $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), '$username', '$ipaddress', '$level', '$message')";
-  mysql_query($sql);
+  $result = $dbo->exec($sql);
  
 } // Ends collate_log function
 
@@ -169,9 +171,10 @@ function pageselector($sql,$hiddenformvars=''){
   # Returns updated SQL with limits to reflect page selection
   
   global $COLLATE;
+  $dbo = getdbo();
   
-  $result = mysql_query($sql);
-  $totalrows = mysql_num_rows($result);
+  $result = $dbo->query($sql);
+  $totalrows = $result->rowCount();
   
   $page = (!isset($_GET['page'])) ? "1" : $_GET['page'];
   $show = (!isset($_GET['show'])) ? $_SESSION['show'] : $_GET['show'];
@@ -239,14 +242,16 @@ function pageselector($sql,$hiddenformvars=''){
 }
 
 function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
+  $dbo = getdbo();
+  
   $sql = "SELECT COUNT(*) FROM statics WHERE subnet_id='$subnet_id'";
-  $result = mysql_query($sql);
-  $static_count = mysql_result($result, 0, 0);
+  $result = $dbo -> query($sql);
+  $static_count = $result->fetchColumn();
   
   $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
-  $result = mysql_query($sql);
+  $result = $dbo->query($sql);
   if ($result != false) {
-    while(list($long_acl_start,$long_acl_end) = mysql_fetch_row($result)){
+    while(list($long_acl_start,$long_acl_end) = $result->fetch(PDO::FETCH_NUM)){
       $subnet_size = $subnet_size - ($long_acl_end - $long_acl_start);
     }
   }
@@ -281,40 +286,43 @@ function get_formatted_subnet_util($subnet_id,$subnet_size,$in_color){
 }
 
 function find_free_statics($subnet_id){
+  global $dbo;
   # This function returns an array containing all free IP addresses in a subnet
   # after excluding ACL'd ranges and already used addresses. If an IP is supplied,
   # it will return an array with a truth value an an error message
   
+  $dbo = getdbo();
+  
   $sql = "SELECT name, start_ip, end_ip, mask FROM subnets WHERE id='$subnet_id'";
-  $results = mysql_query($sql);
+  $results = $dbo->query($sql);
   $return = array();
   
-  if(mysql_num_rows($results) != '1'){
+  if($results->rowCount() != '1'){
     $return['0'] = false;
 	$return['1'] = "subnet not found";
 	return $return;
   }
   
-  list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip,$long_mask) = mysql_fetch_row($results);
+  list($subnet_name,$long_subnet_start_ip,$long_subnet_end_ip,$long_mask) = $results->fetch(PDO::FETCH_NUM);
   $first_usable = $long_subnet_start_ip;
   $last_usable = $long_subnet_end_ip - '1';
   $whole_subnet = range($first_usable, $last_usable);
   $ipspace = $whole_subnet;
   
   $sql = "SELECT start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id'";
-  $results = mysql_query($sql);
+  $results = $dbo->query($sql);
   
-  while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
+  while(list($start_ip, $end_ip) = $results->fetch(PDO::FETCH_NUM)){
     $acl = range($start_ip, $end_ip);
     $ipspace = array_diff($ipspace, $acl);
   }
   
   $sql = "SELECT ip FROM statics WHERE subnet_id='$subnet_id'";
-  $results = mysql_query($sql);
+  $results = $dbo->query($sql);
   
-  if(mysql_num_rows($results) > '0'){
+  if($results->rowCount() > '0'){
     $statics = array();
-    while($static_ip = mysql_fetch_row($results)){
+    while($static_ip = $results->fetch(PDO::FETCH_NUM)){
       array_push($statics, $static_ip['0']); 
     }
     $ipspace = array_diff($ipspace, $statics);  
@@ -335,11 +343,13 @@ function find_child_blocks($block_id){
   # output: single-dimensional array of child blocks (recursive)
   # outputs false if the block has no children
   
+  global $dbo;
+  
   $sql = "SELECT id FROM blocks WHERE parent_id='$block_id'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) === 0){ return false; }
+  $result = $dbo->query($sql);
+  if($result->rowCount() === 0){ return false; }
   $return = array();
-  while(list($child_block) = mysql_fetch_row($result)){
+  while($child_block = $result->fetchColumn()){
     $return[] = $child_block;
 	if(find_child_blocks($child_block) !== false){
       $return = array_merge($return,find_child_blocks($child_block));

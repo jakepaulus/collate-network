@@ -33,6 +33,7 @@ switch($op){
 
 function edit_subnet(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : $_GET['subnet_id'];
@@ -60,8 +61,9 @@ function edit_subnet(){
     $value = $return['1'];
   }
   
-  $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
-  list($name,$subnet,$mask) = mysql_fetch_row($result);
+  $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
+  $result = $dbo -> query($sql);
+  list($name,$subnet,$mask) = $result -> fetch(PDO::FETCH_NUM);
   $cidr=subnet2cidr($subnet,$mask);
 	
   if($edit == 'name'){
@@ -78,13 +80,14 @@ function edit_subnet(){
 	exit();
   }
  
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   echo $value;
 } // Ends edit_subnet function
 
 function delete_subnet(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
 
   $subnet_id = (empty($_GET['subnet_id'])) ? '' : clean($_GET['subnet_id']);
@@ -95,30 +98,31 @@ function delete_subnet(){
 	exit();
   }
   
-  $result = mysql_query("SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'");
+  $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
+  $result = $dbo -> query($sql);
 	
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount() != '1'){
     header("HTTP/1.1 400 Bad Request");
 	echo $COLLATE['languages']['selected']['shortsubnetname'];
 	exit();
   }
   
-  list($name,$subnet,$mask) = mysql_fetch_row($result);
+  list($name,$subnet,$mask) = $result -> fetch(PDO::FETCH_NUM);
   $cidr=subnet2cidr($subnet,$mask);
   
   collate_log('3', "Subnet $name ($cidr) has been deleted"); 
   
   // First delete all static IPs
   $sql = "DELETE FROM statics WHERE subnet_id='$subnet_id'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   // Next, remove the acl ACL
   $sql = "DELETE FROM acl WHERE subnet_id='$subnet_id'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   // Lastly, remove the subnet
   $sql = "DELETE FROM subnets WHERE id='$subnet_id'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   // The user is informed of success by the fading away of the subnet in the UI
   exit();
@@ -175,9 +179,9 @@ function search_subnets(){
 	  
     $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$long_ip' & 0xFFFFFFFF) AS UNSIGNED) AND ".
            "CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
-    $subnet_rows = mysql_query($sql);
+    $subnet_rows = $dbo -> query($sql);
 	  
-    while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
+    while(list($subnet_long_start_ip,$subnet_long_end_ip) = $subnet_rows -> fetch(PDO::FETCH_NUM)){
       array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
     }
     array_push($ipspace, $long_end_ip);
@@ -230,6 +234,7 @@ function search_subnets(){
 
 function toggle_stalescan(){
   global $COLLATE;
+  global $dbo;
   
   $subnet_id = (isset($_GET['subnet_id']) && preg_match("/[0-9]*/", $_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   $toggle = (isset($_GET['toggle']) && preg_match("/on|off/", $_GET['toggle'])) ? $_GET['toggle'] : '';
@@ -242,15 +247,15 @@ function toggle_stalescan(){
   }
   
   $sql = "SELECT name, start_ip, mask FROM subnets WHERE id='$subnet_id'";
-  $query_result = mysql_query($sql);
-  if(mysql_num_rows($query_result) !== 1){
+  $query_result = $dbo -> query($sql);
+  if($query_result -> rowCount() !== 1){
     header("HTTP/1.1 400 Bad Request");
     $notice = 'invalidrequest';
     header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
     exit();
   }
   
-  list($subnet_name,$long_start_ip,$long_mask) = mysql_fetch_row($query_result);
+  list($subnet_name,$long_start_ip,$long_mask) = $query_result -> fetch(PDO::FETCH_NUM);
   $cidr = subnet2cidr($long_start_ip,$long_mask); 
   
   collate_log('3', "Stale Scan toggled $toggle for Subnet: $subnet_name ($cidr)"); 
@@ -260,18 +265,18 @@ function toggle_stalescan(){
     $notice='staletoggleon-notice';
 	
 	$sql = "UPDATE statics SET failed_scans='0' WHERE subnet_id='$subnet_id'";
-    mysql_query($sql);
+    $dbo -> query($sql);
   }
   else{
     $stalescan_enabled='0';
     $notice='staletoggleoff-notice';
 	
 	$sql = "UPDATE statics SET failed_scans='-1' WHERE subnet_id='$subnet_id'";
-    mysql_query($sql);
+    $dbo -> query($sql);
   }
   
   $sql = "UPDATE subnets SET stalescan_enabled=$stalescan_enabled WHERE id='$subnet_id'";
-  mysql_query($sql);
+  $dbo -> query($sql);
  
   header("Location: subnets.php?op=modify&subnet_id=$subnet_id&notice=$notice");
   exit();

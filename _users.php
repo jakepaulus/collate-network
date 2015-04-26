@@ -20,7 +20,8 @@ else{
 }
 
 $sql = "select count(*) from users where username='$username'";
-$count = mysql_result(mysql_query($sql), 0);
+$result = $dbo -> query($sql)
+$count = $result -> fetchColumn();
 if($count != '1'){ 
   header("HTTP/1.1 400 Bad Request");  
   echo $COLLATE['languages']['selected']['invalidrequest'];
@@ -40,11 +41,12 @@ switch($op){
 function delete_user() {
   global $COLLATE;
   global $username;
+  global $dbo;
   
   collate_log('5', "User deleted: $username");
   
   $sql = "DELETE FROM users WHERE username='$username'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
   $message = str_replace("%username%", "$username", $COLLATE['languages']['selected']['userdeleted']);
   echo $message;

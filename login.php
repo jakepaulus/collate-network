@@ -19,6 +19,7 @@ switch($op) {
 
 function change_password(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
   if(isset($_GET['returnto'])){
@@ -107,7 +108,7 @@ function change_password(){
     $expireat = "0000-00-00 00:00:00";
   }
   $sql = "UPDATE users SET passwd='$password', tmppasswd=NULL, loginattempts='0', passwdexpire='$expireat' WHERE username='$username'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   $level = "5";
   $message = "Password changed: $username";
@@ -156,6 +157,7 @@ function cn_logout(){
 
 function cn_login() {
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
   $action = (empty($_GET['action'])) ? 'show form' : $_GET['action'];
@@ -232,7 +234,7 @@ function cn_login() {
 	$message = "authentication failed: $username";
 	collate_log($level, $message);
     $sql = "UPDATE users SET loginattempts=loginattempts+1 WHERE username='$username'";
-	mysql_query($sql);
+	$dbo -> query($sql);
     $notice = "failedlogin-notice";
     $returnto = urlencode($returnto);
 	header("Location: login.php?notice=$notice&returnto=$returnto");
@@ -256,9 +258,9 @@ function cn_login() {
   $_SESSION['ldapexempt'] = $auth['ldapexempt'];
   
   $sql = "UPDATE users SET loginattempts='0' WHERE username='$username'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   $sql = "UPDATE users SET last_login_at=NOW() WHERE username='$username'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   if($auth['passwdexpire'] < $now && $auth['passwdexpire'] != '0000-00-00 00:00:00' || isset($auth['tmppasswd'])){
     $returnto = urlencode($returnto);
@@ -293,15 +295,16 @@ function cn_login() {
 
 function auth($username, $password){
   global $COLLATE;
+  global $dbo;
   $password = sha1($password);
   
   $sql = "SELECT passwd, tmppasswd, accesslevel, loginattempts, passwdexpire,ldapexempt, language FROM users WHERE username='$username'";
-  $row = mysql_query($sql);
-  if(mysql_num_rows($row) != "1"){
+  $row = $dbo -> query($sql);
+  if($row -> rowCount() != "1"){
     return FALSE;    
   }
   
-  list($passwd,$tmppasswd,$accesslevel,$loginattempts,$passwdexpire,$ldapexempt,$language) = mysql_fetch_row($row);
+  list($passwd,$tmppasswd,$accesslevel,$loginattempts,$passwdexpire,$ldapexempt,$language) = $row -> fetch(PDO::FETCH_NUM);
   
   if($COLLATE['settings']['auth_type'] == 'ldap' && $ldapexempt == false){
     return "ldap";
@@ -330,15 +333,16 @@ function auth($username, $password){
 } // Ends auth function
 
 function ldap_auth($username, $password){
-  global $COLLATE;  
+  global $COLLATE;
+  global $dbo;  
   // First make sure that they are a valid application user, then check their password in the Directory.
   $sql = "SELECT accesslevel, loginattempts FROM users WHERE username='$username'";
-  $row = mysql_query($sql);
-  if(mysql_num_rows($row) != "1"){
+  $row = $dbo -> query($sql);
+  if($row -> rowCount() != "1"){
     return FALSE;    
   }
   
-  list($accesslevel,$loginattempts) = mysql_fetch_row($row);
+  list($accesslevel,$loginattempts) = $row -> fetch(PDO::FETCH_NUM);
   
   if($loginattempts >= $COLLATE['settings']['loginattempts']){
     return "locked";
@@ -361,12 +365,12 @@ function ldap_auth($username, $password){
   }
   
   $sql = "SELECT domain, server FROM `ldap-servers` WHERE domain='$domain'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) < '1'){
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() < '1'){
     return FALSE;
   }
 
-  while(list($domain,$ldap_server) = mysql_fetch_row($result)){ # do anonymous binds to find a working server
+  while(list($domain,$ldap_server) = $result -> fetch(PDO::FETCH_NUM)){ # do anonymous binds to find a working server
 
 	// set up ldap connect parameters. Connection doesn't happen until ldap_bind...
 	$ldapconn = ldap_connect($ldap_server);

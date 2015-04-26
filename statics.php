@@ -31,6 +31,7 @@ require_once('./include/footer.php');
 
 function add_static(){
   global $COLLATE;
+  global $dbo;
 
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   $name = (isset($_GET['name'])) ? $_GET['name'] : '';
@@ -87,9 +88,9 @@ function add_static(){
        "  <div id=\"helper\" style=\"float: left; width: 70%; padding-left: 10px; border-left: 1px solid #000;\">\n";
   
   $sql = "SELECT guidance FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
-  $guidance = mysql_result($result, 0, 0);
+  $guidance = $result -> fetchColumn();
   
   if(empty($guidance) && empty($COLLATE['settings']['guidance'])){
     $help =  '';
@@ -132,6 +133,7 @@ function add_static(){
 
 function submit_static(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
   $name = (empty($_POST['name'])) ? '' : clean($_POST['name']);
@@ -166,15 +168,16 @@ function submit_static(){
   $message = "Static IP Reserved: $ip_addr ($name)";
   AccessControl($accesslevel, $message); // No need to generate logs if nothing is happening. Here, we know data is about to be written to the db.         
 
-  mysql_query($sql);
+  $dbo -> query($sql);
     
   // Everything looks good so here's a success page with all of the information.
   require_once('./include/header.php');
  
   $sql = "SELECT ip FROM statics WHERE subnet_id = '$subnet_id' AND note = 'Default Gateway'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) == '1'){
-    $gateway = long2ip(mysql_result($result, '0'));
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() == '1'){
+    $long_gateway = $result -> fetchColumn();
+    $gateway = long2ip($long_gateway);
     $error = ''; #none    
   }
   else{
@@ -198,6 +201,7 @@ function submit_static(){
 
 function list_statics(){
   global $COLLATE;
+  global $dbo;
   
   $subnet_id = (isset($_GET['subnet_id']) && preg_match("/[0-9]*/", $_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   if(empty($_GET['subnet_id'])){
@@ -213,8 +217,8 @@ function list_statics(){
   }
     
   $sql = "SELECT name, start_ip, mask, stalescan_enabled FROM subnets WHERE id='$subnet_id'";
-  $results = mysql_query($sql);
-  if(mysql_num_rows($results) != '1') {
+  $results = $dbo -> query($sql);
+  if($results -> rowCount() != '1') {
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
@@ -222,7 +226,7 @@ function list_statics(){
   
   require_once('./include/header.php');
   
-  list($subnet_name, $subnet_number, $subnet_mask, $stalescan_enabled) = mysql_fetch_row($results);
+  list($subnet_name, $subnet_number, $subnet_mask, $stalescan_enabled) = $results -> fetch(PDO::FETCH_NUM);
   $subnet_number = long2ip($subnet_number);
   $subnet_mask = long2ip($subnet_mask);
      
@@ -236,8 +240,8 @@ function list_statics(){
                   "<input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
   
   $updatedsql = pageselector($sql, $hiddenformvars);
-  $row = mysql_query($updatedsql);
-  $rows = mysql_num_rows($row);
+  $row = $dbo -> query($updatedsql);
+  $rows = $row -> rowCount();
   
   echo "</div>";   
 
@@ -254,7 +258,7 @@ function list_statics(){
        "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
    
   $javascript = ''; # this gets concatenated to below 
-  while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
+  while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = $row -> fetch(PDO::FETCH_NUM)){
       $ip = long2ip($ip);
       echo "<tr id=\"static_".$static_id."_row_1\">".
            "<td><img src=\"images/static.png\" alt=\"\" /> &nbsp; $ip</td><td><span id=\"edit_name_".$static_id."\">$name</span></td>".
@@ -373,7 +377,7 @@ function list_statics(){
   pageselector($sql,$hiddenformvars);
   
   $sql = "SELECT id, name, start_ip, end_ip FROM acl WHERE subnet_id='$subnet_id' ORDER BY name ASC";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
   echo "<h1>".$COLLATE['languages']['selected']['ACL']."</h1>\n";
   
@@ -391,7 +395,7 @@ function list_statics(){
         "<th>".$COLLATE['languages']['selected']['EndingIPAddress']."</th><th></th></tr>".
         "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>";
     
-  while(list($acl_id,$acl_name, $long_acl_start, $long_acl_end) = mysql_fetch_row($result)){
+  while(list($acl_id,$acl_name, $long_acl_start, $long_acl_end) = $result -> fetch(PDO::FETCH_NUM)){
     $acl_start = long2ip($long_acl_start);
     $acl_end = long2ip($long_acl_end);    
          
@@ -453,6 +457,7 @@ function list_statics(){
 
 
 function submit_acl(){
+  global $dbo;
   include 'include/validation_functions.php';
 
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
@@ -498,7 +503,7 @@ function submit_acl(){
   AccessControl('3', "$acl_name ACL for $subnet_name subnet edited");
   
   $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES ('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
-  mysql_query($sql);
+  $dbo -> query($sql);
   $notice = "acladded-notice";
   header("Location: statics.php?subnet_id=$subnet_id&notice=$notice");
   exit();

@@ -63,9 +63,9 @@ function health_check(){
   
   # Can we connect to the database?
   require_once('./include/db_connect.php');
-  $dbresult = connectToDB();
-  if($dbresult !== true){
-    echo "<p class=\"installfail\">$dbresult</p>";
+  $dbo = getdbo();
+  if(!is_object($dbo)){
+    echo "<p class=\"installfail\">$dbo</p>";
 	echo "</div></div>";
     require_once('./include/nav.php');
     echo "</div>";
@@ -88,7 +88,7 @@ function health_check(){
 
 function install(){
   require_once('./include/db_connect.php');
-  $dbresult = connectToDB();
+  $dbo = getdbo();
   
   $install = 
   "
@@ -250,32 +250,32 @@ function install(){
   function upgrade_from_one_dot_six () {
   	# Find autoincrement values for each table that uses them
   	$sql = "SELECT LAST_INSERT_ID() from acl";
-  	$result = mysql_query($sql);
-  	$acl_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$acl_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from blocks";
-  	$result = mysql_query($sql);
-  	$blocks_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$blocks_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from `ldap-servers`";
-  	$result = mysql_query($sql);
-  	$ldap_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$ldap_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from logs";
-  	$result = mysql_query($sql);
-  	$logs_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$logs_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from statics";
-  	$result = mysql_query($sql);
-  	$statics_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$statics_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from subnets";
-  	$result = mysql_query($sql);
-  	$subnets_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$subnets_autoincrement = $result->fetchColumn();
   	
   	$sql = "SELECT LAST_INSERT_ID() from users";
-  	$result = mysql_query($sql);
-  	$users_autoincrement = mysql_result($result, 0, 0);
+  	$result = $dbo->exec($sql);
+  	$users_autoincrement = $result->fetchColumn();
   
   	# copy old tables to temporary tables using unsigned INTs, then drop old ones, then rename new to old
   	$data_shuffle =
@@ -454,10 +454,10 @@ function install(){
   ";
   
   $sql = "select value from settings where name='version'";
-  $result = mysql_query($sql);
+  $result = $dbo->exec($sql);
   
   if($result != FALSE) { // See what version we're on
-    $version = mysql_result($result, 0, 0);
+    $version = $result->fetchColumn();
     if($version == '1.0'){
       $results = multiple_query("$upgrade_from_one_dot_zero");
       $results .= multiple_query("$upgrade_from_one_dot_two");
@@ -580,7 +580,7 @@ function install(){
   $COLLATE["languages"]["selected"] = $languages['en'];
   require_once('./include/header.php');
   
-    echo "<h1>An error has occured.</h1>
+    echo "<h1>An error has occured.</h1><br>
           <p>Below you will find the mysql errors that prevented this application from installing properly.</p>";
     echo "$results";
     echo "</div></div>";
@@ -594,11 +594,16 @@ function install(){
 }
 
 function multiple_query($sql){
+  $dbo = getdbo();
   $tok = strtok($sql, ";");
   $results = "";
+
   while ($tok){
-    mysql_query($tok);
-	$results = "<br>".mysql_error();
+    $result = $dbo->exec($tok);
+	if(!$result){ 
+	  $dbo->errorInfo();
+	  $results = "$results<br>".$result[2];
+	}
     $tok = strtok(";");
   }
   return $results;

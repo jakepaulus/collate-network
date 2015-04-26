@@ -31,16 +31,17 @@ require_once('./include/footer.php');
 
 function list_users(){
   global $COLLATE;
+  global $dbo;
   require_once('./include/header.php');
   
   $sql = "SELECT username, phone, email, last_login_at FROM users ORDER BY username"; 
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
     
   echo "<h1>".$COLLATE['languages']['selected']['Users']."</h1>\n".
        "<p style=\"text-align: right;\"><a href=\"users.php?op=add\">".
 	   "<img src=\"images/add.gif\" alt=\"\" /> ".$COLLATE['languages']['selected']['AddaUser']." </a></p>";
 
-  if (mysql_num_rows($result) == '0'){
+  if ($result -> rowCount() == '0'){
     echo "<br /><p>".$COLLATE['languages']['selected']['nousers']."</p>";
   }
   else {  
@@ -52,7 +53,7 @@ function list_users(){
 		 "<th>".$COLLATE['languages']['selected']['LastLogin']."</th><th></th></tr>".
 	     "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>";
 	     
-    while(list($username,$phone,$email,$lastlogin) = mysql_fetch_row($result)){
+    while(list($username,$phone,$email,$lastlogin) = $result -> fetch(PDO::FETCH_NUM)){
       echo "<tr id=\"user_${username}_row_1\"><td>$username</td><td>$phone</td><td>$email</td><td>$lastlogin</td>
 	       <td style=\"text-align: right;\">\n";
 	  if ($COLLATE['user']['accesslevel'] == '5' || $COLLATE['settings']['perms'] > '5') {
@@ -80,6 +81,7 @@ function list_users(){
 function user_form(){
   global $COLLATE;
   global $op;
+  global $dbo;
   
   $username = (isset($_GET['username'])) ? $_GET['username'] : '';
   $phone = (isset($_GET['phone'])) ? $_GET['phone'] : '';
@@ -98,13 +100,13 @@ function user_form(){
   
   if($op == 'edit'){
     $sql = "SELECT accesslevel, phone, email, loginattempts, ldapexempt, language FROM users WHERE username='$username'";
-    $result = mysql_query($sql);
-    if(mysql_num_rows($result) != '1'){
+    $result = $dbo -> query($sql);
+    if($result -> rowCount() != '1'){
       $notice = $COLLATE['languages']['selected']['invalidrequest'];
       header("Location: users.php?notice=$notice");
       exit();
     }
-    list($accesslevel,$phone,$email,$loginattempts,$ldapexempt,$current_language) = mysql_fetch_row($result);
+    list($accesslevel,$phone,$email,$loginattempts,$ldapexempt,$current_language) = $result -> fetch(PDO::FETCH_NUM);
 	$title = $COLLATE['languages']['selected']['EditUser'].": $username";
 	$action_url = 'users.php?op=submit&amp;edit=true';
   }
@@ -184,6 +186,7 @@ function user_form(){
 
 function submit_user(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
  
@@ -247,13 +250,13 @@ function submit_user(){
 	exit();
   } 
 
-  $test = mysql_query("SELECT id FROM users WHERE username='$username'");
-  if(mysql_num_rows($test) > "0" && $edit === false) { #duplicate user
+  $test = $dbo -> query("SELECT id FROM users WHERE username='$username'");
+  if($test -> rowCount() > "0" && $edit === false) { #duplicate user
     $notice = "nameconflict-notice";
     header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
     exit();
   }
-  elseif(mysql_num_rows($test) !== 1 && $edit !== false){ #can't edit a user that doesn't exist
+  elseif($test -> rowCount() !== 1 && $edit !== false){ #can't edit a user that doesn't exist
     $notice = "invalidrequest";
     header("Location: users.php?op=add&username=$username&phone=$phone&email=$email&notice=$notice");
     exit();
@@ -292,7 +295,7 @@ function submit_user(){
   }
   collate_log('5', $message); // adds and modifications are always logged
   
-  mysql_query($sql);  
+  $dbo -> query($sql);  
   
   header("Location: users.php?op=edit&username=$username&notice=$notice");
   exit();

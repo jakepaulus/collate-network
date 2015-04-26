@@ -35,7 +35,8 @@ switch($op){
  */
 
 function download() {
-  global $COLLATE;  
+  global $COLLATE;
+  global $dbo;  
  
   $tmparray=build_search_sql();
   $sql=$tmparray["sql"];
@@ -48,8 +49,8 @@ function download() {
   $todate = $tmparray["todate"];
   $fromdate = $tmparray["fromdate"];
 
-  $row = mysql_query($sql);
-  $totalrows = mysql_num_rows($row);
+  $row = $dbo -> query($sql);
+  $totalrows = $row -> rowCount();
  
   if($totalrows < "1"){
     require_once('./include/header.php');
@@ -81,7 +82,7 @@ function download() {
          "<th>".$COLLATE['languages']['selected']['EndIP']."</th>".
 	     "<th>".$COLLATE['languages']['selected']['Note']."</th></tr>\n";
 
-    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($row)){
+    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = $row -> fetch(PDO::FETCH_NUM)){
       if(empty($long_start_ip)){
         $start_ip = '';
         $end_ip = '';
@@ -107,14 +108,14 @@ function download() {
          "<th>".$COLLATE['languages']['selected']['StaticsUsed']."</th>".
          "<th>".$COLLATE['languages']['selected']['Note']."</th></tr>\n";
  
-    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = mysql_fetch_row($row)){
+    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = $row -> fetch(PDO::FETCH_NUM)){
       $start_ip = long2ip($long_start_ip);
       $mask = long2ip($long_mask);
 	  
       if(!isset($block_name[$block_id])){ // Only look up the block name if we haven't seen the block_id yet on this page
 	    $blocknamesql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
-        $result = mysql_query($blocknamesql);
-        $block_name[$block_id] = mysql_result($result, 0, 0);
+        $result = $dbo -> query($blocknamesql);
+        $block_name[$block_id] = $result -> fetchColumn();
       }
 	  
       $subnet_size = $long_end_ip - $long_start_ip;
@@ -132,7 +133,7 @@ function download() {
 		 "<th>".$COLLATE['languages']['selected']['Note']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>\n";
   
-    while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($row)){
+    while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = $row -> fetch(PDO::FETCH_NUM)){
       $ip = long2ip($ip);
       echo "<tr><td>$ip</td><td>$name</td><td>$contact</td><td>$note</td><td>$failed_scans</td></tr>\n";
     }
@@ -143,7 +144,7 @@ function download() {
 		 "<th>".$COLLATE['languages']['selected']['IPAddress']."</th>".
          "<th>".$COLLATE['languages']['selected']['Severity']."</th>".
 		 "<th>".$COLLATE['languages']['selected']['Message']."</th></tr>\n";
-    while(list($occuredat,$username,$ipaddress, $level,$message) = mysql_fetch_row($row)){
+    while(list($occuredat,$username,$ipaddress, $level,$message) = $row -> fetch(PDO::FETCH_NUM)){
       echo "<tr><td>$occuredat</td><td>$username</td><td>$ipaddress</td><td>$level</td><td>$message</td></tr>\n";
     }
   }
@@ -165,6 +166,7 @@ function download() {
 
 function search() {
   global $COLLATE;
+  global $dbo;
   $export = (!isset($_GET['export'])) ? 'off' : $_GET['export'];
   
   # set these for hidden forms. They'll be reset by return data from build_search_sql()  
@@ -201,8 +203,8 @@ function search() {
 		             <input type=\"hidden\" name=\"todate\" value=\"$todate\" />
 					 <input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
   $updatedsql = pageselector($sql,$hiddenformvars);
-  $row = mysql_query($updatedsql);
-  $rows = mysql_num_rows($row);
+  $row = $dbo -> query($updatedsql);
+  $rows = $row -> rowCount();
   
   $searchdescription=$tmparray["searchdescription"];
   $first = $tmparray["first"];
@@ -248,7 +250,7 @@ function search() {
        "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
     
     $javascript = ''; # this gets concatenated to below
-    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($row)){
+    while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = $row -> fetch(PDO::FETCH_NUM)){
       $link_target = ($block_type == 'container') ? "blocks.php?block_id=$block_id" : "subnets.php?block_id=$block_id";
       if(empty($long_start_ip)){
         $start_ip = $COLLATE['languages']['selected']['Browse'];
@@ -336,13 +338,13 @@ function search() {
 	     "<tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 		 
     $javascript=''; # this gets appended to in the following while loop
-    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = mysql_fetch_row($row)){
+    while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note,$block_id) = $row -> fetch(PDO::FETCH_NUM)){
       $start_ip = long2ip($long_start_ip);
       $mask = long2ip($long_mask);
 	  if(!isset($block_name[$block_id])){ // Only look up the block name if we haven't seen the block_id yet on this page
 	    $blocknamesql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
-        $result = mysql_query($blocknamesql);
-        $block_name[$block_id] = mysql_result($result, 0, 0);
+        $result = $dbo -> query($blocknamesql);
+        $block_name[$block_id] = $result -> fetchColumn();
       }
       
       $subnet_size = $long_end_ip - $long_start_ip;
@@ -430,15 +432,15 @@ function search() {
          "</tr><tr><td colspan=\"6\"><hr class=\"head\" /></td></tr>\n";
 
 	$javascript = ''; # this gets appended to in the following while loop
-    while(list($static_id,$ip,$name,$contact,$note,$subnet_id,$failed_scans) = mysql_fetch_row($row)){
+    while(list($static_id,$ip,$name,$contact,$note,$subnet_id,$failed_scans) = $row -> fetch(PDO::FETCH_NUM)){
 	
 		# Build path information for IP - use an array to avoid accessive db calls
 		if(!isset($path[$subnet_id])) {
 			$pathsql = "SELECT blocks.name, blocks.parent_id, subnets.name, subnets.block_id, subnets.stalescan_enabled FROM blocks, subnets 
                         WHERE subnets.id ='$subnet_id' AND subnets.block_id = blocks.id";
-			$result = mysql_query($pathsql);
-			if(mysql_num_rows($result) == '1'){
-				list($block_name, $block_parent, $subnet_name, $block_id, $stalescan_enabled) = mysql_fetch_row($result);
+			$result = $dbo -> query($pathsql);
+			if($result -> rowCount() == '1'){
+				list($block_name, $block_parent, $subnet_name, $block_id, $stalescan_enabled) = $result -> fetch(PDO::FETCH_NUM);
 				if($block_parent === null){
 				  $path[$subnet_id] = "<a href=\"blocks.php\">[root]</a> / <a href=\"subnets.php?block_id=$block_id\">$block_name</a> / 
 				   <a href=\"statics.php?subnet_id=$subnet_id\">$subnet_name</a>";
@@ -565,7 +567,7 @@ function search() {
 		 "<th>".$COLLATE['languages']['selected']['Message']."</th></tr>\n".
          "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
 		 
-    while(list($occuredat,$username,$ipaddress, $level,$message) = mysql_fetch_row($row)){
+    while(list($occuredat,$username,$ipaddress, $level,$message) = $row -> fetch(PDO::FETCH_NUM)){
       if($level == "high"){
 	    $level = "<b>$level</b>";
       }
@@ -703,6 +705,7 @@ function show_form()  {
 
 function build_search_sql(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
   $first = (isset($_GET['first'])) ? $_GET['first'] : '';

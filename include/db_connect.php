@@ -1,11 +1,8 @@
 <?php
-  /* This is borrowed from Justin Guagliata's db connect script from the forum code he wrote
-    * a long, long time ago. Thanks Justin, it still works. I've left it in the form of a function
-    * so that the variables are strictly localized inside of the function.
-    */
-
-function connectToDB() {
-  global $COLLATE;
+function getdbo() {
+  #########################################
+  # Begin Configuration
+  #########################################
 
   //database host (IP Address or Hostname)
   $db_host = "localhost";
@@ -19,26 +16,25 @@ function connectToDB() {
   //database
   $db_name = "ipam-latest";
   
-  $link = mysql_connect("$db_host", "$db_user", "$db_pass");
+  #########################################
+  # End Configuration
+  #########################################
+
+  global $dbo;
+  if(is_object($dbo)){ return $dbo; }
   
-  if(!$link){
+  try {
+    $dbo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", "$db_user", "$db_pass", 
+      array(PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT));
+  }
+  catch (PDOException $exception) {
     if(!strstr($_SERVER['REQUEST_URI'], 'install.php')){
       # this file is normally includeded before header.php, but not on install.php
       header("Location: install.php");
       exit();
     }    
-    return "Couldn't connect to MySQL";
+    return "Database connection failed. Exception was: " . $exception->getMessage();
   }
-
-  // select db:
-  $select_result = mysql_select_db($db_name, $link);
-  if(!$select_result){
-    if(!strstr($_SERVER['REQUEST_URI'], 'install.php')){
-      header("Location: install.php");
-      exit();
-    }
-    return "Couldn't open db: $db_name. Caught error: ".mysql_error();
-  }
-  return true;
+  return $dbo;
 } 
 ?>

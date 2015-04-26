@@ -9,7 +9,8 @@ exit();
 
 
 function form() {
-global $COLLATE;
+  global $COLLATE;
+  global $dbo;
 
   ?>
   <h1><?php echo $COLLATE['languages']['selected']['Settings']; ?></h1>
@@ -201,14 +202,14 @@ global $COLLATE;
 	
 	<?php
 	$sql = "select id,domain, server from `ldap-servers` order by domain ASC";
-	$result = mysql_query($sql);
-	if(mysql_num_rows($result) == '0'){
+	$result = $dbo -> query($sql);
+	if($result -> rowCount() == '0'){
 	  echo $COLLATE['languages']['selected']['noserversdefined'];
 	}
 	else{
 	    echo "<table width=\"90%\">";
 	$javascript='';
-	while(list($id,$domain,$server) = mysql_fetch_row($result)){
+	while(list($id,$domain,$server) = $result -> fetch(PDO::FETCH_NUM)){
 	  echo "<tr id=\"ldap_server_$id\"><td width=\"33%\"><span id=\"edit_domain_$id\">$domain</span></td><td width=\"33%\"><span id=\"edit_server_$id\">$server</span></td><td width=\"33%\"><a href=\"#\" onclick=\"
       if (confirm('".$COLLATE['languages']['selected']['confirmdelete']."')) { 
         new Element.update('authenticationnotice', ''); 
@@ -220,7 +221,7 @@ global $COLLATE;
       
       $javascript .=	  
 
-         "  new Ajax.InPlaceEditorWithEmptyText('edit_domain_$id', '_settings.php?op=editldap&amp;object=domain&id=$id',
+         "  new Ajax.InPlaceEditorWithEmptyText('edit_domain_$id', '_settings.php?op=editldap&object=domain&id=$id',
               {
 			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			    highlightcolor: '#a5ddf8', 
@@ -235,7 +236,7 @@ global $COLLATE;
                   }
               }
             );\n".
-         "  new Ajax.InPlaceEditorWithEmptyText('edit_server_$id', '_settings.php?op=editldap&amp;object=server&id=$id',
+         "  new Ajax.InPlaceEditorWithEmptyText('edit_server_$id', '_settings.php?op=editldap&object=server&id=$id',
               {
 			    clickToEditText: '".$COLLATE['languages']['selected']['ClicktoEdit']."',
 			    highlightcolor: '#a5ddf8',  
@@ -359,14 +360,14 @@ global $COLLATE;
 	
 	<?php
 	$sql = "select description,active,apikey from `api-keys` order by description ASC";
-	$result = mysql_query($sql);
-	if(mysql_num_rows($result) == '0'){
+	$result = $dbo -> query($sql);
+	if($result -> rowCount() == '0'){
 	  echo $COLLATE['languages']['selected']['nokeysdefined'];
 	}
 	else{
 	    echo "<table width=\"90%\">";
 	$javascript='';
-	while(list($apidescription,$apikeystatus,$apikey) = mysql_fetch_row($result)){
+	while(list($apidescription,$apikeystatus,$apikey) = $result -> fetch(PDO::FETCH_NUM)){
 	  if($apikeystatus == '1'){
 		$activechecked="selected=\"selected\"";
 		$revokedchecked="";

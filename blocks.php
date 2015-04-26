@@ -31,6 +31,7 @@ require_once('./include/footer.php');
 
 function add_block(){
   global $COLLATE;
+  global $dbo;
   
   $block_id = (empty($_GET['block_id'])) ? '' : $_GET['block_id'];
   $name = (empty($_GET['name'])) ? '' : $_GET['name'];
@@ -47,13 +48,13 @@ function add_block(){
 	  exit();
 	}
 	$sql = "SELECT name, start_ip, end_ip, note, parent_id, type FROM blocks WHERE id='$block_id'";
-	$result = mysql_query($sql);
-	if(mysql_num_rows($result) != '1'){
+	$result = $dbo -> query($sql);
+	if($result -> rowCount()!= '1'){
 	  $notice = 'invalidrequest';
 	  header("Location: blocks.php?notice=$notice");
 	  exit();
 	}
-	list($name,$long_start_ip,$long_end_ip,$note,$old_parent_block,$block_type) = mysql_fetch_row($result);
+	list($name,$long_start_ip,$long_end_ip,$note,$old_parent_block,$block_type) = $result->fetch(PDO::FETCH_NUM);
 	$ip = (empty($long_start_ip)) ? '' : long2ip($long_start_ip);
 	$end_ip = (empty($long_end_ip)) ? '' : long2ip($long_end_ip);
 	$hidden_form_inputs = '<input type="hidden" name="update_block" value="true">'.
@@ -123,24 +124,27 @@ function add_block(){
   }
   
   $sql = "SELECT id, name, parent_id FROM blocks WHERE type='container'";
-  $result = mysql_query($sql);
-  while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
+  $result = $dbo -> query($sql);
+  while(list($select_block_id,$select_block_name,$select_block_parent) = $result->fetch(PDO::FETCH_NUM)){
 	$block_paths[$select_block_id]="$select_block_name";
 	while($select_block_parent !== null){ #this has the potential to be really slow and awful...
-	  $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
-	  list($recursive_parent_name,$recursive_parent_parent) = mysql_fetch_row($recursive_result);
+	  $sql = "SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'";
+	  $recursive_result = $dbo -> query($sql);
+	  list($recursive_parent_name,$recursive_parent_parent) = $recursive_result->fetch(PDO::FETCH_NUM);
 	  $block_paths[$select_block_id] = "$recursive_parent_name/".$block_paths[$select_block_id];
 	  $select_block_parent = $recursive_parent_parent;
 	}
 	$block_paths[$select_block_id]='[root]/'.$block_paths[$select_block_id];
   }
-  natcasesort($block_paths);
-  foreach ($block_paths as $select_id => $select_text){
-    if($parent_block == $select_id){
-	  echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
-	}
-	else{
-	  echo "<option value=\"$select_id\">$select_text</option>\n";
+  if(!empty($block_paths)){
+    natcasesort($block_paths);
+    foreach ($block_paths as $select_id => $select_text){
+      if($parent_block == $select_id){
+	    echo "<option selected=\"selected\" value=\"$select_id\">$select_text</option>\n";
+	  }
+	  else{
+	    echo "<option value=\"$select_id\">$select_text</option>\n";
+      }
     }
   }
 	   
@@ -157,8 +161,9 @@ function submit_block() {
   # 2. all other checks
   
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
-  
+    
   $block_id = (isset($_POST['block_id'])) ? $_POST['block_id'] : '';
   $name = (isset($_POST['name'])) ? $_POST['name'] : '';
   $note = (isset($_POST['note'])) ? $_POST['note'] : ''; # this input is optional
@@ -205,8 +210,9 @@ function submit_block() {
   }
 
   if($update_block === false){ # checking for duplicate block name
-    $result = mysql_query("SELECT id from blocks where name='$name'");
-	if(mysql_num_rows($result) != '0'){
+    $sql = "SELECT id from blocks where name='$name'";
+    $result = $dbo -> query($sql);
+	if($result -> rowCount()!= '0'){
   	  header("HTTP/1.1 400 Bad Request");
    	  $notice = 'duplicatename';
    	  header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&block_type=$block_type&parent_block=$parent_block&notice=$notice");
@@ -214,14 +220,15 @@ function submit_block() {
 	}
   }
   else{ # checking that we're updating a block that actually exists
-    $result = mysql_query("SELECT name FROM blocks WHERE id='$block_id'");
-	if(mysql_num_rows($result) != '1'){
+    $sql = "SELECT name FROM blocks WHERE id='$block_id'";
+    $result = $dbo -> query($sql);
+	if($result -> rowCount()!= '1'){
       header("HTTP/1.1 400 Bad Request");
       $notice = 'selectblock';
 	  header("Location: blocks.php?notice=$notice");
    	  exit();
 	}
-	$old_block_name = mysql_result($result, 0);
+	$old_block_name = $result -> fetchColumn();
   }
   
   $return = validate_text($note,'note');
@@ -256,8 +263,8 @@ function submit_block() {
   $result = '';
   if($parent_block != 'null'){
     $sql = "SELECT id FROM blocks WHERE id='$parent_block'";
-    $result = mysql_query($sql);
-	if(mysql_num_rows($result) != '1'){
+    $result = $dbo -> query($sql);
+	if($result -> rowCount()!= '1'){
 	  $notice = "invalidrequest";
       header("Location: blocks.php?notice=$notice");
 	  exit();
@@ -273,7 +280,8 @@ function submit_block() {
   }
   else{ 
     $sql = "SELECT parent_id FROM blocks WHERE id='$block_id'";
-    $old_parent_block = mysql_result(mysql_query($sql), 0);
+	$result = $dbo -> query($sql);
+    $old_parent_block = $result -> fetchColumn();
   }
   
   # If we're changing an existing block, we must make sure we don't orphan a child object
@@ -285,7 +293,8 @@ function submit_block() {
 	}
 	elseif($block_type == 'container'){ # just check this block for subnets
 	  $sql = "SELECT count(*) FROM subnets where block_id='$block_id'";
-	  if(mysql_result(mysql_query($sql), 0) != '0'){
+	  $result = $dbo -> query($sql);
+	  if($result -> fetchColumn() != '0'){
 	    $notice = 'wouldorphansubnets';
 	    header("Location: blocks.php?op=$submit_op&name=$name&ip=$ip&end_ip=$end_ip&note=$note&parent_block=$parent_block&notice=$notice");
 	    exit();
@@ -307,7 +316,7 @@ function submit_block() {
   $message .= ($name != $old_block_name) ? "(previously $old_block_name)" : '';
   AccessControl($accesslevel, $message); // We don't want to generate logs when nothing is really happening, so this goes down here.
   
-  mysql_query($sql);
+  $dbo -> query($sql);
   $notice = ($update_block) ? 'blockupdated-notice' : 'blockadded-notice';
   if($old_parent_block == 'null'){
     header("Location: blocks.php?notice=$notice");
@@ -321,18 +330,19 @@ function submit_block() {
 
 function list_blocks(){
   global $COLLATE;
-  require_once('./include/header.php');
+  global $dbo;
+  require_once('./include/header.php');  
   
   $block_id = (isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])) ? $_GET['block_id'] : '';
   
   if(!empty($block_id)){
     $parent_name_check = "SELECT name FROM blocks WHERE id = '$block_id'";
-    $result = mysql_query($parent_name_check);
-    if(mysql_num_rows($result) != '1'){
+    $result = $dbo -> query($parent_name_check);
+    if($result -> rowCount()!= '1'){
       $block_id = ''; # Instead of an error, we'll just show them the root-level blocks list
     }
     else{
-      $parent_block_name = mysql_result($result, 0);
+      $parent_block_name = $result -> fetchColumn();
 	  $block_limit_sql = "WHERE parent_id='$block_id'";
     }
   }
@@ -371,9 +381,9 @@ function list_blocks(){
 	     "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
 		 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `note`,`type` FROM `blocks` $block_limit_sql ORDER BY `$sort` ASC";
-  $results = mysql_query($sql);
+  $results = $dbo -> query($sql);
   $javascript = ''; # this gets concatenated to below
-  while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = mysql_fetch_row($results)){
+  while(list($block_id,$name,$long_start_ip,$long_end_ip,$note,$block_type) = $results -> fetch(PDO::FETCH_NUM)){
     $link_target = ($block_type == 'container') ? "blocks.php?block_id=$block_id" : "subnets.php?block_id=$block_id";
 	if(empty($long_start_ip)){
 	  $start_ip = $COLLATE['languages']['selected']['Browse'];

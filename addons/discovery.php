@@ -5,10 +5,7 @@
 # discovery.php written by Jake Paulus for Collate:Network
 # http://collate.info/ 
 # 
-# Please refer to the documentation for this script in the docs directory or
-# at the following URL:
-#
-# http://code.google.com/p/collate-network/w/list
+# Please refer to the documentation for this script linked on the page above
 #
 #
 # Here is how we scan. Feel free to modify the options to adjust performance...
@@ -76,6 +73,7 @@ else{
 }
 
 require_once('../include/db_connect.php');
+$dbo = getdbo();
 
 // Create array containing all unreserved IPs in all reserved subnets excluding ACL'd IP space
 
@@ -84,26 +82,26 @@ $pingedhosts = '0';
 $newhosts = '0';
 
 $sql = "SELECT id, start_ip, end_ip FROM subnets";
-$subnet_results = mysql_query($sql);
-while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_row($subnet_results)){
+$subnet_results = $dbo -> query($sql);
+while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = $subnet_results -> fetch(PDO::FETCH_NUM)){
   $first_usable = $long_subnet_start_ip;
   $last_usable = $long_subnet_end_ip - '1';
   $subnet = range($first_usable, $last_usable);
   
   // exclude ACL'd IPs from this array
   $sql = "SELECT start_ip, end_ip FROM acl where subnet_id = '$subnet_id'";
-  $results = mysql_query($sql);
-  while(list($start_ip, $end_ip) = mysql_fetch_row($results)){
+  $results = $dbo -> query($sql);
+  while(list($start_ip, $end_ip) = $results -> fetch(PDO::FETCH_NUM)){
     $acl = range($start_ip, $end_ip);
     $subnet = array_diff($subnet, $acl);
   }
   
   // exclude already reserved static IPs from this array
   $sql = "SELECT ip FROM statics WHERE subnet_id='$subnet_id'";
-  $results = mysql_query($sql);
-  if(mysql_num_rows($results) > '0'){
+  $results = $dbo -> query($sql);
+  if($results -> rowCount() > '0'){
     $statics = array();
-    while($static_ip = mysql_fetch_row($results)){
+    while($static_ip = $results -> fetch(PDO::FETCH_NUM)){
       array_push($statics, $static_ip['0']); 
     }
     $subnet = array_diff($subnet, $statics);  
@@ -142,11 +140,11 @@ while(list($subnet_id,$long_subnet_start_ip,$long_subnet_end_ip) = mysql_fetch_r
       
       $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
   		 VALUES('$long_ip_addr', '$name', 'Network Admin', 'Added by discovery addon', '$subnet_id', 'system', now())";
-    	mysql_query($sql);
+    	$dbo -> query($sql);
       
       // Log what we've added to the DB
       $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), 'system', '', 'normal', 'Static IP Reserved by discovery addon: $ip ($name)')";
-      mysql_query($sql);
+      $dbo -> query($sql);
   
     	$newhosts++;
       if($verbose == 'on'){ echo '!'; }
@@ -170,11 +168,11 @@ if(!isset($_ARG['n']) && !isset($_ARG['numeric'])){
 		 "\r\n";
   }
   $sql = "SELECT ip FROM statics WHERE name = '' OR name='discovered-host'";
-  $result = mysql_query($sql);
-  $hoststoresolve=mysql_num_rows($result);
+  $result = $dbo -> query($sql);
+  $hoststoresolve=$result -> rowCount();
   if( $hoststoresolve < '1'){ break; }
   
-  while(list($long_ip) = mysql_fetch_row($result)){
+  while($long_ip = $result -> fetchColumn()){
     $ip = long2ip($long_ip);
     
     // Do dns lookups
@@ -186,11 +184,11 @@ if(!isset($_ARG['n']) && !isset($_ARG['numeric'])){
 	    $long_ip_addr = ip2decimal($ip);
         
         $sql = "UPDATE statics set name='$name', modified_by='system', modified_at=now() WHERE ip='$long_ip_addr'";
-      	mysql_query($sql);
+      	$dbo -> query($sql);
         
         // Log what we've added to the DB
         $sql = "INSERT INTO logs (occuredat, username, ipaddress, level, message) VALUES(NOW(), 'system', '', 'normal', 'Static IP name updated by discovery addon: $ip ($name)')";
-        mysql_query($sql);
+        $dbo -> query($sql);
 		
 		$namesupdated++;
 		if($verbose=='on'){
@@ -218,7 +216,7 @@ if(!isset($_ARG['n']) && !isset($_ARG['numeric'])){
 
 
 $sql = "REPLACE INTO settings (name, value) VALUES ('last_discovery_at', NOW())";
-mysql_query($sql);
+$dbo -> query($sql);
 
 exit();
 ?>

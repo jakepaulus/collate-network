@@ -18,6 +18,7 @@ switch($op){
 
 function log_truncate(){
   global $COLLATE;
+  global $dbo;
   
   include "include/validation_functions.php";
   
@@ -39,11 +40,12 @@ function log_truncate(){
   
   // They've confirmed they want to truncate the logs.
   $sql = "SELECT MAX(id) FROM logs";
-  $maxid = mysql_result(mysql_query($sql), 0);
+  $result = $dbo -> query($sql);
+  $maxid = $result -> fetchColumn();
   $id = $maxid - 500;
     
   $sql = "DELETE FROM logs WHERE id<'$id'";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   $level = "5";
   $message = "LOGS TRUNCATED";
@@ -58,6 +60,7 @@ function log_truncate(){
 
 function view_logs() {
   global $COLLATE;
+  global $dbo;
   require_once('./include/header.php');
   
   echo "<h1>".$COLLATE['languages']['selected']['Logs']."</h1>
@@ -66,8 +69,8 @@ function view_logs() {
   $sql = "SELECT occuredat, username, ipaddress, level, message FROM logs ORDER BY id DESC";
   $hiddenformvars='';
   $sql = pageselector($sql,$hiddenformvars);
-  $row = mysql_query($sql);
-  $rows = mysql_num_rows($row);
+  $row = $dbo -> query($sql);
+  $rows = $row -> rowCount();
   
   echo "</div>";
   
@@ -81,7 +84,7 @@ function view_logs() {
         <td><b>".$COLLATE['languages']['selected']['Severity']."</b></td>\n
 	    <td><b>".$COLLATE['languages']['selected']['Message']."</b></td></tr>\n
 	    <tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
-  while(list($occuredat,$username,$ipaddress, $level,$message) = mysql_fetch_row($row)){
+  while(list($occuredat,$username,$ipaddress, $level,$message) = $row -> fetch(PDO::FETCH_NUM)){
     if($level == "high"){
 	  $level = "<b>high</b>";
 	}

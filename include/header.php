@@ -27,19 +27,22 @@
 	  echo "<a href=\"blocks.php\">[root]</a> ";
 	  if(stristr($_SERVER['REQUEST_URI'], "subnet_id")){ # let's get the block_id
 	    $subnet_id = (preg_match("/[0-9]*/", $_GET['subnet_id'])) ? $_GET['subnet_id'] : null;
+		
+		$dbo = getdbo();
+		
 		$sql = "SELECT name, block_id FROM subnets WHERE id='$subnet_id'";
-		$result = mysql_query($sql);
-	    if(mysql_num_rows($result) == '1'){
-		  list($subnet_name,$block_id) = mysql_fetch_row($result);
+		$subnet_result = $dbo->query($sql);
+	    if($subnet_result->rowCount() == '1'){
+		  list($subnet_name,$block_id) = $subnet_result->fetch(PDO::FETCH_NUM);
 		}		
 	  }
 	  
 	  if((isset($_GET['block_id']) && preg_match("/[0-9]*/", $_GET['block_id'])) || !empty($block_id)){
 	    $block_id = (!empty($block_id)) ? $block_id : $_GET['block_id'];
 	    $sql = "SELECT name, parent_id, type FROM blocks WHERE id='$block_id'";
-	    $result = mysql_query($sql);
-	    if(mysql_num_rows($result) == '1'){
-		  list($block_name,$parent_id,$block_type) = mysql_fetch_row($result);
+	    $block_result = $dbo->query($sql);
+	    if($block_result->rowCount() == '1'){
+		  list($block_name,$parent_id,$block_type) = $block_result->fetch(PDO::FETCH_NUM);
 		  if($block_type == 'container'){
 		    $block_path = "/ <a href=\"blocks.php?block_id=$block_id\">$block_name</a>";
 		  }
@@ -49,8 +52,8 @@
 		  $toomanylookups=1;
 		  while($parent_id !== null && $toomanylookups < 5){
 		    $sql = "SELECT `name`, `parent_id`, `type` FROM blocks WHERE id='$parent_id'";
-			$recursive_result = mysql_query($sql);
-			list($recursive_parent_name,$recursive_parent_id,$recursive_block_type) = mysql_fetch_row($recursive_result);
+			$recursive_result = $dbo->query($sql);
+			list($recursive_parent_name,$recursive_parent_id,$recursive_block_type) = $recursive_result->fetch(PDO::FETCH_NUM);
 			if($recursive_block_type == 'container'){
 		      $block_path = "/ <a href=\"blocks.php?block_id=$parent_id\">$recursive_parent_name</a>".$block_path;
 		    }

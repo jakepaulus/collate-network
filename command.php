@@ -11,11 +11,11 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 
 switch($op){
 	case "get";
-	get_record();
+	get_record(); # some day..
 	break;
 	
 	case "set";
-	set_record();
+	set_record(); # some day..
 	break;
 	
 	case "upload";
@@ -30,6 +30,7 @@ switch($op){
 
 function process_file(){
   global $COLLATE;
+  global $dbo;
   include "include/header.php";
   include "include/validation_functions.php";
   echo "<h1>Upload Results</h1><br />";
@@ -118,7 +119,7 @@ function process_file(){
 	unset($rownum);
 	
 	if($errorcount === '0'){ // don't bother validating data further if we didn't even find a propper csv file
-	  mysql_query("START TRANSACTION");
+	  $dbo -> query("START TRANSACTION");
 	  $recordprocessingorder = array('block', 'subnet', 'acl', 'static');
 	  foreach($recordprocessingorder as $recordtype){
 	    foreach($row as $currentrow => $rowdata){
@@ -134,7 +135,7 @@ function process_file(){
 	  	      }
 		    }
 	        else{
-			  mysql_query($result['sql']);
+			  $dbo -> query($result['sql']);
 	  	      $sql .= $result['sql'].';<br><br>'; #### ---> remove this line later <--- #######
 	        }
 		  }
@@ -145,10 +146,10 @@ function process_file(){
 	  
 	  
 	  if($errorcount !== '0'){
-	    mysql_query("ROLLBACK");
+	    $dbo -> query("ROLLBACK");
 	  }
 	  else {
-	    mysql_query("COMMIT");
+	    $dbo -> query("COMMIT");
 	  }
     }
 	
@@ -225,6 +226,7 @@ function return_ini_setting_in_bytes($val) {
 
 function read_in_csv_row($row){
   global $COLLATE;
+  global $dbo;
   $recordtype=$row['0'];
   $fieldcount = count($row);
   $result=array();
@@ -270,8 +272,8 @@ function read_in_csv_row($row){
 	else{
 	  $block_name = $validate['1'];
     }
-	$query_result = mysql_query("SELECT id from blocks where name='$block_name'");
-	if(mysql_num_rows($query_result) != '0'){
+	$query_result = $dbo -> query("SELECT id from blocks where name='$block_name'");
+	if($query_result -> rowCount() != '0'){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'duplicatename';
 	  return $result;
@@ -339,14 +341,14 @@ function read_in_csv_row($row){
 	else{
 	  $block_name = $validate['1'];
     }
-	$query_result = mysql_query("SELECT id from blocks where name='$block_name'");
-	if(mysql_num_rows($query_result) != '1'){
+	$query_result = $dbo -> query("SELECT id from blocks where name='$block_name'");
+	if($query_result -> rowCount() != '1'){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'blocknotfound';
 	  return $result;
 	}
 	else{
-	  $block_id = mysql_result($query_result, 0);
+	  $block_id = $query_result -> fetchColumn();
 	}
 	
 	$validate = validate_text($subnet_name,'subnetname');
@@ -448,15 +450,15 @@ function read_in_csv_row($row){
 	}
 		
     $sql = "SELECT id from subnets where CAST('$static_long_ip' AS UNSIGNED) & CAST(mask AS UNSIGNED) = CAST(start_ip AS UNSIGNED)";
-	$subnet_result = mysql_query($sql);
+	$subnet_result = $dbo -> query($sql);
 	
-	if(mysql_num_rows($subnet_result) != '1'){
+	if($subnet_result -> rowCount() != '1'){
 	  $result['error'] = true;
 	  $result['errormessage'] = 'subnetnotfound';
 	  return $result;
 	}
 	else{
-	  $subnet_id = mysql_result($subnet_result, 0);
+	  $subnet_id = $subnet_result -> fetchColumn();
 	}
 	
 	// Make sure the static IP isn't in use already or excluded from use via an ACL

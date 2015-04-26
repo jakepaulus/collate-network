@@ -42,6 +42,7 @@ require_once('./include/footer.php');
 
 function add_subnet (){
   global $COLLATE;
+  global $dbo;
   require_once('./include/header.php');
   
   if(!isset($_GET['block_id'])){
@@ -98,17 +99,17 @@ function add_subnet (){
     $ipspace = array();
     
     $sql = "SELECT name, start_ip, end_ip FROM blocks WHERE id = '$block_id'";
-    $results = mysql_query($sql);
-    list($block_name,$block_long_start_ip,$block_long_end_ip) = mysql_fetch_row($results);
+    $results = $dbo -> query($sql);
+    list($block_name,$block_long_start_ip,$block_long_end_ip) = $results -> fetch(PDO::FETCH_NUM);
     if(!empty($block_long_start_ip)){
 
       array_push($ipspace, $block_long_start_ip);
       
       // We need to consider that some subnets in the block are not in the IP range the block specifies, so we compare ranges as well as block_id.
       $sql = "SELECT start_ip, end_ip FROM subnets WHERE CAST((start_ip & 0xFFFFFFFF) AS UNSIGNED) >= CAST(('$block_long_start_ip' & 0xFFFFFFFF) AS UNSIGNED) AND CAST((end_ip & 0xFFFFFFFF) AS UNSIGNED) <= CAST(('$block_long_end_ip' & 0xFFFFFFFF) AS UNSIGNED) ORDER BY start_ip ASC";
-      $subnet_rows = mysql_query($sql);
+      $subnet_rows = $dbo -> query($sql);
       
-      while(list($subnet_long_start_ip,$subnet_long_end_ip) = mysql_fetch_row($subnet_rows)){
+      while(list($subnet_long_start_ip,$subnet_long_end_ip) = $subnet_rows -> fetch(PDO::FETCH_NUM)){
         array_push($ipspace, $subnet_long_start_ip, $subnet_long_end_ip);
       }
       array_push($ipspace, $block_long_end_ip);
@@ -168,6 +169,7 @@ function add_subnet (){
 } // Ends add_subnet function
 
 function submit_subnet(){
+  global $dbo;
   include 'include/validation_functions.php';
   
   $block_id = (isset($_POST['block_id']) && is_numeric($_POST['block_id'])) ? $_POST['block_id'] : '';
@@ -220,20 +222,20 @@ function submit_subnet(){
     $long_mask = $result['long_mask'];
   } 
   
-  mysql_query("START TRANSACTION");
+  $dbo -> beginTransaction();
   
   $username = (!isset($COLLATE['user']['username'])) ? 'system' : $COLLATE['user']['username'];
   $sql = "INSERT INTO subnets (name, start_ip, end_ip, mask, note, block_id, modified_by, modified_at, guidance) 
         VALUES('$name', '$long_start_ip', '$long_end_ip', '$long_mask', '$note', '$block_id', '$username', now(), '$guidance')";
   
     
-  mysql_query($sql);
-  $subnet_id = mysql_insert_id();
+  $dbo -> query($sql);
+  $subnet_id = $dbo -> lastInsertId();
   
   if(!empty($acl_start) && !empty($acl_end)){
     $result = validate_ip_range($acl_start,$acl_end,'acl');
     if($result['0'] === false){
-      mysql_query("ROLLBACK");
+      $dbo -> rollBack();
       $notice = $result['error'];
       $guidance = urlencode($guidance);
       header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
@@ -246,7 +248,7 @@ function submit_subnet(){
     
     // Add an ACL for the acl range so users don't assign a static IP inside a acl scope.
     $sql = "INSERT INTO acl (name, start_ip, end_ip, subnet_id) VALUES('$acl_name', '$long_acl_start', '$long_acl_end', '$subnet_id')";
-    mysql_query($sql);
+    $dbo -> query($sql);
   }
    
   // Add static IP for the Default Gateway  
@@ -254,7 +256,7 @@ function submit_subnet(){
     $long_gateway = ip2decimal($gateway);
     $subnet_test = $long_gateway & $long_mask;
     if($subnet_test !== $long_start_ip){
-      mysql_query("ROLLBACK");
+      $dbo -> rollBack();
       $notice = 'invalidip';
       $guidance = urlencode($guidance);
       header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
@@ -263,7 +265,7 @@ function submit_subnet(){
     
     $validate_gateway = validate_static_ip($gateway);
     if($validate_gateway['0'] === false){
-      mysql_query("ROLLBACK");
+      $dbo -> rollBack();
       $notice = $validate_gateway['error'];
       $guidance = urlencode($guidance);
       header("Location: subnets.php?op=add&block_id=$block_id&name=$name&ip=$ip&gateway=$gateway&acl_start=$acl_start&acl_end=$acl_end&note=$note&guidance=$guidance&notice=$notice");
@@ -272,12 +274,12 @@ function submit_subnet(){
     
     $sql = "INSERT INTO statics (ip, name, contact, note, subnet_id, modified_by, modified_at) 
            VALUES('$long_gateway', 'Gateway', 'Network Admin', 'Default Gateway', '$subnet_id', '$username', now())";
-    mysql_query($sql);
+    $dbo -> query($sql);
   }
   
-  mysql_query("COMMIT");
+  $dbo -> commit();
   
-  $cidr=subnet2cidr($long_ip,$long_mask);
+  $cidr=subnet2cidr($long_start_ip,$long_mask);
   $accesslevel = "3";
   $message = "Subnet $name ($cidr) has been created";
   AccessControl($accesslevel, $message); // No need to generate logs when nothing is really happening. This 
@@ -291,7 +293,8 @@ function submit_subnet(){
 } // ends submit_subnet function
 
 function list_subnets(){
-  global $COLLATE;  
+  global $COLLATE;
+  global $dbo;
   
   $block_id = (isset($_GET['block_id']) && is_numeric($_GET['block_id'])) ? $_GET['block_id'] : '';
   if(!isset($_GET['block_id']) || empty($_GET['block_id'])){
@@ -309,14 +312,14 @@ function list_subnets(){
   }
   
   $sql = "SELECT `name` FROM `blocks` WHERE `id` = '$block_id'";
-  $result = mysql_query($sql);
-  if(mysql_num_rows($result) != '1'){
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() !== 1){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
   require_once('./include/header.php');
-  $block_name = mysql_result($result, 0, 0);
+  $block_name = $result -> fetchColumn();
   
   $blocknamesubnets = str_replace("%block_name%", $block_name, $COLLATE['languages']['selected']['BlockSubnets']);
   echo "<h1>$blocknamesubnets</h1>\n".
@@ -338,9 +341,9 @@ function list_subnets(){
          "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th><th></th></tr>\n".
          "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
          
-  $results = mysql_query($sql);  
+  $results = $dbo -> query($sql);  
   $javascript = ''; # This gets concatenated to below.
-  while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($results)){
+  while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = $results -> fetch(PDO::FETCH_NUM)){
     $start_ip = long2ip($long_start_ip);
     $mask = long2ip($long_mask);
     
@@ -427,6 +430,8 @@ function list_subnets(){
 
 function modify_subnet (){
   global $COLLATE;
+  global $dbo;
+  
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   if(empty($subnet_id)){
     $notice = "invalidrequest";
@@ -435,15 +440,15 @@ function modify_subnet (){
   }
   
   $sql = "SELECT id, name, start_ip, mask, block_id, stalescan_enabled FROM subnets WHERE id='$subnet_id'";
-  $query_result = mysql_query($sql);
-  if(mysql_num_rows($query_result) !== 1){
+  $query_result = $dbo -> query($sql);
+  if($query_result -> rowCount() !== 1){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
   require_once('./include/header.php'); 
   
-  list($subnet_id,$subnet_name,$long_start_ip,$long_mask,$current_block_id,$stalescan_enabled) = mysql_fetch_row($query_result); 
+  list($subnet_id,$subnet_name,$long_start_ip,$long_mask,$current_block_id,$stalescan_enabled) = $query_result -> fetch(PDO::FETCH_NUM); 
   $start_ip = long2ip($long_start_ip);
   $mask = long2ip($long_mask);
   
@@ -471,12 +476,13 @@ function modify_subnet (){
        "<p><select name=\"block_id\">";
 
   $sql = "SELECT id, name, parent_id FROM blocks WHERE type='ipv4'";
-  $result = mysql_query($sql);
-  while(list($select_block_id,$select_block_name,$select_block_parent) = mysql_fetch_row($result)){
+  $result = $dbo -> query($sql);
+  while(list($select_block_id,$select_block_name,$select_block_parent) = $result -> fetch(PDO::FETCH_NUM)){
     $block_paths[$select_block_id]="$select_block_name";
     while($select_block_parent !== null){ #this has the potential to be really slow and awful...
-      $recursive_result = mysql_query("SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'");
-      list($recursive_parent_name,$recursive_parent_parent) = mysql_fetch_row($recursive_result);
+	  $sql = "SELECT name, parent_id FROM blocks WHERE id='$select_block_parent'";
+      $recursive_result = $dbo -> query($sql);
+      list($recursive_parent_name,$recursive_parent_parent) = $recursive_result -> fetch(PDO::FETCH_NUM);
       $block_paths[$select_block_id] = "$recursive_parent_name/".$block_paths[$select_block_id];
       $select_block_parent = $recursive_parent_parent;
     }
@@ -507,6 +513,7 @@ function modify_subnet (){
 } // Ends move_subnet function
 
 function submit_move_subnet (){
+  global $dbo;
   
   $subnet_id = (isset($_POST['subnet_id']) && preg_match("/[0-9]*/", $_POST['subnet_id'])) ? $_POST['subnet_id'] : '';
   $block_id = (isset($_POST['block_id']) && preg_match("/[0-9]*/", $_POST['block_id'])) ? $_POST['block_id'] : '';
@@ -517,20 +524,26 @@ function submit_move_subnet (){
     exit();
   }
     
-  $result = mysql_query("SELECT name,start_ip, mask, block_id FROM subnets WHERE id='$subnet_id'");
-  if(mysql_num_rows($result) != '1') {
+  $sql = "SELECT name,start_ip, mask, block_id FROM subnets WHERE id='$subnet_id'";
+  $result = $dbo -> query($sql);
+  if($result -> rowCount() != '1') {
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
-  list($subnet_name,$ip,$mask,$old_block_id)=mysql_fetch_row($result);
-  $old_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$old_block_id'"), 0, 0);
-  $new_block_name=mysql_result(mysql_query("SELECT name FROM blocks WHERE id='$block_id'"), 0, 0);
+  list($subnet_name,$ip,$mask,$old_block_id)=$result -> fetch(PDO::FETCH_NUM);
+  $sql = "SELECT name FROM blocks WHERE id='$old_block_id'";
+  $result = $dbo -> query($sql);
+  $old_block_name = $result -> fetchColumn();
+  
+  $sql = "SELECT name FROM blocks WHERE id='$block_id'";
+  $result = $dbo -> query($sql);
+  $new_block_name = $result -> fetchColumn();
   $cidr=subnet2cidr($ip,$mask);
   AccessControl("3", "Subnet $subnet_name ($cidr) moved from $old_block_name block to $new_block_name block");
   
   $sql = "UPDATE subnets set block_id='$block_id' WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
   $notice = "subnetmoved-notice";
   header("Location: subnets.php?block_id=$old_block_id&notice=$notice");
@@ -539,6 +552,7 @@ function submit_move_subnet (){
 
 function resize_subnet() {
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
 
   $subnet_id = (isset($_POST['subnet_id']) && is_numeric($_POST['subnet_id'])) ? $_POST['subnet_id'] : '';
@@ -546,14 +560,14 @@ function resize_subnet() {
   $confirm = (isset($_POST['confirm'])) ? true : false;
 
   $sql = "SELECT name, start_ip, end_ip, mask, block_id FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
-  if ( mysql_num_rows($result) != '1' ){
+  $result = $dbo -> query($sql);
+  if ( $result -> rowCount() != '1' ){
     $notice = "invalidrequest";
     header("Location: blocks.php?notice=$notice");
     exit();
   }
 
-  list($original_subnet_name,$original_long_start_ip,$original_long_end_ip,$original_long_mask,$original_block_id) = mysql_fetch_row($result);
+  list($original_subnet_name,$original_long_start_ip,$original_long_end_ip,$original_long_mask,$original_block_id) = $result -> fetch(PDO::FETCH_NUM);
   
   $original_cidr=subnet2cidr($original_long_start_ip,$original_long_mask);
 
@@ -610,17 +624,17 @@ function resize_subnet() {
 	$sql = $sql_action.$sql_selection;
 	$sql = (isset($sql_sort)) ? $sql.$sql_sort : $sql;	
     
-    $result = mysql_query($sql);
+    $result = $dbo -> query($sql);
     if($confirm === false){
       $staticstobedeleted = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['staticstodelete']);
       echo "<h1>$staticstobedeleted:</h1><br />\n";
 
-      if(mysql_num_rows($result) != '0'){
+      if($result -> rowCount() != '0'){
         echo "<table style=\"width: 100%\"><tr><th>".$COLLATE['languages']['selected']['IPAddress'].
              "</th><th>".$COLLATE['languages']['selected']['Name']."</th><th>".
              $COLLATE['languages']['selected']['Contact']."</th><th>".$COLLATE['languages']['selected']['FailedScans']."</th></tr>".
              "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
-        while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = mysql_fetch_row($result)){
+        while(list($static_id,$ip,$name,$contact,$note,$failed_scans) = $result -> fetch(PDO::FETCH_NUM)){
           $ip = long2ip($ip);
           echo "<tr><td>$ip</td><td>$name</td><td>$contact</td><td>$failed_scans</td><td></td></tr>\n";
           echo "<tr><td colspan=\"5\">$note</td></tr>\n";
@@ -640,12 +654,12 @@ function resize_subnet() {
            CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
            OR CAST(end_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) != 
            CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED))";
-    $result = mysql_query($sql);
+    $result = $dbo -> query($sql);
     if($confirm === false){
       $aclstobechanged = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['aclstobechanged']);
       echo "<h1>$aclstobechanged:</h1><br />\n";
 
-      if(mysql_num_rows($result) == '0'){
+      if($result -> rowCount() == '0'){
         echo "<p>".$COLLATE['languages']['selected']['noaclschanged']."</p><br /><br />"; 
       }
       else{
@@ -657,7 +671,7 @@ function resize_subnet() {
       }
 	}
         
-    while(list($acl_id,$acl_name,$acl_long_start_ip,$acl_long_end_ip) = mysql_fetch_row($result)){
+    while(list($acl_id,$acl_name,$acl_long_start_ip,$acl_long_end_ip) = $result -> fetch(PDO::FETCH_NUM)){
       $note = ""; # this might not get set below.
       $sql = "";
     
@@ -692,7 +706,7 @@ function resize_subnet() {
         echo "<tr><td>$acl_name</td><td>$new_acl_start_ip</td><td>$new_acl_end_ip</td><td>$note</td></tr>\n";
       }
       elseif(!empty($sql)) {
-        mysql_query($sql);
+        $dbo -> query($sql);
       }
     }
     if($confirm === false){
@@ -710,14 +724,14 @@ function resize_subnet() {
     $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` WHERE
             CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
             CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED) ORDER BY `start_ip` ASC";
-    $results = mysql_query($sql);
+    $results = $dbo -> query($sql);
     
     $subnetstomerge = str_replace("%original_subnet_name%", $original_subnet_name, $COLLATE['languages']['selected']['subnetstomerge']);
     if($confirm === false){
       echo "<h1>$subnetstomerge:</h1><br />\n";
     }
     
-    if(mysql_num_rows($results) < '1' && $confirm === false){
+    if($results -> rowCount() < '1' && $confirm === false){
       echo "<p>".$COLLATE['languages']['selected']['nosubnetsoverlap']."</p>";
     }
     else{
@@ -729,7 +743,7 @@ function resize_subnet() {
            "<tr><td colspan=\"4\"><hr class=\"head\" /></td></tr>\n";
       }           
        
-      while(list($affected_subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = mysql_fetch_row($results)){
+      while(list($affected_subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = $results -> fetch(PDO::FETCH_NUM)){
         if($confirm === false){
           $start_ip = long2ip($long_start_ip);
           $mask = long2ip($long_mask);
@@ -739,7 +753,7 @@ function resize_subnet() {
         }
         else {
           $sql = "UPDATE acl SET subnet_id='$subnet_id' WHERE subnet_id='$affected_subnet_id'";
-          $result = mysql_query($sql);
+          $result = $dbo -> query($sql);
         }
       }
       if($confirm === false){
@@ -749,12 +763,12 @@ function resize_subnet() {
         $sql = "DELETE FROM `subnets` WHERE CAST(start_ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
                 CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)
                 AND id != '$subnet_id'";
-        $result = mysql_query($sql);
+        $result = $dbo -> query($sql);
       
         $sql = "UPDATE statics SET subnet_id='$subnet_id' WHERE 
 		       CAST(ip & 0xFFFFFFFF AS UNSIGNED) & CAST('$new_long_mask' & 0xFFFFFFFF AS UNSIGNED) = 
 			   CAST('$new_long_start_ip' & 0xFFFFFFFF AS UNSIGNED)";
-        $result = mysql_query($sql);
+        $result = $dbo -> query($sql);
       }
     }
   }
@@ -771,7 +785,7 @@ function resize_subnet() {
   }
   else {
     $sql = "UPDATE subnets set start_ip='$new_long_start_ip', end_ip='$new_long_end_ip', mask='$new_long_mask' WHERE id='$subnet_id'";
-    $result = mysql_query($sql);
+    $result = $dbo -> query($sql);
     $notice = "resized-notice";
     header("Location: subnets.php?block_id=$original_block_id&notice=$notice");
     exit();

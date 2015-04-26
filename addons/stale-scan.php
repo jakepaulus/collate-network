@@ -5,10 +5,7 @@
 # stale-scan.php written by Jake Paulus for Collate:Network
 # http://collate.info/ 
 # 
-# Please refer to the documentation for this script in the docs directory or
-# at the following URL:
-#
-# http://code.google.com/p/collate-network/w/list
+# Please refer to the documentation for this script linked on the page above
 #
 #
 # Here is how we scan. Feel free to modify the options to adjust performance...
@@ -49,16 +46,17 @@ else{
 }
 
 require_once('../include/db_connect.php');
+$dbo = getdbo();
 
 $pingedhosts = '0';
 $goodhosts = '0';
 
 $sql = "SELECT ip FROM statics WHERE failed_scans != '-1'";
-$result = mysql_query($sql);
+$result = $dbo -> query($sql);
 
-if(mysql_num_rows($result) < '1'){ exit("\r\nError:\r\nThere are no IPs to check\r\n"); }
+if($result -> rowCount() < '1'){ exit("\r\nError:\r\nThere are no IPs to check\r\n"); }
 
-while(list($long_ip) = mysql_fetch_row($result)){
+while(list($long_ip) = $result -> fetch(PDO::FETCH_NUM)){
   $ip = long2ip($long_ip);
   
   $output = &system("$command $ip > /dev/null", $return);
@@ -73,7 +71,7 @@ while(list($long_ip) = mysql_fetch_row($result)){
     $sql = "UPDATE statics SET failed_scans=failed_scans+1 WHERE ip='$long_ip'";
     if($verbose == 'on'){ echo '.'; }
   }
-  mysql_query($sql);
+  $dbo -> query($sql);
 }
 if($verbose == 'on'){
   echo "\r\n".
@@ -82,7 +80,7 @@ if($verbose == 'on'){
 }
 
 $sql = "REPLACE INTO settings (name, value) VALUES ('last_stale_scan_at', NOW())";
-mysql_query($sql);
+$dbo -> query($sql);
 
 exit();
 ?>

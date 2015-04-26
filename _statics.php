@@ -47,6 +47,7 @@ switch($op){
 
 function edit_static(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
 
   $static_id = (empty($_GET['static_id'])) ? '' : $_GET['static_id'];
@@ -72,8 +73,8 @@ function edit_static(){
   }
   
  
-  $result = mysql_query("SELECT ip, name FROM statics WHERE id='$static_id'");
-  list($long_ip, $name) = mysql_fetch_row($result);
+  $result = $dbo -> query("SELECT ip, name FROM statics WHERE id='$static_id'");
+  list($long_ip, $name) = $result -> fetch(PDO::FETCH_NUM);
   $static_ip = long2ip($long_ip);
   
   if($edit == 'staticname'){
@@ -89,7 +90,7 @@ function edit_static(){
     $sql = "UPDATE statics SET note='$value', modified_by='$username', modified_at=NOW() WHERE id='$static_id'";
   }
  
-  mysql_query($sql);  
+  $dbo -> query($sql);  
   echo $value;
   exit();
 } // Ends edit_static function
@@ -97,6 +98,7 @@ function edit_static(){
 
 function edit_acl(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $acl_id = (isset($_GET['acl_id']) && is_numeric($_GET['acl_id'])) ? $_GET['acl_id'] : '';
@@ -119,20 +121,20 @@ function edit_acl(){
   }
   
   $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount() != '1'){
     header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
   
-  $subnet_name = mysql_result($result, 0, 0);
+  $subnet_name = $result -> fetchColumn();
   
   collate_log('3', "ACL statement name updated in $subnet_name subnet");
   $sql = "UPDATE acl SET name='$value' where id='$acl_id'";
   
-  mysql_query($sql);  
+  $dbo -> query($sql);  
   echo $value; 
   exit();
 } // Ends edit_acl function
@@ -162,6 +164,7 @@ function ping_host(){
 
 function ip_guidance(){
   global $COLLATE;
+  $dbo = getdbo();
   
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
   
@@ -172,8 +175,8 @@ function ip_guidance(){
   }
   
   $sql = "SELECT guidance FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);  
-  $guidance = mysql_result($result, 0);
+  $result = $dbo -> query($sql);  
+  $guidance = $result -> fetchColumn();
 
   if(!empty($guidance)){
     $help = $guidance;
@@ -207,6 +210,7 @@ function ip_guidance(){
 
 function edit_guidance(){
   global $COLLATE;
+  $dbo = getdbo();
   include 'include/validation_functions.php';
   
   $subnet_id = (isset($_GET['subnet_id']) && is_numeric($_GET['subnet_id'])) ? $_GET['subnet_id'] : '';
@@ -220,21 +224,21 @@ function edit_guidance(){
   }
       
   $sql = "SELECT name FROM subnets WHERE id='$subnet_id'";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount() != '1'){
     header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit();
   }
   
-  $name = mysql_result($result, 0, 0);
+  $name = $result -> fetchColumn();
   
   collate_log('3', "IP Guidance edited for $name subnet");  
     
   $sql = "UPDATE subnets SET guidance='$value', modified_by='$username', modified_at=NOW() WHERE id='$subnet_id'";
   
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   if(empty($value)){
     $value = $COLLATE['settings']['guidance'];
@@ -248,6 +252,7 @@ function edit_guidance(){
 
 function delete_static(){
   global $COLLATE;
+  $dbo = getdbo();
   
   $long_ip = (isset($_GET['static_ip'])) ? ip2decimal($_GET['static_ip']) : '';
   
@@ -262,7 +267,7 @@ function delete_static(){
   
   collate_log('2', "Static IP deleted: $static_ip");
   $sql = "DELETE FROM statics WHERE ip='$long_ip' LIMIT 1";
-  mysql_query($sql);
+  $dbo -> query($sql);
   
   // no success message. the user sees the static entry in the table fade away as feedback
    
@@ -273,6 +278,7 @@ function delete_static(){
 
 function delete_acl(){
   global $COLLATE;
+  $dbo = getdbo();
   
   $acl_id = (isset($_GET['acl_id']) && is_numeric($_GET['acl_id'])) ? $_GET['acl_id'] : '';
   
@@ -283,26 +289,27 @@ function delete_acl(){
   }
   
   $sql = "SELECT name FROM subnets WHERE id=(SELECT subnet_id FROM acl WHERE id='$acl_id')";
-  $result = mysql_query($sql);
+  $result = $dbo -> query($sql);
   
-  if(mysql_num_rows($result) != '1'){
+  if($result -> rowCount() != '1'){
     header("HTTP/1.1 400 Bad Request");
     echo $COLLATE['languages']['selected']['invalidrequest'];
     exit(); 
   }
   
-  $subnet_name = mysql_result($result, 0, 0);
+  $subnet_name = $result -> fetchColumn();
   
   collate_log('3', "ACL Statement #$acl_id deleted in $subnet_name subnet");
   
   $sql = "DELETE FROM acl WHERE id='$acl_id'";  
-  mysql_query($sql);
+  $dbo -> query($sql);
   exit();
 } // Ends delete_acl function
 
 
 function toggle_stalescan(){
   global $COLLATE;
+  global $dbo;
   
   $static_ip = (isset($_GET['static_ip'])) ? $_GET['static_ip'] : '';
   $long_ip = ip2decimal($static_ip);
@@ -323,14 +330,16 @@ function toggle_stalescan(){
   # make sure we aren't being asked to toggle for a subnet that has stale scan disabled:
   $sql = "SELECT stalescan_enabled FROM subnets WHERE 
     CAST('$long_ip' & 0xFFFFFFFF AS UNSIGNED) & CAST(mask & 0xFFFFFFFF AS UNSIGNED) = CAST(start_ip & 0xFFFFFFFF AS UNSIGNED)";
-  $subnet_status = mysql_result(mysql_query($sql), 0);
+  $result = $dbo -> query($sql);
+  $subnet_status = $result -> fetchColumn();
   if($subnet_status == false){
 	header("HTTP/1.1 400 Bad Request");
     exit();
   }
   
   $sql = "SELECT failed_scans from statics where ip='$long_ip'";
-  $current_count = mysql_result(mysql_query($sql), 0);
+  $result = $dbo -> query($sql);
+  $current_count = $result -> fetchColumn();
   if($current_count == -1){
 	$new_status = 'on';
 	$new_count = 0;
@@ -347,7 +356,7 @@ function toggle_stalescan(){
   collate_log('2', "Stale Scan toggled $new_status for IP: $static_ip"); 
   
   $sql = "UPDATE statics SET failed_scans='$new_count' WHERE ip='$long_ip' LIMIT 1";
-  mysql_query($sql);
+  $dbo -> query($sql);
 
   echo "<img src=\"./images/$new_icon\" alt=\"\" title=\"$new_icon_text\" />";
   exit();
