@@ -816,7 +816,7 @@ function build_search_sql(){
       $mask = bindec(substr($bin,0,8)).".".bindec(substr($bin,8,8)).".".bindec(substr($bin,16,8)).".".bindec(substr($bin,24,8));
       $mask = long2ip(ip2decimal($mask));
     }
-    elseif(!checkNetmask($mask)){
+    elseif(!validate_netmask($mask)){
       $notice = "invalidmask";
       header("Location: search.php?notice=$notice");
 	  exit();
