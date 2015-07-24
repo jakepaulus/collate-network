@@ -9,7 +9,7 @@ $op = (empty($_GET['op'])) ? 'default' : $_GET['op'];
 switch($op){
 
     case "add";
-    AccessControl("2", "Static IP Reservation form accessed");
+    AccessControl("2", null);
     add_static();
     break;
     
