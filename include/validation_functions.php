@@ -171,7 +171,7 @@ function validate_ip_range($start_ip,$end_ip,$range_type,$table_id=null){
 	}
 	$result = $dbo -> query($sql);
 	if($result -> rowcount() != '1'){
-	  $function_return['error'] = 'invalidrange';
+	  $function_return['error'] = 'aclsubnetmismatch';
 	  return $function_return;
 	}
 	list($subnet_id,$subnet_name) =  $result -> fetch(PDO::FETCH_NUM);
