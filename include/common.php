@@ -1,4 +1,7 @@
 <?php
+// Suppress DateTime warnings - Documentation informs the user to update php.ini as needed.
+date_default_timezone_set(@date_default_timezone_get());
+
 session_start();
 // Let the sessions expire when the user closes the browser window or logs out. Hopefully no timeouts
 ini_set("session.gc_maxlifetime", "86400");
