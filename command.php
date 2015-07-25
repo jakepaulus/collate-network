@@ -83,7 +83,8 @@ function process_file(){
 	$rownum = '0';
 	$checkedlinewithcontentforencoding=false;
     while ($currentrow = fgetcsv($handle, '1000', ",", "'")) {
-	  if($currentrow['0'] === null && count($currentrow) === '1'){
+	  #if(($currentrow['0'] === null || preg_match('/^\s*$/', $currentrow['0'])) && count($currentrow) === '1'){
+	  if($currentrow['0'] === null || preg_match('/^\s*$/', $currentrow['0'])){
 		  // blank line in csv file
 		  $rownum++;
 		  continue;
@@ -163,7 +164,7 @@ function process_file(){
 	  $importedrecords = $currentrow + 1;
 	  $successmessage = str_replace("%rows%", $importedrecords, $COLLATE['languages']['selected']['importsuccess']);
 	  echo "<p><b>$successmessage</b></p>";
-	  $logmessage = "Bulk imported $importedrecords records";
+	  $logmessage = "Bulk imported $importedrecords records (including blank lines).";
 	  collate_log('5', $logmessage);
 	}
 	
