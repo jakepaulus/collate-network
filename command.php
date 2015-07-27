@@ -280,7 +280,14 @@ function read_in_csv_row($row){
 	  return $result;
 	}
 	
-	if(empty($block_end_ip) || ip2decimal($block_end_ip) === false){
+	if(preg_match('/^\s*$/', $block_start_ip) && preg_match('/^\s*$/', $block_end_ip)){
+      // block with no associated IP information
+        $block_start_ip = '';
+		$block_long_start_ip = '';
+		$block_end_ip = '';
+		$block_long_end_ip = '';
+	}
+	elseif(empty($block_end_ip) || ip2decimal($block_end_ip) === false){
 	  // subnet
 	  $validate = validate_network($block_start_ip,'block');
 	  if($validate['0'] === false){
