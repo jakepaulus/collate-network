@@ -131,6 +131,7 @@ function delete_subnet(){
 
 function search_subnets(){
   global $COLLATE;
+  global $dbo;
   include 'include/validation_functions.php';
   
   $search = (empty($_GET['search'])) ? '' : clean($_GET['search']);
