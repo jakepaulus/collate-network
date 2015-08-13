@@ -35,11 +35,11 @@ function show_panel(){
 <tr><td colspan="4"><br /></td></tr>
 <tr>
   <td align="center" style="width: 25%">
-    <a href="search.php?op=search&first=1&second=note&search=Added%20by%20discovery%20addon"><img height="48" width="48" alt="[+]" src="./images/discovered.png"></a>
+    <a href="search.php?op=search&first=2&second=note&search=Added%20by%20discovery%20addon"><img height="48" width="48" alt="[+]" src="./images/discovered.png"></a>
 	<br /><b><?php echo $COLLATE['languages']['selected']['DiscoveredHosts']; ?></b>
   </td>
   <td align="center" style="width: 25%">
-    <a href="search.php?op=search&first=1&second=failed_scans&search=4"><img height="48" width="48" alt="[-]" src="./images/stale.gif"></a>
+    <a href="search.php?op=search&first=2&second=failed_scans&search=4"><img height="48" width="48" alt="[-]" src="./images/stale.gif"></a>
 	<br /><b><?php echo $COLLATE['languages']['selected']['StaleHosts']; ?></b></td>
   <?php if(isset($COLLATE['user']['ldapexempt']) && ($COLLATE['settings']['auth_type'] != 'ldap' || $COLLATE['user']['ldapexempt'] === true)){ ?>
     <td align="center" style="width: 25%">
