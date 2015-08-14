@@ -323,13 +323,23 @@ function list_subnets(){
   
   $blocknamesubnets = str_replace("%block_name%", $block_name, $COLLATE['languages']['selected']['BlockSubnets']);
   echo "<h1>$blocknamesubnets</h1>\n".
-       "<p style=\"text-align: right;\"><a href=\"subnets.php?op=add&amp;block_id=$block_id\">
-       <img src=\"./images/add.gif\" alt=\"\" /> ".
-       $COLLATE['languages']['selected']['AllocateaSubnet']." </a></p>";
+       "<div style=\"float: left; width: 70%;\">";
 
   $sql = "SELECT `id`, `name`, `start_ip`, `end_ip`, `mask`, `note` FROM `subnets` 
       WHERE `block_id` = '$block_id' ORDER BY `$sort` ASC";
+  $hiddenformvars="<input type=\"hidden\" name=\"block_id\" value=\"$block_id\" />".
+                  "<input type=\"hidden\" name=\"sort\" value=\"$sort\" />";
 
+  # page selector here
+  $updatedsql = pageselector($sql,$hiddenformvars);
+  $row = $dbo -> query($updatedsql);
+  $rows = $row -> rowCount();
+  
+  echo "</div>\n".
+       "<a href=\"subnets.php?op=add&amp;block_id=$block_id\">\n".
+	   "<div style=\"float: left; width: 25%; text-align:right; padding:5px;\">".
+       "<img src=\"./images/add.gif\" alt=\"\" /> ".
+       $COLLATE['languages']['selected']['AllocateaSubnet']." </a></div><p style=\"clear: left; display: done;\">\n";
     
    
   echo "<table style=\"width: 100%\">\n". 
@@ -341,9 +351,8 @@ function list_subnets(){
          "<th style=\"text-align: left\">".$COLLATE['languages']['selected']['StaticsUsed']."</th><th></th></tr>\n".
          "<tr><td colspan=\"5\"><hr class=\"head\" /></td></tr>\n";
          
-  $results = $dbo -> query($sql);  
   $javascript = ''; # This gets concatenated to below.
-  while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = $results -> fetch(PDO::FETCH_NUM)){
+  while(list($subnet_id,$name,$long_start_ip,$long_end_ip,$long_mask,$note) = $row -> fetch(PDO::FETCH_NUM)){
     $start_ip = long2ip($long_start_ip);
     $mask = long2ip($long_mask);
     
@@ -421,6 +430,8 @@ function list_subnets(){
   }
   
   echo "</table>";
+  
+  pageselector($sql,$hiddenformvars);
   
   echo $javascript;
   require_once("include/footer.php");
