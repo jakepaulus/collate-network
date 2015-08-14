@@ -20,7 +20,7 @@ else{
 }
 
 $sql = "select count(*) from users where username='$username'";
-$result = $dbo -> query($sql)
+$result = $dbo -> query($sql);
 $count = $result -> fetchColumn();
 if($count != '1'){ 
   header("HTTP/1.1 400 Bad Request");  
