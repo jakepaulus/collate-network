@@ -420,7 +420,7 @@ $languages["en"] = array(
   "Hostname"    => "Hostname",
   
 // command.php
-  "uploadwarning"  => "Please consult the <a href=\"http://collate.info/">documentation</a> 
+  "uploadwarning"  => "Please consult the <a href=\"http://collate.info/\">documentation</a> 
                        for guidance on the layout of the CSV files this form supports.",
   "SelectFile"     => "<b>Select a file</b> (up to %bytes% bytes long)",
   "filesizenote"   => "The file size limit is the smallest of the following values in your php.ini: post_max_size, upload_max_filesize, and memory_limit",
