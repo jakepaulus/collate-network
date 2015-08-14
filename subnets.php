@@ -358,8 +358,13 @@ function list_subnets(){
     
     $subnet_size = $long_end_ip - $long_start_ip;
     $in_color=true;
-    $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
-    
+	if($subnet_size > 4){ # only calculate usage if larger than a /30
+      $percent_subnet_used = get_formatted_subnet_util($subnet_id,$subnet_size,$in_color);
+    }
+	else{
+      $percent_subnet_used = '<td style=\"color:green"></td>';
+    }
+	
     echo "<tr id=\"subnet_".$subnet_id."_row_1\">
          <td><a href=\"statics.php?subnet_id=$subnet_id\"><img src=\"images/subnet.png\" alt=\"\"></a> &nbsp; 
 		 <b><span id=\"edit_name_".$subnet_id."\">$name</span></b></td><td><a href=\"statics.php?subnet_id=$subnet_id\">$start_ip</a></td>
