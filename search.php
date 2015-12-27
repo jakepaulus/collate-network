@@ -804,7 +804,7 @@ function build_search_sql(){
       exit();
     }
   
-    $ip = long2ip(ip2decimal($ip));  
+    $ip = long2ip(ip2decimal($ip));
     if(!strstr($mask, '.') && ($mask <= '0' || $mask > '32')){
       $notice = "invalidmask";
       header("Location: search.php?notice=$notice");
@@ -823,8 +823,10 @@ function build_search_sql(){
     }
   }
   
-  $long_ip = (isset($ip)) ? ip2decimal($ip) : '';
+  $long_ip = (isset($ip)) ? ip2decimal($ip) : ''; # this might not be the subnet number
+  $start_ip = long2ip($long_start_ip);
   $long_mask = (isset($mask)) ? ip2decimal($mask) : '';
+  $long_ip = (isset($long_mask)) ? ($long_ip & $long_mask) : $long_ip; # now we're sure we have the network address
   
   if($when == "dates"){
     $searchdescription = str_replace("%fromdate%", "$fromdate", $COLLATE['languages']['selected']['searchdatedesc']);
