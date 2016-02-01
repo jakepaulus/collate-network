@@ -72,7 +72,7 @@ else{
   $verbose = 'off';
 }
 
-require_once('../include/db_connect.php');
+require_once(dirname(__FILE__).'/../include/db_connect.php');
 $dbo = getdbo();
 
 // Create array containing all unreserved IPs in all reserved subnets excluding ACL'd IP space
